@@ -8,6 +8,7 @@ import PeminjamanPage from "./pages/Peminjamanpage";
 import PengembalianPage from "./pages/Pengembalianpage";
 import DendaPage from "./pages/Dendapage";
 import MahasiswaPage from "./pages/Mahasiswapage";
+import RegisterPage from "./pages/Register";
 
 import Layout from "./components/Layout";
 
@@ -16,6 +17,9 @@ function App() {
     <Routes>
       {/* LOGIN */}
       <Route path="/" element={<LoginPage />} />
+
+      {/* REGISTER */}
+      <Route path="/register" element={<RegisterPage />} />
 
       {/* DASHBOARD */}
       <Route

@@ -134,6 +134,20 @@ export default function LoginPage() {
           </div>
         </div>
 
+{/* Tambahkan ini setelah demo shortcut buttons */}
+<div style={{ textAlign: 'center', marginTop: 20, fontSize: 13, color: 'var(--gray-text)' }}>
+  Belum punya akun?{' '}
+  <a
+    href="#"
+    onClick={(e) => {
+      e.preventDefault();
+      navigate('/register');
+    }}
+    style={{ color: 'var(--maroon)', fontWeight: 600, textDecoration: 'none' }}
+  >
+    Daftar di sini
+  </a>
+</div>
         <div>
           <div className="login-footer-cards">
             <div className="login-feature-card">
