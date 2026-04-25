@@ -2,8 +2,22 @@
 // In a real app, replace this with API calls to your backend (Node.js + MySQL/PostgreSQL)
 
 export const USERS = [
-  { id: 1, name: 'Admin Perpustakaan', email: 'admin@fmipa.ac.id', password: 'admin123', role: 'admin', avatar: 'AP' },
-  { id: 2, name: 'Budi Santoso', email: 'petugas@fmipa.ac.id', password: 'petugas123', role: 'petugas', avatar: 'BS' },
+  {
+    email: 'admin@fmipa.ac.id',
+    password: 'admin123',
+    role: 'admin',
+  },
+  {
+    email: 'petugas@fmipa.ac.id',
+    password: 'petugas123',
+    role: 'petugas',
+  },
+  {
+    email: 'mahasiswa@fmipa.ac.id',
+    password: 'mhs123',
+    role: 'mahasiswa',
+    nama: 'Budi Mahasiswa' // opsional (kalau mau ditampilkan)
+  }
 ];
 
 export const BOOKS = [
@@ -63,13 +77,84 @@ export const DAILY_LOANS = [
 ];
 
 export const ACTIVITY_LOG = [
-  { id: 1, time: '2025-04-23 09:42', type: 'Peminjaman Buku', desc: 'Siti Rahayu meminjam "Kalkulus Lanjutan"', icon: 'loan' },
-  { id: 2, time: '2025-04-23 09:15', type: 'Pendaftaran Anggota', desc: 'Anggota baru: Lina Kartika (Mahasiswa Kimia)', icon: 'member' },
-  { id: 3, time: '2025-04-22 16:30', type: 'Pengembalian Buku', desc: 'Dewi Anggraini mengembalikan "Biologi Sel"', icon: 'return' },
-  { id: 4, time: '2025-04-22 14:00', type: 'Perhitungan Denda', desc: 'Denda keterlambatan Nur Azizah: Rp 30.000', icon: 'denda' },
-  { id: 5, time: '2025-04-22 11:20', type: 'Penambahan Buku', desc: 'Buku baru ditambahkan: "Optika Modern" (FIS-003)', icon: 'book' },
-  { id: 6, time: '2025-04-21 10:00', type: 'Cadangan Sistem', desc: 'Backup database otomatis berhasil', icon: 'system' },
-  { id: 7, time: '2025-04-21 08:30', type: 'Hapus Buku', desc: 'Buku "Termodinamika Dasar" dihapus dari katalog', icon: 'delete' },
+  {
+    id: 1,
+    code: "MTK-001",
+    title: "Kalkulus Lanjutan",
+    author: "James Stewart",
+    discipline: "Mathematics",
+    year: 2022,
+    stock: 5,
+    available: 3,
+    isbn: "978-0-538-49781-7",
+    publisher: "Cengage Learning",
+    cover: "https://covers.openlibrary.org/b/isbn/9780538497817-L.jpg"
+  },
+  {
+    id: 2,
+    code: "FIS-001",
+    title: "Fisika Universitas",
+    author: "Hugh D. Young",
+    discipline: "Physics",
+    year: 2021,
+    stock: 4,
+    available: 2,
+    isbn: "978-0-13-411513-1",
+    publisher: "Pearson",
+    cover: "https://covers.openlibrary.org/b/isbn/9780134115131-L.jpg"
+  },
+  {
+    id: 3,
+    code: "KIM-001",
+    title: "Kimia Organik",
+    author: "Paula Yurkanis Bruice",
+    discipline: "Chemistry",
+    year: 2020,
+    stock: 3,
+    available: 3,
+    isbn: "978-0-13-400767-2",
+    publisher: "Pearson",
+    cover: "https://covers.openlibrary.org/b/isbn/9780134007672-L.jpg"
+  },
+  {
+    id: 4,
+    code: "BIO-001",
+    title: "Biologi Sel",
+    author: "Bruce Alberts",
+    discipline: "Biology",
+    year: 2019,
+    stock: 2,
+    available: 0,
+    isbn: "978-0-8153-4454-0",
+    publisher: "Garland Science",
+    cover: "https://covers.openlibrary.org/b/isbn/9780815344540-L.jpg"
+  },
+  {
+    id: 5,
+    code: "FIS-002",
+    title: "Optika Modern",
+    author: "Eugene Hecht",
+    discipline: "Physics",
+    year: 2018,
+    stock: 3,
+    available: 1,
+    isbn: "978-0-321-88500-0",
+    publisher: "Pearson",
+    cover: "https://covers.openlibrary.org/b/isbn/9780321885000-L.jpg"
+  },
+  {
+    id: 6,
+    code: "MTK-002",
+    title: "Aljabar Linear",
+    author: "Gilbert Strang",
+    discipline: "Mathematics",
+    year: 2021,
+    stock: 4,
+    available: 4,
+    isbn: "978-0-9802327-7-6",
+    publisher: "Wellesley Cambridge Press",
+    cover: "https://covers.openlibrary.org/b/isbn/9780980232776-L.jpg"
+  }
 ];
 
 export const VISITORS = [

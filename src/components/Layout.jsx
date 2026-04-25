@@ -1,16 +1,26 @@
-import Sidebar from './Sidebar';
-import Header from './Header';
-import Footer from './Footer';
+import Header from "./Header";
+import Footer from "./Footer";
+import Sidebar from "./Sidebar";
 
-export default function Layout({ children }) {
+export default function Layout({ children, showSidebar = true }) {
   return (
-    <div className="layout">
-      <Sidebar />
-      <div className="main-content">
+    <div style={{ display: "flex", minHeight: "100vh" }}>
+
+      {showSidebar && <Sidebar />}
+
+      <div style={{
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+        marginLeft: showSidebar ? "240px" : "0",
+        minWidth: 0,
+      }}>
         <Header />
-        <div className="page-content">
+
+        <main style={{ flex: 1, padding: "24px" }}>
           {children}
-        </div>
+        </main>
+
         <Footer />
       </div>
     </div>

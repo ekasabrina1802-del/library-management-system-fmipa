@@ -7,6 +7,7 @@ import AnggotaPage from "./pages/Anggotapage";
 import PeminjamanPage from "./pages/Peminjamanpage";
 import PengembalianPage from "./pages/Pengembalianpage";
 import DendaPage from "./pages/Dendapage";
+import MahasiswaPage from "./pages/Mahasiswapage";
 
 import Layout from "./components/Layout";
 
@@ -71,6 +72,17 @@ function App() {
           </Layout>
         }
       />
+
+      <Route
+        path="/mahasiswa"
+        element={
+          <Layout showSidebar={false}>
+            <MahasiswaPage />
+          </Layout>
+        }
+      />
+
+      <Route path="*" element={<div>404 - Halaman tidak ditemukan</div>} />
     </Routes>
   );
 }

@@ -11,24 +11,38 @@ export default function LoginPage() {
   const navigate = useNavigate();
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    setTimeout(() => {
-      const result = login(form.email, form.password);
-      if (result.success) {
-        navigate('/dashboard');
-      } else {
-        setError(result.message);
-      }
-      setLoading(false);
-    }, 600);
-  };
+  e.preventDefault();
+  setLoading(true);
+  setError('');
+
+  setTimeout(() => {
+    const result = login(form.email, form.password);
+
+    if (result.success) {
+      const redirectMap = {
+        admin: '/dashboard',
+        petugas: '/dashboard',
+        mahasiswa: '/mahasiswa',
+      };
+
+      navigate(redirectMap[result.role] || '/');
+    } else {
+      setError(result.message);
+    }
+
+    setLoading(false);
+  }, 600);
+};
 
   const fillDemo = (role) => {
-    if (role === 'admin') setForm(f => ({ ...f, email: 'admin@fmipa.ac.id', password: 'admin123' }));
-    else setForm(f => ({ ...f, email: 'petugas@fmipa.ac.id', password: 'petugas123' }));
-  };
+  if (role === 'admin') {
+    setForm(f => ({ ...f, email: 'admin@fmipa.ac.id', password: 'admin123' }));
+  } else if (role === 'petugas') {
+    setForm(f => ({ ...f, email: 'petugas@fmipa.ac.id', password: 'petugas123' }));
+  } else if (role === 'mahasiswa') {
+    setForm(f => ({ ...f, email: 'mahasiswa@fmipa.ac.id', password: 'mhs123' }));
+  }
+};
 
   return (
     <div className="login-page">
@@ -116,6 +130,7 @@ export default function LoginPage() {
           <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
             <button onClick={() => fillDemo('admin')} className="btn btn-ghost btn-sm" style={{ flex: 1, justifyContent: 'center', fontSize: 11 }}>Demo Admin</button>
             <button onClick={() => fillDemo('petugas')} className="btn btn-ghost btn-sm" style={{ flex: 1, justifyContent: 'center', fontSize: 11 }}>Demo Petugas</button>
+            <button onClick={() => fillDemo('mahasiswa')} className="btn btn-ghost btn-sm" style={{ flex: 1 }}>Demo Mahasiswa</button>
           </div>
         </div>
 
