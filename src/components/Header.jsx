@@ -25,7 +25,14 @@ export default function Header() {
         <button className="header-icon-btn">
           <Settings size={16} />
         </button>
-        <div className="avatar" title={user?.name}>{user?.avatar}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+  <div className="avatar">
+    {user?.avatar}
+  </div>
+  <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--navy)' }}>
+    {user?.name || 'User'}
+  </span>
+</div>
       </div>
     </header>
   );

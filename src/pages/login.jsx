@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, BookOpen, FlaskConical } from 'lucide-react';
 import { useAuth } from '../components/AuthContext';
 
+
 export default function LoginPage() {
   const [form, setForm] = useState({ email: '', password: '', remember: false });
   const [error, setError] = useState('');
@@ -10,13 +11,16 @@ export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
-  e.preventDefault();
-  setLoading(true);
-  setError('');
 
-  setTimeout(() => {
-    const result = login(form.email, form.password);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+
+    // Memanggil fungsi login async yang tersambung ke database
+    const result = await login(form.email, form.password);
+
 
     if (result.success) {
       const redirectMap = {
@@ -25,24 +29,27 @@ export default function LoginPage() {
         mahasiswa: '/mahasiswa',
       };
 
+
       navigate(redirectMap[result.role] || '/');
     } else {
       setError(result.message);
     }
 
+
     setLoading(false);
-  }, 600);
-};
+  };
+
 
   const fillDemo = (role) => {
-  if (role === 'admin') {
-    setForm(f => ({ ...f, email: 'admin@fmipa.ac.id', password: 'admin123' }));
-  } else if (role === 'petugas') {
-    setForm(f => ({ ...f, email: 'petugas@fmipa.ac.id', password: 'petugas123' }));
-  } else if (role === 'mahasiswa') {
-    setForm(f => ({ ...f, email: 'mahasiswa@fmipa.ac.id', password: 'mhs123' }));
-  }
-};
+    if (role === 'admin') {
+      setForm(f => ({ ...f, email: 'admin@fmipa.ac.id', password: 'admin123' }));
+    } else if (role === 'petugas') {
+      setForm(f => ({ ...f, email: 'petugas@fmipa.ac.id', password: 'petugas123' }));
+    } else if (role === 'mahasiswa') {
+      setForm(f => ({ ...f, email: 'mahasiswa@fmipa.ac.id', password: 'mhs123' }));
+    }
+  };
+
 
   return (
     <div className="login-page">
@@ -64,11 +71,13 @@ export default function LoginPage() {
         </div>
       </div>
 
+
       {/* Right Panel */}
       <div className="login-right">
         <div>
           <h2>Masuk ke Sistem<br />Admin & Petugas</h2>
           <p>Gunakan akun Administrator atau Petugas Anda untuk mengelola repositori perpustakaan digital.</p>
+
 
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: 8 }}>
@@ -85,6 +94,7 @@ export default function LoginPage() {
                 />
               </div>
             </div>
+
 
             <div style={{ marginBottom: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
@@ -104,6 +114,7 @@ export default function LoginPage() {
               </div>
             </div>
 
+
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
               <input
                 type="checkbox"
@@ -115,16 +126,19 @@ export default function LoginPage() {
               <label htmlFor="remember" style={{ fontSize: 13, color: 'var(--gray-text)', cursor: 'pointer' }}>Ingat info login</label>
             </div>
 
+
             {error && (
               <div style={{ background: 'rgba(183,28,28,0.1)', color: 'var(--danger)', padding: '10px 12px', borderRadius: 6, fontSize: 13, marginBottom: 16 }}>
                 {error}
               </div>
             )}
 
+
             <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%', justifyContent: 'center' }} disabled={loading}>
               {loading ? 'Memproses...' : 'Masuk ke Sistem'}
             </button>
           </form>
+
 
           {/* Demo shortcuts */}
           <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
@@ -134,20 +148,20 @@ export default function LoginPage() {
           </div>
         </div>
 
-{/* Tambahkan ini setelah demo shortcut buttons */}
-<div style={{ textAlign: 'center', marginTop: 20, fontSize: 13, color: 'var(--gray-text)' }}>
-  Belum punya akun?{' '}
-  <a
-    href="#"
-    onClick={(e) => {
-      e.preventDefault();
-      navigate('/register');
-    }}
-    style={{ color: 'var(--maroon)', fontWeight: 600, textDecoration: 'none' }}
-  >
-    Daftar di sini
-  </a>
-</div>
+
+        <div style={{ textAlign: 'center', marginTop: 20, fontSize: 13, color: 'var(--gray-text)' }}>
+          Belum punya akun?{' '}
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate('/register');
+            }}
+            style={{ color: 'var(--maroon)', fontWeight: 600, textDecoration: 'none' }}
+          >
+            Daftar di sini
+          </a>
+        </div>
         <div>
           <div className="login-footer-cards">
             <div className="login-feature-card">
@@ -173,3 +187,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

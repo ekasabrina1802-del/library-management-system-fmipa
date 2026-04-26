@@ -11,24 +11,25 @@ export default function RegisterPage() {
   const { register } = useAuth();
   const navigate = useNavigate();
 
- const handleSubmit = (e) => {
-  e.preventDefault();
-  setError('');
+  // (tambahan baru, setTiemout dihapus, soalnya udah nyambung ke database)
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
 
-  if (form.password !== form.confirm) {
-    setError('Konfirmasi kata sandi tidak cocok.');
-    return;
-  }
+    if (form.password !== form.confirm) {
+      setError('Konfirmasi kata sandi tidak cocok.');
+      return;
+    }
 
-  if (form.password.length < 6) {
-    setError('Kata sandi minimal 6 karakter.');
-    return;
-  }
+    if (form.password.length < 6) {
+      setError('Kata sandi minimal 6 karakter.');
+      return;
+    }
 
-  setLoading(true);
+    setLoading(true);
 
-  setTimeout(() => {
-    const result = register(form.email, form.password, form.name);
+    // ⬇️ sekarang nunggu response backend
+    const result = await register(form.email, form.password, form.name);
 
     if (result.success) {
       navigate('/');
@@ -37,12 +38,11 @@ export default function RegisterPage() {
     }
 
     setLoading(false);
-  }, 600);
-};
+  };
 
   return (
     <div className="login-page">
-      {/* Left Panel — sama persis dengan LoginPage */}
+      {/* Left Panel */}
       <div className="login-left">
         <div>
           <div className="login-tag">The Precise Curator</div>
@@ -66,11 +66,9 @@ export default function RegisterPage() {
           <p>Isi data di bawah untuk mendaftarkan akun mahasiswa FMIPA kamu.</p>
 
           <form onSubmit={handleSubmit}>
-            {/* Nama Lengkap */}
+            {/* Nama */}
             <div style={{ marginBottom: 8 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', marginBottom: 6, textTransform: 'uppercase', color: 'var(--navy)' }}>
-                Nama Lengkap
-              </div>
+              <div className="label">Nama Lengkap</div>
               <div className="login-input-wrap">
                 <User size={15} />
                 <input
@@ -86,9 +84,7 @@ export default function RegisterPage() {
 
             {/* Email */}
             <div style={{ marginBottom: 8 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', marginBottom: 6, textTransform: 'uppercase', color: 'var(--navy)' }}>
-                Email
-              </div>
+              <div className="label">Email</div>
               <div className="login-input-wrap">
                 <Mail size={15} />
                 <input
@@ -104,9 +100,7 @@ export default function RegisterPage() {
 
             {/* Password */}
             <div style={{ marginBottom: 8 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', marginBottom: 6, textTransform: 'uppercase', color: 'var(--navy)' }}>
-                Kata Sandi
-              </div>
+              <div className="label">Kata Sandi</div>
               <div className="login-input-wrap">
                 <Lock size={15} />
                 <input
@@ -117,21 +111,15 @@ export default function RegisterPage() {
                   onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
                   required
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPass(s => !s)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-text)', padding: 0, display: 'flex', alignItems: 'center' }}
-                >
+                <button type="button" onClick={() => setShowPass(s => !s)}>
                   {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
             </div>
 
-            {/* Konfirmasi Password */}
+            {/* Confirm */}
             <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', marginBottom: 6, textTransform: 'uppercase', color: 'var(--navy)' }}>
-                Konfirmasi Kata Sandi
-              </div>
+              <div className="label">Konfirmasi Kata Sandi</div>
               <div className="login-input-wrap">
                 <Lock size={15} />
                 <input
@@ -145,8 +133,16 @@ export default function RegisterPage() {
               </div>
             </div>
 
+            {/* ERROR MESSAGE */}
             {error && (
-              <div style={{ background: 'rgba(183,28,28,0.1)', color: 'var(--danger)', padding: '10px 12px', borderRadius: 6, fontSize: 13, marginBottom: 16 }}>
+              <div style={{
+                background: 'rgba(183,28,28,0.1)',
+                color: 'var(--danger)',
+                padding: '10px 12px',
+                borderRadius: 6,
+                fontSize: 13,
+                marginBottom: 16
+              }}>
                 {error}
               </div>
             )}
@@ -154,52 +150,42 @@ export default function RegisterPage() {
             <button
               type="submit"
               className="btn btn-primary btn-lg"
-              style={{ width: '100%', justifyContent: 'center' }}
+              style={{ width: '100%' }}
               disabled={loading}
             >
               {loading ? 'Mendaftarkan...' : 'Buat Akun'}
             </button>
           </form>
 
-          {/* Link balik ke login */}
-          <div style={{ textAlign: 'center', marginTop: 20, fontSize: 13, color: 'var(--gray-text)' }}>
+          {/* Link login */}
+          <div style={{ textAlign: 'center', marginTop: 20 }}>
             Sudah punya akun?{' '}
-            <a
-            href="#"
-            onClick={(e) => {
-                e.preventDefault();
-                navigate('/');
-            }}
-            style={{
-                color: 'var(--maroon)',
-                fontWeight: 600,
-                textDecoration: 'none'
-            }}
-            >
-            Masuk di sini
+            <a href="#" onClick={(e) => {
+              e.preventDefault();
+              navigate('/');
+            }}>
+              Masuk di sini
             </a>
           </div>
         </div>
 
+        {/* Footer */}
         <div>
           <div className="login-footer-cards">
             <div className="login-feature-card">
               <BookOpen size={18} />
               <div>
-                <div className="card-label">Katalog</div>
-                <div className="card-value">24k+ Literatur</div>
+                <div>Katalog</div>
+                <div>24k+ Literatur</div>
               </div>
             </div>
             <div className="login-feature-card">
               <FlaskConical size={18} />
               <div>
-                <div className="card-label">Riset</div>
-                <div className="card-value">Jurnal FMIPA</div>
+                <div>Riset</div>
+                <div>Jurnal FMIPA</div>
               </div>
             </div>
-          </div>
-          <div style={{ textAlign: 'center', marginTop: 24, fontSize: 11, color: 'var(--gray-text)', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-            © 2026 FMIPA UNESA — Library Management System Developed by Team 10
           </div>
         </div>
       </div>
