@@ -4,11 +4,16 @@ import LoginPage from "./pages/login";
 import DashboardPage from "./pages/Dashboardpage";
 import BukuPage from "./pages/Bukupage";
 import AnggotaPage from "./pages/Anggotapage";
-import PeminjamanPage from "./pages/Peminjamanpage";
-import PengembalianPage from "./pages/Pengembalianpage";
+import PetugasPeminjamanPage from "./pages/PetugasPeminjamanPage";
+import PetugasPengembalianPage from "./pages/PetugasPengembalianPage";
+import AdminPeminjamanPage from './pages/AdminPeminjamanPage';
+import AdminPengembalianPage from './pages/AdminPengembalianPage';
+import UserPeminjamanPage from './pages/UserPeminjamanPage';
+import UserPengembalianPage from './pages/UserPengembalianPage';
 import DendaPage from "./pages/Dendapage";
 import MahasiswaPage from "./pages/Mahasiswapage";
 import RegisterPage from "./pages/Register";
+
 
 import Layout from "./components/Layout";
 
@@ -54,7 +59,7 @@ function App() {
         path="/peminjaman"
         element={
           <Layout>
-            <PeminjamanPage />
+            <PetugasPeminjamanPage />
           </Layout>
         }
       />
@@ -63,7 +68,43 @@ function App() {
         path="/pengembalian"
         element={
           <Layout>
-            <PengembalianPage />
+            <PetugasPengembalianPage />
+          </Layout>
+        }
+      />
+
+      <Route 
+        path="/admin/peminjaman" 
+        element={
+          <Layout>
+            <AdminPeminjamanPage />
+          </Layout>
+        } 
+      />
+
+     <Route 
+        path="/admin/pengembalian" 
+        element={
+          <Layout>
+            <AdminPengembalianPage />
+          </Layout>
+        } 
+      />
+
+      <Route
+        path="/user/peminjaman"
+        element={
+          <Layout>
+            <UserPeminjamanPage />
+          </Layout>
+        }
+      />
+
+      <Route
+        path="/user/pengembalian"
+        element={
+          <Layout>
+            <UserPengembalianPage />
           </Layout>
         }
       />

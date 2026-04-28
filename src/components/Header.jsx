@@ -9,31 +9,21 @@ export default function Header() {
       <div className="header-brand">
         <span className="lib-name">Perpustakaan FMIPA</span>
         <nav className="header-nav">
-          <a href="#">Katalog</a>
-          <a href="#">E-Resources</a>
         </nav>
       </div>
-      <div className="header-search">
-        <Search size={14} />
-        <span>Cari Koleksi…</span>
-      </div>
+
       <div className="header-actions">
-        <button className="header-icon-btn notif-btn">
-          <Bell size={16} />
-          <span className="notif-dot" />
-        </button>
-        <button className="header-icon-btn">
-          <Settings size={16} />
-        </button>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+
+<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+  <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--navy)' }}>
+    {user?.name || 'User'}
+  </span>
+
   <div className="avatar">
     {user?.avatar}
   </div>
-  <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--navy)' }}>
-    {user?.name || 'User'}
-  </span>
 </div>
-      </div>
+</div>
     </header>
   );
 }
