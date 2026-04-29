@@ -3,27 +3,56 @@ import { Plus, Pencil, Trash2, X, Check, Search, Filter } from 'lucide-react';
 import { useApp } from '../components/AppContext';
 import { useAuth } from '../components/AuthContext';
 
-const DISCIPLINES = ['All Disciplines', 'Mathematics', 'Physics', 'Chemistry', 'Biology'];
+const CATEGORIES = ['All Categories', 'Mathematics', 'Physics', 'Chemistry', 'Biology'];
 const COVER_COLORS = { MTK: '#7B1C1C', FIS: '#0D1B2A', KIM: '#1B5E20', BIO: '#1A237E' };
 
-function BookCover({ code, title }) {
-  const prefix = code?.split('-')[0] || 'BK';
+function BookCover({ no_klasifikasi, title }) {
+  const kode = no_klasifikasi?.split('/')[0]; // ambil 510, 530, dll
+
+  const map = {
+    '510': 'MTK',
+    '530': 'FIS',
+    '540': 'KIM',
+    '570': 'BIO'
+  };
+
+  const prefix = map[kode] || 'BK';
+
   return (
     <div style={{
-      width: 44, height: 58, borderRadius: 4, flexShrink: 0,
+      width: 44,
+      height: 58,
+      borderRadius: 4,
+      flexShrink: 0,
       background: COVER_COLORS[prefix] || '#555',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      color: 'white', fontSize: 9, fontWeight: 700, textAlign: 'center', padding: 3
-    }}>{prefix}</div>
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: 'white',
+      fontSize: 9,
+      fontWeight: 700,
+      textAlign: 'center',
+      padding: 3
+    }}>
+      {prefix}
+    </div>
   );
 }
 
 function BookModal({ book, onSave, onClose }) {
   const isEdit = !!book?.id;
-  const [form, setForm] = useState(book || {
-    code: '', title: '', author: '', publisher: '', year: new Date().getFullYear(),
-    isbn: '', discipline: 'Mathematics', stock: 1, description: ''
-  });
+  const [form, setForm] = useState({
+  no_induk: book?.no_induk || '',
+  no_klasifikasi: book?.no_klasifikasi || '',
+  title: book?.title || '',
+  author: book?.author || '',
+  publisher: book?.publisher || '',
+  year: book?.year || new Date().getFullYear(),
+  isbn: book?.isbn || '',
+  category: book?.category || 'Mathematics',
+  stock: book?.stock || 1,
+  description: book?.description || ''
+});
 
   const handleSubmit = (e) => { e.preventDefault(); onSave(form); };
   const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
@@ -38,14 +67,18 @@ function BookModal({ book, onSave, onClose }) {
         <form onSubmit={handleSubmit}>
           <div className="grid-2">
             <div className="form-group">
-              <label className="form-label">Kode Buku *</label>
-              <input className="form-control" value={form.code} onChange={f('code')} placeholder="MTK-001" required />
+              <label className="form-label">No. Induk *</label>
+              <input className="form-control" value={form.no_induk} onChange={f('no_induk')} placeholder="00009/FMIPA/2025" required />
             </div>
             <div className="form-group">
-              <label className="form-label">Disiplin</label>
-              <select className="form-control" value={form.discipline} onChange={f('discipline')}>
-                {DISCIPLINES.slice(1).map(d => <option key={d}>{d}</option>)}
-              </select>
+              <label className="form-label">No. Klasifikasi *</label>
+              <input className="form-control" value={form.no_klasifikasi} onChange={f('no_klasifikasi')} placeholder="541/SHI/d" required />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Kategori</label>
+              <select className="form-control" value={form.category} onChange={f('category')}>
+              {CATEGORIES.slice(1).map(c => <option key={c}>{c}</option>)}
+            </select>
             </div>
           </div>
           <div className="form-group">
@@ -94,8 +127,9 @@ function BookModal({ book, onSave, onClose }) {
 
 export default function BukuPage() {
   const { books, addBook, updateBook, deleteBook } = useApp();
+  console.log(books);
   const { user } = useAuth();
-  const [filter, setFilter] = useState('All Disciplines');
+  const [filter, setFilter] = useState('All Categories');
   const [search, setSearch] = useState('');
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [modal, setModal] = useState(null); // null | {mode:'add'|'edit', book?}
@@ -103,9 +137,10 @@ export default function BukuPage() {
   const [selected, setSelected] = useState([]);
 
   const filtered = books.filter(b => {
-    const matchDis = filter === 'All Disciplines' || b.discipline === filter;
+    const matchDis = filter === 'All Categories' || b.category === filter;
     const matchSearch = !search || b.title.toLowerCase().includes(search.toLowerCase()) ||
-      b.author.toLowerCase().includes(search.toLowerCase()) || b.code.toLowerCase().includes(search.toLowerCase());
+      b.author.toLowerCase().includes(search.toLowerCase()) || b.no_induk?.toLowerCase().includes(search.toLowerCase()) ||
+b.no_klasifikasi?.toLowerCase().includes(search.toLowerCase())
     return matchDis && matchSearch;
   }).slice(0, rowsPerPage);
 
@@ -171,7 +206,7 @@ export default function BukuPage() {
         {/* Toolbar */}
         <div className="flex-between mb-16" style={{ flexWrap: 'wrap', gap: 10 }}>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {user?.role === 'admin' && (
+            {user?.role === 'petugas' && (
               <>
                 <button className="btn btn-primary btn-sm" onClick={() => setModal({ mode: 'add' })}>
                   <Plus size={14} /> Add New Book
@@ -194,7 +229,7 @@ export default function BukuPage() {
               <input className="form-control" style={{ paddingLeft: 30, width: 200 }} placeholder="Cari buku..." value={search} onChange={e => setSearch(e.target.value)} />
             </div>
             <select className="form-control" style={{ width: 170 }} value={filter} onChange={e => setFilter(e.target.value)}>
-              {DISCIPLINES.map(d => <option key={d}>{d}</option>)}
+              {CATEGORIES.map(c => <option key={c}>{c}</option>)}
             </select>
             <select className="form-control" style={{ width: 130 }} value={rowsPerPage} onChange={e => setRowsPerPage(Number(e.target.value))}>
               <option value={10}>10 per halaman</option>
@@ -210,10 +245,11 @@ export default function BukuPage() {
               <tr>
                 {deleteMode && <th style={{ width: 40 }}></th>}
                 <th>Cover</th>
-                <th>Kode</th>
+                <th>No. Induk</th>
+                <th>No. Klasifikasi</th>
                 <th>Judul Buku</th>
                 <th>Penulis</th>
-                <th>Disiplin</th>
+                <th>Kategori</th>
                 <th>Tahun</th>
                 <th>Stok</th>
                 <th>Tersedia</th>
@@ -222,28 +258,94 @@ export default function BukuPage() {
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan={10} style={{ textAlign: 'center', padding: 40, color: 'var(--gray-text)' }}>Tidak ada buku ditemukan</td></tr>
-              ) : filtered.map(b => (
-                <tr key={b.id} style={{ background: selected.includes(b.id) ? 'rgba(123,28,28,0.06)' : '' }}>
-                  {deleteMode && (
-                    <td>
-                      <input type="checkbox" checked={selected.includes(b.id)} onChange={() => toggleSelect(b.id)} style={{ accentColor: 'var(--maroon)' }} />
-                    </td>
-                  )}
-                  <td><BookCover code={b.code} title={b.title} /></td>
-                  <td><code style={{ background: 'var(--gray-light)', padding: '2px 6px', borderRadius: 4, fontSize: 11 }}>{b.code}</code></td>
-                  <td>
-                    <div style={{ fontWeight: 600, fontSize: 13 }}>{b.title}</div>
-                    <div style={{ fontSize: 11, color: 'var(--gray-text)' }}>{b.isbn}</div>
-                  </td>
-                  <td style={{ color: 'var(--gray-text)' }}>{b.author}</td>
-                  <td><span className="badge badge-info">{b.discipline}</span></td>
-                  <td>{b.year}</td>
-                  <td style={{ fontWeight: 600 }}>{b.stock}</td>
-                  <td style={{ fontWeight: 600, color: b.available === 0 ? 'var(--danger)' : 'var(--success)' }}>{b.available}</td>
-                  <td>{statusBadge(b)}</td>
-                </tr>
-              ))}
+  <tr>
+    <td colSpan={10} style={{ textAlign: 'center', padding: 40, color: 'var(--gray-text)' }}>
+      Tidak ada buku ditemukan
+    </td>
+  </tr>
+    ) : filtered.map(b => {
+      console.log("DATA B:", b);
+      return (
+      
+      <tr
+        key={b.id}
+        style={{ background: selected.includes(b.id) ? 'rgba(123,28,28,0.06)' : '' }}
+      >
+        {deleteMode && (
+          <td>
+            <input
+              type="checkbox"
+              checked={selected.includes(b.id)}
+              onChange={() => toggleSelect(b.id)}
+              style={{ accentColor: 'var(--maroon)' }}
+            />
+          </td>
+        )}
+
+        {/* COVER */}
+        <td>
+          <BookCover
+            no_klasifikasi={b.no_klasifikasi}
+            title={b.title}
+          />
+        </td>
+
+        {/* NO INDUK + KLASIFIKASI */}
+        <td>
+          <code
+            style={{
+              background: 'var(--gray-light)',
+              padding: '2px 6px',
+              borderRadius: 4,
+              fontSize: 11
+            }}
+          >
+            {b.no_induk || b.code}
+          </code>
+        </td>
+
+        <td>
+          <span style={{ fontSize: 11, color: 'var(--gray-text)' }}>
+            {b.no_klasifikasi || '-'}
+          </span>
+        </td>
+        {/* JUDUL */}
+        <td>
+          <div style={{ fontWeight: 600, fontSize: 13 }}>{b.title}</div>
+          <div style={{ fontSize: 11, color: 'var(--gray-text)' }}>{b.isbn}</div>
+        </td>
+
+        {/* PENULIS */}
+        <td style={{ color: 'var(--gray-text)' }}>{b.author}</td>
+
+        {/* KATEGORI */}
+        <td>
+          <span className="badge badge-info">
+            {b.category || b.discipline}
+          </span>
+        </td>
+
+        {/* TAHUN */}
+        <td>{b.year}</td>
+
+        {/* STOK */}
+        <td style={{ fontWeight: 600 }}>{b.stock}</td>
+
+        {/* TERSEDIA */}
+        <td
+          style={{
+            fontWeight: 600,
+            color: b.available === 0 ? 'var(--danger)' : 'var(--success)'
+          }}
+        >
+          {b.available}
+        </td>
+
+        {/* STATUS */}
+        <td>{statusBadge(b)}</td>
+      </tr>
+     );
+})}
             </tbody>
           </table>
         </div>

@@ -18,7 +18,7 @@ export function AppProvider({ children }) {
   const addBook = (book) => {
     const newBook = { ...book, id: `B${String(books.length + 1).padStart(3, '0')}`, available: book.stock };
     setBooks(prev => [...prev, newBook]);
-    addLog('Penambahan Buku', `Buku baru: "${book.title}" (${book.code})`, 'book');
+    addLog('Penambahan Buku', `Buku baru: "${book.title}" (${book.no_induk})`, 'book');
   };
 
   const updateBook = (id, updates) => {
@@ -43,7 +43,7 @@ export function AppProvider({ children }) {
   };
 
   const addLoan = (bookCode, memberId) => {
-    const book = books.find(b => b.code === bookCode);
+    const book = books.find(b => b.no_induk === bookCode);
     const member = members.find(m => m.id === memberId);
     if (!book || !member) return { success: false, message: 'Kode buku atau ID anggota tidak ditemukan.' };
     if (book.available === 0) return { success: false, message: 'Buku tidak tersedia.' };
@@ -54,14 +54,14 @@ export function AppProvider({ children }) {
 
     const newLoan = {
       id: `L${String(loans.length + 1).padStart(3, '0')}`,
-      bookCode: book.code, bookTitle: book.title,
+      bookCode: book.no_induk, bookTitle: book.title,
       memberId: member.id, memberName: member.name, memberType: member.type,
       loanDate: today.toISOString().split('T')[0],
       dueDate: due.toISOString().split('T')[0],
       returnDate: null, status: 'dipinjam', denda: 0
     };
     setLoans(prev => [...prev, newLoan]);
-    setBooks(prev => prev.map(b => b.code === bookCode ? { ...b, available: b.available - 1 } : b));
+    setBooks(prev => prev.map(b => b.no_induk === bookCode ? { ...b, available: b.available - 1 } : b));
     addLog('Peminjaman Buku', `${member.name} meminjam "${book.title}"`, 'loan');
     return { success: true, loan: newLoan };
   };

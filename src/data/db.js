@@ -21,16 +21,16 @@ export const USERS = [
 ];
 
 export const BOOKS = [
-  { id: 'B001', code: 'MTK-001', title: 'Kalkulus Lanjutan', author: 'James Stewart', publisher: 'Erlangga', year: 2022, isbn: '978-0-538-49781-7', discipline: 'Mathematics', stock: 5, available: 3, cover: 'MTK', description: 'Buku kalkulus komprehensif untuk mahasiswa sains dan teknik.' },
-  { id: 'B002', code: 'FIS-001', title: 'Fisika Universitas', author: 'Hugh D. Young', publisher: 'Pearson', year: 2021, isbn: '978-0-13-411513-0', discipline: 'Physics', stock: 4, available: 2, cover: 'FIS', description: 'Fisika dasar dan lanjutan untuk program universitas.' },
-  { id: 'B003', code: 'KIM-001', title: 'Kimia Organik', author: 'Paula Yurkanis Bruice', publisher: 'Pearson', year: 2020, isbn: '978-0-13-400767-5', discipline: 'Chemistry', stock: 3, available: 3, cover: 'KIM', description: 'Kimia organik lengkap dengan mekanisme reaksi.' },
-  { id: 'B004', code: 'BIO-001', title: 'Biologi Sel', author: 'Bruce Alberts', publisher: 'W.W. Norton', year: 2022, isbn: '978-0-393-88410-6', discipline: 'Biology', stock: 6, available: 4, cover: 'BIO', description: 'Pengantar komprehensif biologi molekuler dan sel.' },
-  { id: 'B005', code: 'MTK-002', title: 'Aljabar Linear', author: 'Gilbert Strang', publisher: 'Wellesley', year: 2019, isbn: '978-0-9802327-7-6', discipline: 'Mathematics', stock: 4, available: 1, cover: 'MTK', description: 'Aljabar linear dan aplikasinya dalam berbagai bidang.' },
-  { id: 'B006', code: 'FIS-002', title: 'Mekanika Kuantum', author: 'David Griffiths', publisher: 'Cambridge', year: 2021, isbn: '978-1-107-18963-8', discipline: 'Physics', stock: 2, available: 0, cover: 'FIS', description: 'Pengantar mekanika kuantum untuk fisikawan.' },
-  { id: 'B007', code: 'KIM-002', title: 'Kimia Analitik', author: 'Daniel Harris', publisher: 'Freeman', year: 2022, isbn: '978-1-319-35791-0', discipline: 'Chemistry', stock: 5, available: 3, cover: 'KIM', description: 'Teknik dan metode kimia analitik modern.' },
-  { id: 'B008', code: 'MTK-003', title: 'Statistika Matematika', author: 'Walpole & Myers', publisher: 'Pearson', year: 2020, isbn: '978-0-13-461827-1', discipline: 'Mathematics', stock: 3, available: 2, cover: 'MTK', description: 'Probabilitas dan statistika untuk sains dan teknik.' },
-  { id: 'B009', code: 'BIO-002', title: 'Ekologi', author: 'Robert Ricklefs', publisher: 'Freeman', year: 2021, isbn: '978-1-319-32209-5', discipline: 'Biology', stock: 4, available: 4, cover: 'BIO', description: 'Prinsip-prinsip ekologi dan lingkungan.' },
-  { id: 'B010', code: 'FIS-003', title: 'Optika Modern', author: 'Eugene Hecht', publisher: 'Pearson', year: 2022, isbn: '978-0-13-397024-3', discipline: 'Physics', stock: 3, available: 2, cover: 'FIS', description: 'Optika fisik dan geometri untuk fisikawan.' },
+  { id: 'B001', no_induk: '00009/FMIPA/2025', no_klasifikasi: '510/STE/k', title: 'Kalkulus Lanjutan', author: 'James Stewart', publisher: 'Erlangga', year: 2022, isbn: '978-0-538-49781-7', category: 'Mathematics', stock: 5, available: 3, cover: 'MTK' },
+  { id: 'B002', no_induk: '00010/FMIPA/2025', no_klasifikasi: '530/YOU/f', title: 'Fisika Universitas', author: 'Hugh D. Young', publisher: 'Pearson', year: 2021, isbn: '978-0-13-411513-0', category: 'Physics', stock: 4, available: 2, cover: 'FIS' },
+  { id: 'B003', no_induk: '00011/FMIPA/2025', no_klasifikasi: '540/BRU/k', title: 'Kimia Organik', author: 'Paula Yurkanis Bruice', publisher: 'Pearson', year: 2020, isbn: '978-0-13-400767-5', category: 'Chemistry', stock: 3, available: 3, cover: 'KIM' },
+  { id: 'B004', no_induk: '00012/FMIPA/2025', no_klasifikasi: '570/ALB/b', title: 'Biologi Sel', author: 'Bruce Alberts', publisher: 'W.W. Norton', year: 2022, isbn: '978-0-393-88410-6', category: 'Biology', stock: 6, available: 4, cover: 'BIO' },
+  { id: 'B005', no_induk: '00013/FMIPA/2025', no_klasifikasi: '512/STR/a', title: 'Aljabar Linear', author: 'Gilbert Strang', publisher: 'Wellesley', year: 2019, isbn: '978-0-9802327-7-6', category: 'Mathematics', stock: 4, available: 1, cover: 'MTK' },
+  { id: 'B006', no_induk: '00014/FMIPA/2025', no_klasifikasi: '530/GRI/m', title: 'Mekanika Kuantum', author: 'David Griffiths', publisher: 'Cambridge', year: 2021, isbn: '978-1-107-18963-8', category: 'Physics', stock: 2, available: 0, cover: 'FIS' },
+  { id: 'B007', no_induk: '00015/FMIPA/2025', no_klasifikasi: '543/HAR/k', title: 'Kimia Analitik', author: 'Daniel Harris', publisher: 'Freeman', year: 2022, isbn: '978-1-319-35791-0', category: 'Chemistry', stock: 5, available: 3, cover: 'KIM' },
+  { id: 'B008', no_induk: '00016/FMIPA/2025', no_klasifikasi: '519/WAL/s', title: 'Statistika Matematika', author: 'Walpole & Myers', publisher: 'Pearson', year: 2020, isbn: '978-0-13-461827-1', category: 'Mathematics', stock: 3, available: 2, cover: 'MTK' },
+  { id: 'B009', no_induk: '00017/FMIPA/2025', no_klasifikasi: '577/RIC/e', title: 'Ekologi', author: 'Robert Ricklefs', publisher: 'Freeman', year: 2021, isbn: '978-1-319-32209-5', category: 'Biology', stock: 4, available: 4, cover: 'BIO' },
+  { id: 'B010', no_induk: '00018/FMIPA/2025', no_klasifikasi: '535/HEC/o', title: 'Optika Modern', author: 'Eugene Hecht', publisher: 'Pearson', year: 2022, isbn: '978-0-13-397024-3', category: 'Physics', stock: 3, available: 2, cover: 'FIS' },
 ];
 
 export const MEMBERS = [
@@ -47,14 +47,14 @@ export const MEMBERS = [
 ];
 
 export const LOANS = [
-  { id: 'L001', bookCode: 'MTK-001', bookTitle: 'Kalkulus Lanjutan', memberId: 'M001', memberName: 'Siti Rahayu', memberType: 'mahasiswa', loanDate: '2025-04-01', dueDate: '2025-04-15', returnDate: null, status: 'dipinjam', denda: 0 },
-  { id: 'L002', bookCode: 'FIS-001', bookTitle: 'Fisika Universitas', memberId: 'M002', memberName: 'Dr. Ahmad Fauzi', memberType: 'dosen', loanDate: '2025-03-20', dueDate: '2025-04-20', returnDate: null, status: 'dipinjam', denda: 0 },
-  { id: 'L003', bookCode: 'FIS-002', bookTitle: 'Mekanika Kuantum', memberId: 'M007', memberName: 'Nur Azizah', memberType: 'mahasiswa', loanDate: '2025-03-10', dueDate: '2025-03-24', returnDate: null, status: 'terlambat', denda: 30000 },
-  { id: 'L004', bookCode: 'MTK-002', bookTitle: 'Aljabar Linear', memberId: 'M003', memberName: 'Budi Prasetyo', memberType: 'mahasiswa', loanDate: '2025-03-15', dueDate: '2025-03-29', returnDate: null, status: 'terlambat', denda: 25000 },
-  { id: 'L005', bookCode: 'KIM-001', bookTitle: 'Kimia Organik', memberId: 'M005', memberName: 'Prof. Rina Susanti', memberType: 'dosen', loanDate: '2025-04-10', dueDate: '2025-04-25', returnDate: '2025-04-20', status: 'dikembalikan', denda: 0 },
-  { id: 'L006', bookCode: 'BIO-001', bookTitle: 'Biologi Sel', memberId: 'M004', memberName: 'Dewi Anggraini', memberType: 'mahasiswa', loanDate: '2025-04-05', dueDate: '2025-04-19', returnDate: '2025-04-18', status: 'dikembalikan', denda: 0 },
-  { id: 'L007', bookCode: 'MTK-003', bookTitle: 'Statistika Matematika', memberId: 'M006', memberName: 'Fajar Nugroho', memberType: 'mahasiswa', loanDate: '2025-04-15', dueDate: '2025-04-29', returnDate: null, status: 'dipinjam', denda: 0 },
-  { id: 'L008', bookCode: 'FIS-003', bookTitle: 'Optika Modern', memberId: 'M009', memberName: 'Dr. Hendra Kusuma', memberType: 'dosen', loanDate: '2025-04-02', dueDate: '2025-04-16', returnDate: null, status: 'terlambat', denda: 8000 },
+  { id: 'L001', bookCode: '00009/FMIPA/2025', bookTitle: 'Kalkulus Lanjutan', memberId: 'M001', memberName: 'Siti Rahayu', memberType: 'mahasiswa', loanDate: '2025-04-01', dueDate: '2025-04-15', returnDate: null, status: 'dipinjam', denda: 0 },
+  { id: 'L002', bookCode: '00010/FMIPA/2025', bookTitle: 'Fisika Universitas', memberId: 'M002', memberName: 'Dr. Ahmad Fauzi', memberType: 'dosen', loanDate: '2025-03-20', dueDate: '2025-04-20', returnDate: null, status: 'dipinjam', denda: 0 },
+  { id: 'L003', bookCode: '00011/FMIPA/2025', bookTitle: 'Mekanika Kuantum', memberId: 'M007', memberName: 'Nur Azizah', memberType: 'mahasiswa', loanDate: '2025-03-10', dueDate: '2025-03-24', returnDate: null, status: 'terlambat', denda: 30000 },
+  { id: 'L004', bookCode: '00012/FMIPA/2025', bookTitle: 'Aljabar Linear', memberId: 'M003', memberName: 'Budi Prasetyo', memberType: 'mahasiswa', loanDate: '2025-03-15', dueDate: '2025-03-29', returnDate: null, status: 'terlambat', denda: 25000 },
+  { id: 'L005', bookCode: '00013/FMIPA/2025', bookTitle: 'Kimia Organik', memberId: 'M005', memberName: 'Prof. Rina Susanti', memberType: 'dosen', loanDate: '2025-04-10', dueDate: '2025-04-25', returnDate: '2025-04-20', status: 'dikembalikan', denda: 0 },
+  { id: 'L006', bookCode: '00014/FMIPA/2025', bookTitle: 'Biologi Sel', memberId: 'M004', memberName: 'Dewi Anggraini', memberType: 'mahasiswa', loanDate: '2025-04-05', dueDate: '2025-04-19', returnDate: '2025-04-18', status: 'dikembalikan', denda: 0 },
+  { id: 'L007', bookCode: '00015/FMIPA/2025', bookTitle: 'Statistika Matematika', memberId: 'M006', memberName: 'Fajar Nugroho', memberType: 'mahasiswa', loanDate: '2025-04-15', dueDate: '2025-04-29', returnDate: null, status: 'dipinjam', denda: 0 },
+  { id: 'L008', bookCode: '00016/FMIPA/2025', bookTitle: 'Optika Modern', memberId: 'M009', memberName: 'Dr. Hendra Kusuma', memberType: 'dosen', loanDate: '2025-04-02', dueDate: '2025-04-16', returnDate: null, status: 'terlambat', denda: 8000 },
 ];
 
 export const MONTHLY_LOANS = [
@@ -79,10 +79,11 @@ export const DAILY_LOANS = [
 export const ACTIVITY_LOG = [
   {
     id: 1,
-    code: "MTK-001",
+    no_induk: "00009/FMIPA/2025",
+    no_klasifikasi: "541/SHI/d",
     title: "Kalkulus Lanjutan",
     author: "James Stewart",
-    discipline: "Mathematics",
+    category: "Mathematics",
     year: 2022,
     stock: 5,
     available: 3,
@@ -92,10 +93,11 @@ export const ACTIVITY_LOG = [
   },
   {
     id: 2,
-    code: "FIS-001",
+    no_induk: "000010/FMIPA/2025",
+    no_klasifikasi: "542/SHI/d",
     title: "Fisika Universitas",
     author: "Hugh D. Young",
-    discipline: "Physics",
+    category: "Physics",
     year: 2021,
     stock: 4,
     available: 2,
@@ -105,10 +107,11 @@ export const ACTIVITY_LOG = [
   },
   {
     id: 3,
-    code: "KIM-001",
+    no_induk: "000011/FMIPA/2025",
+    no_klasifikasi: "543/SHI/d",
     title: "Kimia Organik",
     author: "Paula Yurkanis Bruice",
-    discipline: "Chemistry",
+    category: "Chemistry",
     year: 2020,
     stock: 3,
     available: 3,
@@ -118,10 +121,11 @@ export const ACTIVITY_LOG = [
   },
   {
     id: 4,
-    code: "BIO-001",
+    no_induk: "000012/FMIPA/2025",
+    no_klasifikasi: "544/SHI/d",
     title: "Biologi Sel",
     author: "Bruce Alberts",
-    discipline: "Biology",
+    category: "Biology",
     year: 2019,
     stock: 2,
     available: 0,
@@ -131,10 +135,11 @@ export const ACTIVITY_LOG = [
   },
   {
     id: 5,
-    code: "FIS-002",
+    no_induk: "000013/FMIPA/2025",
+    no_klasifikasi: "545/SHI/d",
     title: "Optika Modern",
     author: "Eugene Hecht",
-    discipline: "Physics",
+    category: "Physics",
     year: 2018,
     stock: 3,
     available: 1,
@@ -144,10 +149,11 @@ export const ACTIVITY_LOG = [
   },
   {
     id: 6,
-    code: "MTK-002",
+    no_induk: "000014/FMIPA/2025",
+    no_klasifikasi: "546/SHI/d",
     title: "Aljabar Linear",
     author: "Gilbert Strang",
-    discipline: "Mathematics",
+    category: "Mathematics",
     year: 2021,
     stock: 4,
     available: 4,
