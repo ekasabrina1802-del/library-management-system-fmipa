@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext(null);
 
@@ -6,7 +6,19 @@ const AuthContext = createContext(null);
 const API_URL = import.meta.env.VITE_API_URL;
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+
+  // ✅ ambil dari localStorage
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem('user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+
+  // ✅ simpan ke localStorage setiap login
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user));
+    }
+  }, [user]);
 
   // LOGIN
   const login = async (email, password) => {
@@ -20,7 +32,7 @@ export function AuthProvider({ children }) {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        setUser(data.user);
+        setUser(data.user); // 🔥 ini sekarang persistent
         return { success: true, role: data.user.role };
       } else {
         return { success: false, message: data.message || 'Email atau password salah' };
@@ -31,7 +43,7 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // REGISTER
+  // REGISTER (biarin dulu)
   const register = async (email, password, name) => {
     try {
       const response = await fetch(`${API_URL}/api/register`, {
@@ -51,6 +63,7 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     setUser(null);
+    localStorage.removeItem('user'); // optional aman
   };
 
   return (
