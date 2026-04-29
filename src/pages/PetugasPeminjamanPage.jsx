@@ -25,18 +25,26 @@ export default function PeminjamanPage() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
 
-  const findMemberByNim = (nim) => members.find(m => m.nim === nim || m.id === nim);
+  const findMemberByNim = (nim) => members.find(m => m.nim === nim || String(m.id) === nim);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setResult(null);
+
     const member = findMemberByNim(nimInput.trim());
-    if (!member) { setError('Anggota tidak ditemukan. Periksa NIM/NIP.'); return; }
-    const res = addLoan(bookCodeInput.trim().toUpperCase(), member.id);
+
+    if (!member) {
+      setError('Anggota tidak ditemukan. Periksa NIM/NIP.');
+      return;
+    }
+
+    const res = await addLoan(bookCodeInput.trim(), member.id);
+
     if (res.success) {
-      setResult({ ...res.loan, memberFull: member });
-      setNimInput(''); setBookCodeInput('');
+      setResult({ dueDate: 'berhasil diproses', memberFull: member });
+      setNimInput('');
+      setBookCodeInput('');
     } else {
       setError(res.message);
     }
@@ -53,10 +61,10 @@ export default function PeminjamanPage() {
       </div>
 
       <div className="grid-2" style={{ gridTemplateColumns: '1fr 1.6fr', gap: 20, marginBottom: 24 }}>
-        {/* Form */}
         <div className="card">
           <div style={{ fontWeight: 700, marginBottom: 4, fontSize: 15 }}>Form Peminjaman</div>
-          <div style={{ fontSize: 12, color: 'var(--gray-text)', marginBottom: 20 }}>Masukkan identitas anggota dan kode buku yang dipinjam.</div>
+          <div style={{ fontSize: 12, color: 'var(--gray-text)', marginBottom: 20 }}>Masukkan identitas anggota dan No. Induk buku yang dipinjam.</div>
+
           <form onSubmit={handleSubmit}>
             <div className="form-group">
               <label className="form-label">Nomor Identitas (NIM/NIP)</label>
@@ -65,14 +73,15 @@ export default function PeminjamanPage() {
                 <input
                   className="form-control"
                   style={{ paddingLeft: 32 }}
-                  placeholder="Contoh: 20010001 atau M001"
+                  placeholder="Contoh: 20264"
                   value={nimInput}
                   onChange={e => setNimInput(e.target.value)}
                   required
                 />
               </div>
+
               {nimInput && (() => {
-                const m = findMemberByNim(nimInput);
+                const m = findMemberByNim(nimInput.trim());
                 return m ? (
                   <div style={{ fontSize: 12, color: 'var(--success)', marginTop: 4 }}>✓ {m.name} — {m.departemen}</div>
                 ) : (
@@ -80,21 +89,23 @@ export default function PeminjamanPage() {
                 );
               })()}
             </div>
+
             <div className="form-group">
-              <label className="form-label">Kode Unik Buku</label>
+              <label className="form-label">No. Induk Buku</label>
               <div style={{ position: 'relative' }}>
                 <Search size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--gray-text)' }} />
                 <input
                   className="form-control"
                   style={{ paddingLeft: 32 }}
-                  placeholder="Contoh: MTK-001"
+                  placeholder="Contoh: 00001/FMIPA/2026"
                   value={bookCodeInput}
                   onChange={e => setBookCodeInput(e.target.value)}
                   required
                 />
               </div>
+
               {bookCodeInput && (() => {
-                const b = books.find(b => b.code === bookCodeInput.toUpperCase());
+                const b = books.find(b => b.no_induk === bookCodeInput.trim());
                 return b ? (
                   <div style={{ fontSize: 12, color: b.available > 0 ? 'var(--success)' : 'var(--danger)', marginTop: 4 }}>
                     {b.available > 0 ? `✓ "${b.title}" — ${b.available} tersedia` : `✗ "${b.title}" — Stok habis`}
@@ -104,53 +115,67 @@ export default function PeminjamanPage() {
                 );
               })()}
             </div>
+
             {error && (
               <div style={{ background: 'rgba(183,28,28,0.08)', color: 'var(--danger)', padding: '10px 12px', borderRadius: 6, fontSize: 13, marginBottom: 12, display: 'flex', gap: 8 }}>
                 <AlertCircle size={15} style={{ flexShrink: 0, marginTop: 1 }} /> {error}
               </div>
             )}
+
             {result && (
               <div style={{ background: 'rgba(46,125,50,0.08)', color: 'var(--success)', padding: '10px 12px', borderRadius: 6, fontSize: 13, marginBottom: 12 }}>
-                ✓ Peminjaman berhasil! Jatuh tempo: {result.dueDate}
+                ✓ Peminjaman berhasil diproses!
               </div>
             )}
+
             <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
               <Plus size={14} /> Proses Peminjaman
             </button>
           </form>
 
           <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--gray-light)' }}>
-            <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 8, color: 'var(--gray-text)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Kode Buku Tersedia</div>
+            <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 8, color: 'var(--gray-text)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              No. Induk Buku Tersedia
+            </div>
+
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {books.filter(b => b.available > 0).map(b => (
-                <span key={b.code}
+                <span
+                  key={b.id}
                   style={{ fontSize: 11, padding: '2px 8px', background: 'var(--gray-light)', borderRadius: 4, cursor: 'pointer' }}
-                  onClick={() => setBookCodeInput(b.code)}
-                >{b.code}</span>
+                  onClick={() => setBookCodeInput(b.no_induk)}
+                >
+                  {b.no_induk}
+                </span>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Active loans */}
         <div className="card">
           <div className="flex-between mb-16">
             <div style={{ fontWeight: 700, fontSize: 15 }}>Daftar Pinjaman Aktif</div>
             <span className="badge badge-warning">{activeLoans.length} aktif</span>
           </div>
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 440, overflowY: 'auto' }}>
             {activeLoans.length === 0 ? (
               <div style={{ textAlign: 'center', padding: 40, color: 'var(--gray-text)' }}>Tidak ada peminjaman aktif</div>
             ) : activeLoans.map(l => {
-              const prefix = l.bookCode?.split('-')[0] || 'BK';
+              const prefix = l.bookCode?.split('/')[0] || 'BK';
+
               return (
                 <div key={l.id} className="loan-card">
-                  <div style={{ width: 44, height: 58, borderRadius: 4, background: COVER_COLORS[prefix] || '#555', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 10, fontWeight: 700, flexShrink: 0 }}>{prefix}</div>
+                  <div style={{ width: 44, height: 58, borderRadius: 4, background: COVER_COLORS[prefix] || '#555', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 10, fontWeight: 700, flexShrink: 0 }}>
+                    {prefix}
+                  </div>
+
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 2 }}>{l.bookTitle}</div>
                     <div style={{ fontSize: 11, color: 'var(--gray-text)', marginBottom: 6 }}>
                       {l.memberName} · <span className="badge badge-neutral" style={{ fontSize: 10, padding: '1px 6px' }}>{l.memberType}</span>
                     </div>
+
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                       <Clock size={11} style={{ color: 'var(--gray-text)' }} />
                       <span style={{ fontSize: 11, color: 'var(--gray-text)' }}>Pinjam: {l.loanDate}</span>

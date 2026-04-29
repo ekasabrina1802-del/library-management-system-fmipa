@@ -1,13 +1,50 @@
-import { createContext, useContext, useState } from 'react';
-import { BOOKS, MEMBERS, LOANS, ACTIVITY_LOG } from '../data/db';
+import { createContext, useContext, useState, useEffect } from 'react';
+import { ACTIVITY_LOG } from '../data/db';
 
 const AppContext = createContext(null);
+const API_URL = import.meta.env.VITE_API_URL;
 
 export function AppProvider({ children }) {
-  const [books, setBooks] = useState(BOOKS);
-  const [members, setMembers] = useState(MEMBERS);
-  const [loans, setLoans] = useState(LOANS);
+  const [books, setBooks] = useState([]);
+  const [members, setMembers] = useState([]);
+  const [loans, setLoans] = useState([]);
   const [activityLog, setActivityLog] = useState(ACTIVITY_LOG);
+
+  const fetchBooks = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/books`);
+      const data = await res.json();
+      if (data.success) setBooks(data.books);
+    } catch (err) {
+      console.error('Gagal ambil data buku:', err);
+    }
+  };
+
+  const fetchMembers = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/members`);
+      const data = await res.json();
+      if (data.success) setMembers(data.members);
+    } catch (err) {
+      console.error('Gagal ambil data anggota:', err);
+    }
+  };
+
+  const fetchLoans = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/loans`);
+      const data = await res.json();
+      if (data.success) setLoans(data.loans);
+    } catch (err) {
+      console.error('Gagal ambil data peminjaman:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchBooks();
+    fetchMembers();
+    fetchLoans();
+  }, []);
 
   const addLog = (type, desc, icon = 'info') => {
     const now = new Date();
@@ -15,87 +52,210 @@ export function AppProvider({ children }) {
     setActivityLog(prev => [{ id: Date.now(), time, type, desc, icon }, ...prev]);
   };
 
-  const addBook = (book) => {
-    const newBook = { ...book, id: `B${String(books.length + 1).padStart(3, '0')}`, available: book.stock };
-    setBooks(prev => [...prev, newBook]);
-    addLog('Penambahan Buku', `Buku baru: "${book.title}" (${book.no_induk})`, 'book');
-  };
+  const addBook = async (book) => {
+    try {
+      const res = await fetch(`${API_URL}/api/books`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(book)
+      });
 
-  const updateBook = (id, updates) => {
-    setBooks(prev => prev.map(b => b.id === id ? { ...b, ...updates } : b));
-    addLog('Edit Buku', `Buku "${updates.title}" diperbarui`, 'book');
-  };
+      const data = await res.json();
 
-  const deleteBook = (ids) => {
-    const titles = books.filter(b => ids.includes(b.id)).map(b => b.title).join(', ');
-    setBooks(prev => prev.filter(b => !ids.includes(b.id)));
-    addLog('Hapus Buku', `Buku dihapus: ${titles}`, 'delete');
-  };
+      if (data.success) {
+        await fetchBooks();
+        addLog('Tambah Buku', `Buku baru: ${book.title}`, 'book');
+        return true;
+      }
 
-  const addMember = (member) => {
-    const newMember = { ...member, id: `M${String(members.length + 1).padStart(3, '0')}`, joinDate: new Date().toISOString().split('T')[0], status: 'aktif' };
-    setMembers(prev => [...prev, newMember]);
-    addLog('Pendaftaran Anggota', `Anggota baru: ${member.name} (${member.type})`, 'member');
-  };
-
-  const updateMember = (id, updates) => {
-    setMembers(prev => prev.map(m => m.id === id ? { ...m, ...updates } : m));
-  };
-
-  const addLoan = (bookCode, memberId) => {
-    const book = books.find(b => b.no_induk === bookCode);
-    const member = members.find(m => m.id === memberId);
-    if (!book || !member) return { success: false, message: 'Kode buku atau ID anggota tidak ditemukan.' };
-    if (book.available === 0) return { success: false, message: 'Buku tidak tersedia.' };
-
-    const today = new Date();
-    const due = new Date(today);
-    due.setDate(due.getDate() + 14);
-
-    const newLoan = {
-      id: `L${String(loans.length + 1).padStart(3, '0')}`,
-      bookCode: book.no_induk, bookTitle: book.title,
-      memberId: member.id, memberName: member.name, memberType: member.type,
-      loanDate: today.toISOString().split('T')[0],
-      dueDate: due.toISOString().split('T')[0],
-      returnDate: null, status: 'dipinjam', denda: 0
-    };
-    setLoans(prev => [...prev, newLoan]);
-    setBooks(prev => prev.map(b => b.no_induk === bookCode ? { ...b, available: b.available - 1 } : b));
-    addLog('Peminjaman Buku', `${member.name} meminjam "${book.title}"`, 'loan');
-    return { success: true, loan: newLoan };
-  };
-
-  const returnBook = (bookCode) => {
-    const loan = loans.find(l => l.bookCode === bookCode && (l.status === 'dipinjam' || l.status === 'terlambat'));
-    if (!loan) return { success: false, message: 'Tidak ada peminjaman aktif untuk kode buku ini.' };
-
-    const today = new Date();
-    const dueDate = new Date(loan.dueDate);
-    let denda = 0;
-    if (today > dueDate) {
-      const days = Math.floor((today - dueDate) / (1000 * 60 * 60 * 24));
-      denda = days * 1000;
+      alert(data.message);
+      return false;
+    } catch (err) {
+      console.error('Gagal tambah buku:', err);
+      alert('Gagal menambahkan buku');
+      return false;
     }
+  };
 
-    const updated = { ...loan, returnDate: today.toISOString().split('T')[0], status: 'dikembalikan', denda };
-    setLoans(prev => prev.map(l => l.id === loan.id ? updated : l));
-    setBooks(prev => prev.map(b => b.code === bookCode ? { ...b, available: b.available + 1 } : b));
-    addLog('Pengembalian Buku', `${loan.memberName} mengembalikan "${loan.bookTitle}"${denda > 0 ? ` — Denda: Rp ${denda.toLocaleString('id-ID')}` : ''}`, 'return');
-    return { success: true, loan: updated, denda };
+  const updateBook = async (id, updates) => {
+    try {
+      const res = await fetch(`${API_URL}/api/books/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        await fetchBooks();
+        addLog('Edit Buku', `Buku ${updates.title} diperbarui`, 'book');
+        return true;
+      }
+
+      alert(data.message);
+      return false;
+    } catch (err) {
+      console.error('Gagal update buku:', err);
+      alert('Gagal mengupdate buku');
+      return false;
+    }
+  };
+
+  const deleteBook = async (ids) => {
+    try {
+      for (const id of ids) {
+        const res = await fetch(`${API_URL}/api/books/${id}`, {
+          method: 'DELETE'
+        });
+
+        const data = await res.json();
+
+        if (!data.success) {
+          alert(data.message);
+          return false;
+        }
+      }
+
+      await fetchBooks();
+      addLog('Hapus Buku', `${ids.length} buku dihapus`, 'delete');
+      return true;
+    } catch (err) {
+      console.error('Gagal hapus buku:', err);
+      alert('Gagal menghapus buku');
+      return false;
+    }
+  };
+
+  const addMember = async (member) => {
+    try {
+      const res = await fetch(`${API_URL}/api/members`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(member)
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        await fetchMembers();
+        addLog('Tambah Anggota', `Anggota baru: ${member.name}`, 'member');
+        return true;
+      }
+
+      alert(data.message);
+      return false;
+    } catch (err) {
+      console.error('Gagal tambah anggota:', err);
+      alert('Gagal menambahkan anggota');
+      return false;
+    }
+  };
+
+  const updateMember = async (id, updates) => {
+    try {
+      const res = await fetch(`${API_URL}/api/members/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        await fetchMembers();
+        addLog('Edit Anggota', `Data anggota ${updates.name} diperbarui`, 'member');
+        return true;
+      }
+
+      alert(data.message);
+      return false;
+    } catch (err) {
+      console.error('Gagal update anggota:', err);
+      alert('Gagal mengupdate anggota');
+      return false;
+    }
+  };
+
+  const addLoan = async (bookCode, memberId) => {
+    try {
+      const res = await fetch(`${API_URL}/api/loans`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookCode, memberId })
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        await fetchBooks();
+        await fetchLoans();
+        addLog('Peminjaman Buku', 'Peminjaman buku berhasil diproses', 'loan');
+        return { success: true };
+      }
+
+      return { success: false, message: data.message };
+    } catch (err) {
+      console.error('Gagal tambah peminjaman:', err);
+      return { success: false, message: 'Gagal menambahkan peminjaman' };
+    }
+  };
+
+  const returnBook = async (bookCode) => {
+    try {
+      const res = await fetch(`${API_URL}/api/loans/return/${encodeURIComponent(bookCode)}`, {
+        method: 'PUT'
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        await fetchBooks();
+        await fetchLoans();
+        addLog('Pengembalian Buku', 'Pengembalian buku berhasil diproses', 'return');
+
+        return {
+          success: true,
+          loan: { bookCode, bookTitle: '', memberName: '' },
+          denda: data.denda || 0
+        };
+      }
+
+      return { success: false, message: data.message };
+    } catch (err) {
+      console.error('Gagal pengembalian buku:', err);
+      return { success: false, message: 'Gagal memproses pengembalian' };
+    }
   };
 
   const getDendaTotal = () => {
     const thisMonth = new Date().getMonth();
-    return loans.filter(l => {
-      if (l.denda === 0) return false;
-      const d = new Date(l.returnDate || l.dueDate);
-      return d.getMonth() === thisMonth;
-    }).reduce((sum, l) => sum + l.denda, 0);
+    return loans
+      .filter(l => {
+        if (l.denda === 0) return false;
+        const d = new Date(l.returnDate || l.dueDate);
+        return d.getMonth() === thisMonth;
+      })
+      .reduce((sum, l) => sum + l.denda, 0);
   };
 
   return (
-    <AppContext.Provider value={{ books, members, loans, activityLog, addBook, updateBook, deleteBook, addMember, updateMember, addLoan, returnBook, getDendaTotal }}>
+    <AppContext.Provider
+      value={{
+        books,
+        members,
+        loans,
+        activityLog,
+        addBook,
+        updateBook,
+        deleteBook,
+        addMember,
+        updateMember,
+        addLoan,
+        returnBook,
+        getDendaTotal
+      }}
+    >
       {children}
     </AppContext.Provider>
   );

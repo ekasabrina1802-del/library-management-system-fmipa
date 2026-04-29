@@ -23,11 +23,12 @@ export default function LoginPage() {
 
 
     if (result.success) {
-      const redirectMap = {
-        admin: '/dashboard',
-        petugas: '/dashboard',
-        mahasiswa: '/mahasiswa',
-      };
+     const redirectMap = {
+  admin: '/dashboard',
+  petugas: '/dashboard',
+  mahasiswa: '/mahasiswa',
+  dosen: '/mahasiswa',
+};
 
 
       navigate(redirectMap[result.role] || '/');

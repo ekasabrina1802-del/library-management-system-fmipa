@@ -3,28 +3,48 @@ import { Plus, X, Check, Search, Printer, BookOpen, History } from 'lucide-react
 import { useApp } from '../components/AppContext';
 import { useAuth } from '../components/AuthContext';
 
-function MemberModal({ onSave, onClose }) {
-  const [form, setForm] = useState({ name: '', nim: '', departemen: '', prodi: '', type: 'mahasiswa', email: '', phone: '', address: '' });
+function MemberModal({ member, onSave, onClose }) {
+  const isEdit = !!member?.id;
+
+  const [form, setForm] = useState({
+    name: member?.name || '',
+    nim: member?.nim || '',
+    departemen: member?.departemen || '',
+    prodi: member?.prodi || '',
+    type: member?.type || 'mahasiswa',
+    email: member?.email || '',
+    phone: member?.phone || '',
+    address: member?.address || ''
+  });
+
   const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
-  const handleSubmit = (e) => { e.preventDefault(); onSave(form); };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave(form);
+  };
+
   return (
     <div className="modal-overlay">
       <div className="modal">
         <div className="modal-header">
-          <h3 className="modal-title">Tambah Anggota Baru</h3>
+          <h3 className="modal-title">{isEdit ? 'Edit Data Anggota' : 'Tambah Anggota Baru'}</h3>
           <button className="modal-close" onClick={onClose}><X size={20} /></button>
         </div>
+
         <form onSubmit={handleSubmit}>
           <div className="grid-2">
             <div className="form-group">
               <label className="form-label">Nama Lengkap *</label>
               <input className="form-control" value={form.name} onChange={f('name')} required />
             </div>
+
             <div className="form-group">
               <label className="form-label">NIM / NIP *</label>
               <input className="form-control" value={form.nim} onChange={f('nim')} required />
             </div>
           </div>
+
           <div className="form-group">
             <label className="form-label">Tipe Anggota</label>
             <select className="form-control" value={form.type} onChange={f('type')}>
@@ -33,33 +53,41 @@ function MemberModal({ onSave, onClose }) {
               <option value="staff">Staff</option>
             </select>
           </div>
+
           <div className="grid-2">
             <div className="form-group">
               <label className="form-label">Departemen</label>
               <input className="form-control" value={form.departemen} onChange={f('departemen')} />
             </div>
+
             <div className="form-group">
               <label className="form-label">Program Studi</label>
               <input className="form-control" value={form.prodi} onChange={f('prodi')} />
             </div>
           </div>
+
           <div className="form-group">
             <label className="form-label">Email</label>
             <input className="form-control" type="email" value={form.email} onChange={f('email')} />
           </div>
+
           <div className="grid-2">
             <div className="form-group">
               <label className="form-label">No. Telp</label>
               <input className="form-control" value={form.phone} onChange={f('phone')} />
             </div>
+
             <div className="form-group">
               <label className="form-label">Alamat</label>
               <input className="form-control" value={form.address} onChange={f('address')} />
             </div>
           </div>
+
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
             <button type="button" className="btn btn-ghost" onClick={onClose}>Batal</button>
-            <button type="submit" className="btn btn-primary"><Check size={14} /> Tambah Anggota</button>
+            <button type="submit" className="btn btn-primary">
+              <Check size={14} /> {isEdit ? 'Simpan Perubahan' : 'Tambah Anggota'}
+            </button>
           </div>
         </form>
       </div>
@@ -82,6 +110,7 @@ function MemberDetailModal({ member, loans, onClose, onEdit }) {
 
         <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start', marginBottom: 24 }}>
           <div className="profile-avatar-lg">{initials}</div>
+
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 18, fontWeight: 700 }}>{member.name}</div>
             <div style={{ fontSize: 13, color: 'var(--gray-text)' }}>{member.nim} · {member.prodi}</div>
@@ -91,6 +120,7 @@ function MemberDetailModal({ member, loans, onClose, onEdit }) {
               <span className="badge badge-neutral">{member.departemen}</span>
             </div>
           </div>
+
           <div style={{ display: 'flex', gap: 8 }}>
             <button className="btn btn-outline btn-sm" onClick={() => onEdit(member)}>Edit Data</button>
             <button className="btn btn-ghost btn-sm"><Printer size={13} /> Cetak Kartu</button>
@@ -102,10 +132,12 @@ function MemberDetailModal({ member, loans, onClose, onEdit }) {
             <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--maroon)' }}>{activeLoan}</div>
             <div style={{ fontSize: 11, color: 'var(--gray-text)' }}>Sedang Dipinjam</div>
           </div>
+
           <div style={{ textAlign: 'center', padding: 12, background: 'var(--off-white)', borderRadius: 8 }}>
             <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--navy)' }}>{memberLoans.filter(l => l.status === 'dikembalikan').length}</div>
             <div style={{ fontSize: 11, color: 'var(--gray-text)' }}>Sudah Kembali</div>
           </div>
+
           <div style={{ textAlign: 'center', padding: 12, background: 'var(--off-white)', borderRadius: 8 }}>
             <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--warning)' }}>{memberLoans.filter(l => l.status === 'terlambat').length}</div>
             <div style={{ fontSize: 11, color: 'var(--gray-text)' }}>Terlambat</div>
@@ -115,6 +147,7 @@ function MemberDetailModal({ member, loans, onClose, onEdit }) {
         <div style={{ fontWeight: 700, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
           <History size={16} /> Riwayat Peminjaman
         </div>
+
         <div className="table-container" style={{ maxHeight: 240, overflowY: 'auto' }}>
           <table>
             <thead>
@@ -125,16 +158,23 @@ function MemberDetailModal({ member, loans, onClose, onEdit }) {
                 <th>Status</th>
               </tr>
             </thead>
+
             <tbody>
               {memberLoans.length === 0 ? (
-                <tr><td colSpan={4} style={{ textAlign: 'center', padding: 20, color: 'var(--gray-text)' }}>Belum ada riwayat peminjaman</td></tr>
+                <tr>
+                  <td colSpan={4} style={{ textAlign: 'center', padding: 20, color: 'var(--gray-text)' }}>
+                    Belum ada riwayat peminjaman
+                  </td>
+                </tr>
               ) : memberLoans.map(l => (
                 <tr key={l.id}>
                   <td>{l.bookTitle}</td>
                   <td>{l.loanDate}</td>
                   <td>{l.returnDate || l.dueDate}</td>
                   <td>
-                    <span className={`badge ${l.status === 'dikembalikan' ? 'badge-success' : l.status === 'terlambat' ? 'badge-danger' : 'badge-warning'}`}>{l.status}</span>
+                    <span className={`badge ${l.status === 'dikembalikan' ? 'badge-success' : l.status === 'terlambat' ? 'badge-danger' : 'badge-warning'}`}>
+                      {l.status}
+                    </span>
                   </td>
                 </tr>
               ))}
@@ -147,7 +187,9 @@ function MemberDetailModal({ member, loans, onClose, onEdit }) {
             <Printer size={14} style={{ display: 'inline', marginRight: 6 }} />
             Cetak Kartu Anggota Massal
           </div>
-          <div style={{ fontSize: 12, color: 'var(--gray-text)' }}>Pilih hingga 10 anggota untuk mencetak kartu tanda anggota fisik secara massal dengan format standar perpustakaan.</div>
+          <div style={{ fontSize: 12, color: 'var(--gray-text)' }}>
+            Pilih hingga 10 anggota untuk mencetak kartu tanda anggota fisik secara massal dengan format standar perpustakaan.
+          </div>
           <button className="btn btn-outline btn-sm" style={{ marginTop: 8 }}>Cetak Kartu Anggota Ini</button>
         </div>
       </div>
@@ -158,13 +200,17 @@ function MemberDetailModal({ member, loans, onClose, onEdit }) {
 export default function AnggotaPage() {
   const { members, loans, addMember, updateMember } = useApp();
   const { user } = useAuth();
+
   const [search, setSearch] = useState('');
   const [addModal, setAddModal] = useState(false);
+  const [editMember, setEditMember] = useState(null);
   const [detailMember, setDetailMember] = useState(null);
 
   const filtered = members.filter(m =>
-    !search || m.name.toLowerCase().includes(search.toLowerCase()) ||
-    m.nim.includes(search) || m.departemen.toLowerCase().includes(search.toLowerCase())
+    !search ||
+    m.name?.toLowerCase().includes(search.toLowerCase()) ||
+    m.nim?.includes(search) ||
+    m.departemen?.toLowerCase().includes(search.toLowerCase())
   );
 
   const mahasiswa = members.filter(m => m.type === 'mahasiswa' && m.status === 'aktif').length;
@@ -177,10 +223,48 @@ export default function AnggotaPage() {
     return <span className="badge badge-neutral">Staff</span>;
   };
 
+  const handleAddMember = async (m) => {
+    await addMember(m);
+    setAddModal(false);
+  };
+
+const handleUpdateMember = async (m) => {
+  const success = await updateMember(editMember.id, m);
+
+  if (success) {
+    setEditMember(null);
+    setDetailMember(null);
+  }
+};
+
   return (
     <div>
-      {addModal && <MemberModal onSave={(m) => { addMember(m); setAddModal(false); }} onClose={() => setAddModal(false)} />}
-      {detailMember && <MemberDetailModal member={detailMember} loans={loans} onClose={() => setDetailMember(null)} onEdit={() => {}} />}
+      {addModal && (
+        <MemberModal
+          onSave={handleAddMember}
+          onClose={() => setAddModal(false)}
+        />
+      )}
+
+      {editMember && (
+        <MemberModal
+          member={editMember}
+          onSave={handleUpdateMember}
+          onClose={() => setEditMember(null)}
+        />
+      )}
+
+      {detailMember && (
+        <MemberDetailModal
+          member={detailMember}
+          loans={loans}
+          onClose={() => setDetailMember(null)}
+          onEdit={(m) => {
+            setDetailMember(null);
+            setEditMember(m);
+          }}
+        />
+      )}
 
       <div className="page-header">
         <div className="page-breadcrumb">Data Anggota</div>
@@ -196,6 +280,7 @@ export default function AnggotaPage() {
             <div className="stat-label">Mahasiswa Aktif</div>
           </div>
         </div>
+
         <div className="stat-card">
           <div className="stat-icon navy"><BookOpen size={18} /></div>
           <div>
@@ -203,6 +288,7 @@ export default function AnggotaPage() {
             <div className="stat-label">Dosen Aktif</div>
           </div>
         </div>
+
         <div className="stat-card">
           <div className="stat-icon green"><BookOpen size={18} /></div>
           <div>
@@ -217,11 +303,19 @@ export default function AnggotaPage() {
           <button className="btn btn-primary btn-sm" onClick={() => setAddModal(true)}>
             <Plus size={14} /> Tambah Anggota
           </button>
+
           <div style={{ position: 'relative' }}>
             <Search size={13} style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: 'var(--gray-text)' }} />
-            <input className="form-control" style={{ paddingLeft: 30, width: 260 }} placeholder="Cari nama, NIM/NIP, departemen..." value={search} onChange={e => setSearch(e.target.value)} />
+            <input
+              className="form-control"
+              style={{ paddingLeft: 30, width: 260 }}
+              placeholder="Cari nama, NIM/NIP, departemen..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
           </div>
         </div>
+
         <div className="table-container">
           <table>
             <thead>
@@ -235,31 +329,56 @@ export default function AnggotaPage() {
                 <th>Status</th>
               </tr>
             </thead>
+
             <tbody>
               {filtered.map(m => (
                 <tr key={m.id} style={{ cursor: 'pointer' }} onClick={() => setDetailMember(m)}>
-                  <td><code style={{ background: 'var(--gray-light)', padding: '2px 6px', borderRadius: 4, fontSize: 11 }}>{m.id}</code></td>
+                  <td>
+                    <code style={{ background: 'var(--gray-light)', padding: '2px 6px', borderRadius: 4, fontSize: 11 }}>
+                      {m.id}
+                    </code>
+                  </td>
+
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--maroon)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, flexShrink: 0 }}>
-                        {m.name.split(' ').map(w => w[0]).slice(0, 2).join('')}
+                      <div style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: '50%',
+                        background: 'var(--maroon)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 11,
+                        fontWeight: 700,
+                        flexShrink: 0
+                      }}>
+                        {m.name?.split(' ').map(w => w[0]).slice(0, 2).join('')}
                       </div>
+
                       <div>
                         <div style={{ fontWeight: 600, fontSize: 13 }}>{m.name}</div>
                         <div style={{ fontSize: 11, color: 'var(--gray-text)' }}>{m.email}</div>
                       </div>
                     </div>
                   </td>
+
                   <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{m.nim}</td>
                   <td>{m.departemen}</td>
                   <td>{typeBadge(m.type)}</td>
-                  <td style={{ color: 'var(--gray-text)' }}>{m.joinDate}</td>
-                  <td><span className={`badge ${m.status === 'aktif' ? 'badge-success' : 'badge-danger'}`}>{m.status}</span></td>
+                  <td style={{ color: 'var(--gray-text)' }}>{m.joinDate || m.created_at}</td>
+                  <td>
+                    <span className={`badge ${m.status === 'aktif' ? 'badge-success' : 'badge-danger'}`}>
+                      {m.status}
+                    </span>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+
         <div style={{ marginTop: 12, fontSize: 12, color: 'var(--gray-text)' }}>
           {filtered.length} anggota ditampilkan · Klik baris untuk melihat detail
         </div>
