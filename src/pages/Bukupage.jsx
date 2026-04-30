@@ -3,7 +3,7 @@ import { Plus, Pencil, Trash2, X, Check, Search, Filter } from 'lucide-react';
 import { useApp } from '../components/AppContext';
 import { useAuth } from '../components/AuthContext';
 
-const CATEGORIES = ['All Categories', 'Mathematics', 'Physics', 'Chemistry', 'Biology'];
+const CATEGORIES = ['Semua Kategori', 'Matematika', 'Fisika', 'Kimia', 'Biologi'];
 const COVER_COLORS = { MTK: '#7B1C1C', FIS: '#0D1B2A', KIM: '#1B5E20', BIO: '#1A237E' };
 
 function BookCover({ no_klasifikasi }) {
@@ -51,11 +51,35 @@ function BookModal({ book, onSave, onClose }) {
     isbn: book?.isbn || '',
     category: book?.category || 'Mathematics',
     stock: book?.stock || 1,
-    description: book?.description || ''
+    description: book?.description || '',
+    image: book?.image || null
   });
 
   const handleSubmit = (e) => {
-    e.preventDefault();
+  e.preventDefault();
+
+  // validasi semua field
+  const requiredFields = [
+    'no_induk',
+    'no_klasifikasi',
+    'title',
+    'author',
+    'publisher',
+    'year',
+    'isbn',
+    'category',
+    'stock',
+    'description',
+    'image'
+  ];
+
+    for (let field of requiredFields) {
+      if (!form[field] || form[field] === '') {
+        alert(`Field ${field} wajib diisi!`);
+        return;
+      }
+    }
+
     onSave(form);
   };
 
@@ -63,7 +87,7 @@ function BookModal({ book, onSave, onClose }) {
 
   return (
     <div className="modal-overlay">
-      <div className="modal" style={{ maxWidth: 640 }}>
+      <div className="modal" style={{ maxWidth: 900, width: '90%' }}>
         <div className="modal-header">
           <h3 className="modal-title">{isEdit ? 'Edit Buku' : 'Tambah Buku Baru'}</h3>
           <button className="modal-close" onClick={onClose}><X size={20} /></button>
@@ -82,7 +106,7 @@ function BookModal({ book, onSave, onClose }) {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Kategori</label>
+              <label className="form-label">Kategori *</label>
               <select className="form-control" value={form.category} onChange={f('category')}>
                 {CATEGORIES.slice(1).map(c => <option key={c}>{c}</option>)}
               </select>
@@ -101,30 +125,53 @@ function BookModal({ book, onSave, onClose }) {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Penerbit</label>
+              <label className="form-label">Penerbit *</label>
               <input className="form-control" value={form.publisher} onChange={f('publisher')} placeholder="Nama penerbit" />
             </div>
           </div>
 
           <div className="grid-2">
             <div className="form-group">
-              <label className="form-label">ISBN</label>
+              <label className="form-label">ISBN *</label>
               <input className="form-control" value={form.isbn} onChange={f('isbn')} placeholder="978-x-xxx-xxxxx-x" />
             </div>
 
             <div className="form-group">
-              <label className="form-label">Tahun Terbit</label>
+              <label className="form-label">Tahun Terbit *</label>
               <input className="form-control" type="number" value={form.year} onChange={f('year')} min="1900" max="2030" />
             </div>
           </div>
 
           <div className="form-group">
-            <label className="form-label">Jumlah Stok</label>
+            <label className="form-label">Jumlah Stok *</label>
             <input className="form-control" type="number" value={form.stock} onChange={f('stock')} min="1" />
           </div>
 
           <div className="form-group">
-            <label className="form-label">Deskripsi</label>
+            <label className="form-label">Foto Buku *</label>
+            <input
+              type="file"
+              className="form-control"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files[0];
+                if (file) {
+                  setForm(p => ({ ...p, image: URL.createObjectURL(file) }));
+                }
+              }}
+              required={!isEdit}
+            />
+
+            {form.image && (
+              <img
+                src={form.image}
+                alt="preview"
+                style={{ width: 80, marginTop: 8, borderRadius: 6 }}
+              />
+            )}
+          </div>
+          <div className="form-group">
+            <label className="form-label">Deskripsi *</label>
             <textarea className="form-control" value={form.description} onChange={f('description')} rows={3} placeholder="Deskripsi singkat buku..." />
           </div>
 
@@ -242,7 +289,7 @@ export default function BukuPage() {
             {user?.role === 'petugas' && (
               <>
                 <button className="btn btn-primary btn-sm" onClick={() => setModal({ mode: 'add' })}>
-                  <Plus size={14} /> Add New Book
+                  <Plus size={14} /> Tambah Buku
                 </button>
 
                 <button className="btn btn-outline btn-sm" onClick={handleEditClick}>
@@ -297,83 +344,112 @@ export default function BukuPage() {
             </thead>
 
             <tbody>
-              {filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={deleteMode ? 11 : 10} style={{ textAlign: 'center', padding: 40, color: 'var(--gray-text)' }}>
-                    Tidak ada buku ditemukan
-                  </td>
-                </tr>
-              ) : filtered.map(b => (
-                <tr
-                  key={b.id}
-                  onClick={() => {
-                    if (!deleteMode) setSelected([b.id]);
-                  }}
-                  style={{
-                    background: selected.includes(b.id) ? 'rgba(123,28,28,0.06)' : '',
-                    cursor: 'pointer'
-                  }}
+            {filtered.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={deleteMode ? 11 : 10}
+                  style={{ textAlign: 'center', padding: 40, color: 'var(--gray-text)' }}
                 >
-                  {deleteMode && (
+                  Tidak ada buku ditemukan
+                </td>
+              </tr>
+            ) : (
+              filtered.map(b => {
+                console.log(b);
+
+                return (
+                  <tr
+                    key={b.id}
+                    onClick={() => {
+                      if (!deleteMode) setSelected([b.id]);
+                    }}
+                    style={{
+                      background: selected.includes(b.id)
+                        ? 'rgba(123,28,28,0.06)'
+                        : '',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {deleteMode && (
+                      <td>
+                        <input
+                          type="checkbox"
+                          checked={selected.includes(b.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={() => toggleSelect(b.id)}
+                          style={{ accentColor: 'var(--maroon)' }}
+                        />
+                      </td>
+                    )}
+
                     <td>
-                      <input
-                        type="checkbox"
-                        checked={selected.includes(b.id)}
-                        onClick={(e) => e.stopPropagation()}
-                        onChange={() => toggleSelect(b.id)}
-                        style={{ accentColor: 'var(--maroon)' }}
-                      />
+                      {b.image_url ? (
+                        <img
+                          src={`http://localhost:3000${b.image_url}`}
+                          style={{
+                            width: 44,
+                            height: 58,
+                            objectFit: 'cover',
+                            borderRadius: 4
+                          }}
+                        />
+                      ) : (
+                        <BookCover no_klasifikasi={b.no_klasifikasi} />
+                      )}
                     </td>
-                  )}
 
-                  <td>
-                    <BookCover no_klasifikasi={b.no_klasifikasi} />
-                  </td>
+                    <td>
+                      <code
+                        style={{
+                          background: 'var(--gray-light)',
+                          padding: '2px 6px',
+                          borderRadius: 4,
+                          fontSize: 11
+                        }}
+                      >
+                        {b.no_induk || b.code}
+                      </code>
+                    </td>
 
-                  <td>
-                    <code style={{
-                      background: 'var(--gray-light)',
-                      padding: '2px 6px',
-                      borderRadius: 4,
-                      fontSize: 11
-                    }}>
-                      {b.no_induk || b.code}
-                    </code>
-                  </td>
+                    <td>
+                      <span style={{ fontSize: 11, color: 'var(--gray-text)' }}>
+                        {b.no_klasifikasi || '-'}
+                      </span>
+                    </td>
 
-                  <td>
-                    <span style={{ fontSize: 11, color: 'var(--gray-text)' }}>
-                      {b.no_klasifikasi || '-'}
-                    </span>
-                  </td>
+                    <td>
+                      <div style={{ fontWeight: 600, fontSize: 13 }}>{b.title}</div>
+                      <div style={{ fontSize: 11, color: 'var(--gray-text)' }}>
+                        {b.isbn}
+                      </div>
+                    </td>
 
-                  <td>
-                    <div style={{ fontWeight: 600, fontSize: 13 }}>{b.title}</div>
-                    <div style={{ fontSize: 11, color: 'var(--gray-text)' }}>{b.isbn}</div>
-                  </td>
+                    <td style={{ color: 'var(--gray-text)' }}>{b.author}</td>
 
-                  <td style={{ color: 'var(--gray-text)' }}>{b.author}</td>
+                    <td>
+                      <span className="badge badge-info">
+                        {b.category || b.discipline}
+                      </span>
+                    </td>
 
-                  <td>
-                    <span className="badge badge-info">
-                      {b.category || b.discipline}
-                    </span>
-                  </td>
+                    <td>{b.year}</td>
+                    <td style={{ fontWeight: 600 }}>{b.stock}</td>
 
-                  <td>{b.year}</td>
-                  <td style={{ fontWeight: 600 }}>{b.stock}</td>
+                    <td
+                      style={{
+                        fontWeight: 600,
+                        color: b.available === 0 ? 'var(--danger)' : 'var(--success)'
+                      }}
+                    >
+                      {b.available}
+                    </td>
 
-                  <td style={{
-                    fontWeight: 600,
-                    color: b.available === 0 ? 'var(--danger)' : 'var(--success)'
-                  }}>
-                    {b.available}
-                  </td>
-
-                  <td>{statusBadge(b)}</td>
-                </tr>
-              ))}
-            </tbody>
+                    <td>{statusBadge(b)}</td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
           </table>
         </div>
 

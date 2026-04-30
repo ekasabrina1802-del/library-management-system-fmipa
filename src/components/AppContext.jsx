@@ -68,54 +68,70 @@ export function AppProvider({ children }) {
   };
 
   const addBook = async (book) => {
-    try {
-      const res = await fetch(`${API_URL}/api/books`, {
-        method: 'POST',
-        headers: jsonHeaders,
-        body: JSON.stringify(book)
-      });
+      try {
+        const formData = new FormData();
 
-      const data = await res.json();
+        Object.keys(book).forEach(key => {
+          formData.append(key, book[key]);
+        });
 
-      if (data.success) {
-        await fetchBooks();
-        addLog('Tambah Buku', `Buku baru: ${book.title}`, 'book');
-        return true;
+        const res = await fetch(`${API_URL}/api/books`, {
+          method: 'POST',
+          headers: {
+            'ngrok-skip-browser-warning': 'true'
+          },
+          body: formData
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          await fetchBooks();
+          addLog('Tambah Buku', `Buku baru: ${book.title}`, 'book');
+          return true;
+        }
+
+        alert(data.message);
+        return false;
+      } catch (err) {
+        console.error('Gagal tambah buku:', err);
+        alert('Gagal menambahkan buku');
+        return false;
       }
-
-      alert(data.message);
-      return false;
-    } catch (err) {
-      console.error('Gagal tambah buku:', err);
-      alert('Gagal menambahkan buku');
-      return false;
-    }
-  };
+    };
 
   const updateBook = async (id, updates) => {
-    try {
-      const res = await fetch(`${API_URL}/api/books/${id}`, {
-        method: 'PUT',
-        headers: jsonHeaders,
-        body: JSON.stringify(updates)
-      });
+      try {
+        const formData = new FormData();
 
-      const data = await res.json();
+        Object.keys(updates).forEach(key => {
+          formData.append(key, updates[key]);
+        });
 
-      if (data.success) {
-        await fetchBooks();
-        addLog('Edit Buku', `Buku ${updates.title} diperbarui`, 'book');
-        return true;
+        const res = await fetch(`${API_URL}/api/books/${id}`, {
+          method: 'PUT',
+          headers: {
+            'ngrok-skip-browser-warning': 'true'
+          },
+          body: formData
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          await fetchBooks();
+          addLog('Edit Buku', `Buku ${updates.title} diperbarui`, 'book');
+          return true;
+        }
+
+        alert(data.message);
+        return false;
+      } catch (err) {
+        console.error('Gagal update buku:', err);
+        alert('Gagal mengupdate buku');
+        return false;
       }
-
-      alert(data.message);
-      return false;
-    } catch (err) {
-      console.error('Gagal update buku:', err);
-      alert('Gagal mengupdate buku');
-      return false;
-    }
-  };
+    };
 
   const deleteBook = async (ids) => {
     try {
