@@ -41,15 +41,27 @@ export default function LoginPage() {
   };
 
 
-  const fillDemo = (role) => {
-    if (role === 'admin') {
-      setForm(f => ({ ...f, email: 'admin@fmipa.ac.id', password: 'admin123' }));
-    } else if (role === 'petugas') {
-      setForm(f => ({ ...f, email: 'petugas@fmipa.ac.id', password: 'petugas123' }));
-    } else if (role === 'mahasiswa') {
-      setForm(f => ({ ...f, email: 'mahasiswa@fmipa.ac.id', password: 'mhs123' }));
-    }
-  };
+ const fillDemo = (role) => {
+  if (role === 'admin') {
+    setForm(f => ({
+      ...f,
+      email: 'admin@fmipa.ac.id',
+      password: 'admin123'
+    }));
+  } else if (role === 'petugas') {
+    setForm(f => ({
+      ...f,
+      email: 'siti@fmipa.ac.id', // 🔥 sesuai DB kamu
+      password: 'petugas123'
+    }));
+  } else if (role === 'mahasiswa') {
+    setForm(f => ({
+      ...f,
+      email: '24050974001@mhs.unesa.ac.id', // 🔥 sesuai DB kamu
+      password: 'mhs123'
+    }));
+  }
+};
 
 
   return (

@@ -1,23 +1,33 @@
 const express = require('express');
 const sql = require('mssql');
 const cors = require('cors');
+const multer = require('multer');
+const path = require('path');
+const bcrypt = require('bcrypt');
 require('dotenv').config();
 
 const app = express();
+
 app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'ngrok-skip-browser-warning']
 }));
 
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, ngrok-skip-browser-warning');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  next();
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = Date.now() + '-' + file.originalname.replace(/\s+/g, '-');
+    cb(null, uniqueName);
+  }
 });
 
+const upload = multer({ storage });
 // 🔹 Konfigurasi koneksi ke SQL Server
 const dbConfig = {
     user: process.env.DB_USER,
@@ -33,143 +43,149 @@ const dbConfig = {
 
 // 🔹 Route LOGIN
 app.post('/api/login', async (req, res) => {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
-    try {
-        let pool = await sql.connect(dbConfig);
-        let result = await pool.request()
-            .input('email', sql.VarChar, email)
-            .input('password', sql.VarChar, password)
-            .query(`
-                SELECT username, email, role 
-                FROM Users 
-                WHERE email = @email AND password = @password
-            `);
-
-        if (result.recordset.length > 0) {
-            const user = result.recordset[0];
-
-            // ✅ Mapping username → name (INI YANG PENTING)
-            res.json({
-                success: true,
-                user: {
-                    name: user.username,
-                    email: user.email,
-                    role: user.role,
-                    avatar: user.username.charAt(0).toUpperCase() // optional
-                }
-            });
-
-        } else {
-            res.status(401).json({
-                success: false,
-                message: 'Email atau Password salah!'
-            });
-        }
-
-    } catch (err) {
-        console.error("Database Error:", err);
-        res.status(500).json({
-            success: false,
-            message: 'Terjadi kesalahan pada server'
-        });
-    }
-});
-
-app.post('/api/register', async (req, res) => {
-    const { name, email, password } = req.body;
-
-    try {
-        let pool = await sql.connect(dbConfig);
-
-        // ✅ 1. CEK EMAIL DULU (INI HARUS DI ATAS)
-        const checkUser = await pool.request()
-            .input('email', sql.VarChar, email)
-            .query('SELECT * FROM Users WHERE email = @email');
-
-        if (checkUser.recordset.length > 0) {
-            return res.json({
-                success: false,
-                message: 'Email sudah terdaftar'
-            });
-        }
-
-        // ✅ 2. INSERT KE USERS
-        let resultUser = await pool.request()
-            .input('username', sql.VarChar, name)
-            .input('email', sql.VarChar, email)
-            .input('password', sql.VarChar, password)
-            .input('role', sql.VarChar, 'mahasiswa')
-            .query(`
-                INSERT INTO Users (username, email, password, role)
-                OUTPUT INSERTED.id
-                VALUES (@username, @email, @password, @role)
-            `);
-
-        const userId = resultUser.recordset[0].id;
-
-        // ✅ 3. INSERT KE ANGGOTA
-        await pool.request()
-            .input('user_id', sql.Int, userId)
-            .input('nama', sql.VarChar, name)
-            .input('email', sql.VarChar, email)
-            .input('jenis', sql.VarChar, 'mahasiswa')
-            .input('nim', sql.VarChar, 'AUTO' + userId)
-            .input('jurusan', sql.VarChar, null)
-            .query(`
-                INSERT INTO Anggota (user_id, nama, email, jenis, nim, jurusan)
-                VALUES (@user_id, @nama, @email, @jenis, @nim, @jurusan)
-            `);
-
-        // ✅ 4. SUCCESS
-        res.json({ success: true });
-
-    } catch (err) {
-        console.error("Register Error:", err);
-        res.status(500).json({
-            success: false,
-            message: 'Terjadi kesalahan server'
-        });
-    }
-});
-
-app.get('/api/books', async (req, res) => {
   try {
     const pool = await sql.connect(dbConfig);
 
-    const result = await pool.request().query(`
-      SELECT 
-        id,
-        no_induk,
-        no_klasifikasi,
-        title,
-        author,
-        publisher,
-        year,
-        isbn,
-        category,
-        stock,
-        available,
-        description
-      FROM Buku
-      ORDER BY id DESC
-    `);
+    const result = await pool.request()
+      .input('email', sql.VarChar, email)
+      .query(`
+        SELECT username, email, password, role
+        FROM Users
+        WHERE email = @email
+      `);
+
+    if (result.recordset.length === 0) {
+      return res.status(401).json({
+        success: false,
+        message: 'Email atau Password salah!'
+      });
+    }
+
+    const user = result.recordset[0];
+    const passwordMatch = await bcrypt.compare(password, user.password);
+
+    if (!passwordMatch) {
+      return res.status(401).json({
+        success: false,
+        message: 'Email atau Password salah!'
+      });
+    }
 
     res.json({
       success: true,
-      books: result.recordset
+      user: {
+        name: user.username,
+        email: user.email,
+        role: user.role,
+        avatar: user.username.charAt(0).toUpperCase()
+      }
     });
 
   } catch (err) {
-    console.error('Get Books Error:', err);
+    console.error('Login Error:', err);
     res.status(500).json({
       success: false,
-      message: 'Gagal mengambil data buku'
+      message: 'Terjadi kesalahan pada server'
     });
   }
 });
 
-app.post('/api/books', async (req, res) => {
+// 🔹 Route REGISTER
+app.post('/api/register', async (req, res) => {
+  const { name, email, password } = req.body;
+
+  const allowedDomains = [
+    '@mhs.unesa.ac.id',
+    '@unesa.ac.id',
+    '@fmipa.ac.id'
+  ];
+
+  const isValidEmail = allowedDomains.some(domain => email.endsWith(domain));
+
+  if (!isValidEmail) {
+    return res.json({
+      success: false,
+      message: 'Gunakan email resmi UNESA/FMIPA'
+    });
+  }
+
+  try {
+    const pool = await sql.connect(dbConfig);
+
+    const checkUser = await pool.request()
+      .input('email', sql.VarChar, email)
+      .query('SELECT * FROM Users WHERE email = @email');
+
+    if (checkUser.recordset.length > 0) {
+      return res.json({
+        success: false,
+        message: 'Email sudah terdaftar'
+      });
+    }
+
+    const checkAnggota = await pool.request()
+      .input('email', sql.VarChar, email)
+      .query('SELECT * FROM Anggota WHERE email = @email');
+
+    let role = 'mahasiswa';
+
+    if (checkAnggota.recordset.length > 0) {
+      const jenis = checkAnggota.recordset[0].jenis;
+      role = jenis === 'staff' ? 'petugas' : jenis;
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const resultUser = await pool.request()
+      .input('username', sql.VarChar, name)
+      .input('email', sql.VarChar, email)
+      .input('password', sql.VarChar, hashedPassword)
+      .input('role', sql.VarChar, role)
+      .query(`
+        INSERT INTO Users (username, email, password, role)
+        OUTPUT INSERTED.id
+        VALUES (@username, @email, @password, @role)
+      `);
+
+    const userId = resultUser.recordset[0].id;
+
+    if (checkAnggota.recordset.length > 0) {
+      await pool.request()
+        .input('user_id', sql.Int, userId)
+        .input('email', sql.VarChar, email)
+        .query(`
+          UPDATE Anggota
+          SET user_id = @user_id
+          WHERE email = @email
+        `);
+    } else {
+      await pool.request()
+        .input('user_id', sql.Int, userId)
+        .input('nama', sql.VarChar, name)
+        .input('email', sql.VarChar, email)
+        .input('jenis', sql.VarChar, 'mahasiswa')
+        .input('nim', sql.VarChar, 'AUTO' + userId)
+        .input('jurusan', sql.VarChar, null)
+        .query(`
+          INSERT INTO Anggota (user_id, nama, email, jenis, nim, jurusan)
+          VALUES (@user_id, @nama, @email, @jenis, @nim, @jurusan)
+        `);
+    }
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error('Register Error:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Terjadi kesalahan server'
+    });
+  }
+});
+
+app.post('/api/books', upload.single('image'), async (req, res) => {
   const {
     no_induk,
     no_klasifikasi,
@@ -183,27 +199,30 @@ app.post('/api/books', async (req, res) => {
     description
   } = req.body;
 
+  const image_url = req.file ? `/uploads/${req.file.filename}` : null;
+
   try {
     const pool = await sql.connect(dbConfig);
 
-    await pool.request()
-      .input('no_induk', sql.VarChar, no_induk)
-      .input('no_klasifikasi', sql.VarChar, no_klasifikasi)
-      .input('title', sql.VarChar, title)
-      .input('author', sql.VarChar, author)
-      .input('publisher', sql.VarChar, publisher || null)
-      .input('year', sql.Int, year || null)
-      .input('isbn', sql.VarChar, isbn || null)
-      .input('category', sql.VarChar, category)
-      .input('stock', sql.Int, Number(stock))
-      .input('available', sql.Int, Number(stock))
-      .input('description', sql.VarChar, description || null)
-      .query(`
-        INSERT INTO Buku
-        (no_induk, no_klasifikasi, title, author, publisher, year, isbn, category, stock, available, description)
-        VALUES
-        (@no_induk, @no_klasifikasi, @title, @author, @publisher, @year, @isbn, @category, @stock, @available, @description)
-      `);
+   await pool.request()
+  .input('no_induk', sql.VarChar, no_induk)
+  .input('no_klasifikasi', sql.VarChar, no_klasifikasi)
+  .input('title', sql.VarChar, title)
+  .input('author', sql.VarChar, author)
+  .input('publisher', sql.VarChar, publisher || null)
+  .input('year', sql.Int, year || null)
+  .input('isbn', sql.VarChar, isbn || null)
+  .input('category', sql.VarChar, category)
+  .input('stock', sql.Int, Number(stock))
+  .input('available', sql.Int, Number(stock))
+  .input('description', sql.VarChar, description || null)
+  .input('image_url', sql.VarChar, image_url)
+  .query(`
+    INSERT INTO Buku
+    (no_induk, no_klasifikasi, title, author, publisher, year, isbn, category, stock, available, description, image_url)
+    VALUES
+    (@no_induk, @no_klasifikasi, @title, @author, @publisher, @year, @isbn, @category, @stock, @available, @description, @image_url)
+  `);
 
     res.json({
       success: true,
@@ -219,7 +238,7 @@ app.post('/api/books', async (req, res) => {
   }
 });
 
-app.put('/api/books/:id', async (req, res) => {
+app.put('/api/books/:id', upload.single('image'), async (req, res) => {
   const { id } = req.params;
 
   const {
@@ -238,6 +257,14 @@ app.put('/api/books/:id', async (req, res) => {
   try {
     const pool = await sql.connect(dbConfig);
 
+    const oldBook = await pool.request()
+      .input('id', sql.Int, id)
+      .query(`SELECT image_url FROM Buku WHERE id = @id`);
+
+    const image_url = req.file
+      ? `/uploads/${req.file.filename}`
+      : oldBook.recordset[0]?.image_url || null;
+
     await pool.request()
       .input('id', sql.Int, id)
       .input('no_induk', sql.VarChar, no_induk)
@@ -250,6 +277,7 @@ app.put('/api/books/:id', async (req, res) => {
       .input('category', sql.VarChar, category)
       .input('stock', sql.Int, Number(stock))
       .input('description', sql.VarChar, description || null)
+      .input('image_url', sql.VarChar, image_url)
       .query(`
         UPDATE Buku
         SET
@@ -262,7 +290,8 @@ app.put('/api/books/:id', async (req, res) => {
           isbn = @isbn,
           category = @category,
           stock = @stock,
-          description = @description
+          description = @description,
+          image_url = @image_url
         WHERE id = @id
       `);
 
@@ -308,23 +337,23 @@ app.get('/api/members', async (req, res) => {
   try {
     const pool = await sql.connect(dbConfig);
 
-    const result = await pool.request().query(`
-      SELECT
-        id,
-        user_id,
-        nama AS name,
-        nim,
-        jurusan AS departemen,
-        jurusan AS prodi,
-        jenis AS type,
-        email,
-        'aktif' AS status,
-        CAST(NULL AS VARCHAR(20)) AS phone,
-        CAST(NULL AS VARCHAR(255)) AS address,
-        CONVERT(varchar, created_at, 23) AS joinDate
-      FROM Anggota
-      ORDER BY id DESC
-    `);
+  const result = await pool.request().query(`
+  SELECT
+    id,
+    user_id,
+    nama AS name,
+    nim,
+    jurusan AS departemen,
+    jurusan AS prodi,
+    jenis AS type,
+    email,
+    'aktif' AS status,
+    phone,
+    address,
+    CONVERT(varchar, created_at, 23) AS joinDate
+  FROM Anggota
+  ORDER BY id DESC
+`);
 
     res.json({
       success: true,
@@ -341,10 +370,59 @@ app.get('/api/members', async (req, res) => {
 });
 
 app.post('/api/members', async (req, res) => {
-  const { name, nim, departemen, prodi, type, email } = req.body;
+  const { name, nim, departemen, prodi, type, email, phone, address, password } = req.body;
 
   try {
     const pool = await sql.connect(dbConfig);
+
+    if (type === 'staff') {
+      if (!password) {
+        return res.json({ success: false, message: 'Password wajib diisi untuk staff/petugas' });
+      }
+
+      if (!email.endsWith('@fmipa.ac.id')) {
+        return res.json({ success: false, message: 'Email staff/petugas harus @fmipa.ac.id' });
+      }
+
+      const checkUser = await pool.request()
+        .input('email', sql.VarChar, email)
+        .query(`SELECT id FROM Users WHERE email = @email`);
+
+      if (checkUser.recordset.length > 0) {
+        return res.json({ success: false, message: 'Email sudah digunakan sebagai akun login' });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const resultUser = await pool.request()
+        .input('username', sql.VarChar, name)
+        .input('email', sql.VarChar, email)
+        .input('password', sql.VarChar, hashedPassword)
+        .input('role', sql.VarChar, 'petugas')
+        .query(`
+          INSERT INTO Users (username, email, password, role)
+          OUTPUT INSERTED.id
+          VALUES (@username, @email, @password, @role)
+        `);
+
+      const userId = resultUser.recordset[0].id;
+
+      await pool.request()
+        .input('user_id', sql.Int, userId)
+        .input('nama', sql.VarChar, name)
+        .input('nim', sql.VarChar, nim)
+        .input('jurusan', sql.VarChar, departemen || prodi || null)
+        .input('jenis', sql.VarChar, 'staff')
+        .input('email', sql.VarChar, email)
+        .input('phone', sql.VarChar, phone || null)
+        .input('address', sql.VarChar, address || null)
+        .query(`
+          INSERT INTO Anggota (user_id, nama, nim, jurusan, jenis, email, phone, address)
+          VALUES (@user_id, @nama, @nim, @jurusan, @jenis, @email, @phone, @address)
+        `);
+
+      return res.json({ success: true, message: 'Staff/petugas berhasil ditambahkan' });
+    }
 
     await pool.request()
       .input('nama', sql.VarChar, name)
@@ -352,17 +430,14 @@ app.post('/api/members', async (req, res) => {
       .input('jurusan', sql.VarChar, departemen || prodi || null)
       .input('jenis', sql.VarChar, type)
       .input('email', sql.VarChar, email || null)
+      .input('phone', sql.VarChar, phone || null)
+      .input('address', sql.VarChar, address || null)
       .query(`
-        INSERT INTO Anggota
-        (nama, nim, jurusan, jenis, email)
-        VALUES
-        (@nama, @nim, @jurusan, @jenis, @email)
+        INSERT INTO Anggota (nama, nim, jurusan, jenis, email, phone, address)
+        VALUES (@nama, @nim, @jurusan, @jenis, @email, @phone, @address)
       `);
 
-    res.json({
-      success: true,
-      message: 'Anggota berhasil ditambahkan'
-    });
+    res.json({ success: true, message: 'Anggota berhasil ditambahkan' });
 
   } catch (err) {
     console.error('Add Member Error:', err);
@@ -375,28 +450,48 @@ app.post('/api/members', async (req, res) => {
 
 app.put('/api/members/:id', async (req, res) => {
   const { id } = req.params;
-  const { name, nim, departemen, prodi, type, email } = req.body;
+  const { name, nim, departemen, prodi, type, email, phone, address } = req.body;
 
   try {
     const pool = await sql.connect(dbConfig);
 
-    await pool.request()
-      .input('id', sql.Int, id)
-      .input('nama', sql.VarChar, name)
-      .input('nim', sql.VarChar, nim)
-      .input('jurusan', sql.VarChar, departemen || prodi || null)
-      .input('jenis', sql.VarChar, type)
-      .input('email', sql.VarChar, email || null)
-      .query(`
-        UPDATE Anggota
-        SET
-          nama = @nama,
-          nim = @nim,
-          jurusan = @jurusan,
-          jenis = @jenis,
-          email = @email
-        WHERE id = @id
-      `);
+  await pool.request()
+  .input('id', sql.Int, id)
+  .input('nama', sql.VarChar, name)
+  .input('nim', sql.VarChar, nim)
+  .input('jurusan', sql.VarChar, departemen || prodi || null)
+  .input('jenis', sql.VarChar, type)
+  .input('email', sql.VarChar, email || null)
+  .input('phone', sql.VarChar, phone || null)
+  .input('address', sql.VarChar, address || null)
+  .query(`
+    UPDATE Anggota
+    SET
+      nama = @nama,
+      nim = @nim,
+      jurusan = @jurusan,
+      jenis = @jenis,
+      email = @email,
+      phone = @phone,
+      address = @address
+    WHERE id = @id
+  `);
+
+  await pool.request()
+  .input('anggota_id', sql.Int, id)
+  .input('username', sql.VarChar, name)
+  .input('email', sql.VarChar, email || null)
+  .input('role', sql.VarChar, type === 'staff' ? 'petugas' : type)
+  .query(`
+    UPDATE Users
+    SET
+      username = @username,
+      email = @email,
+      role = @role
+    WHERE id = (
+      SELECT user_id FROM Anggota WHERE id = @anggota_id
+    )
+  `);
 
     res.json({
       success: true,
@@ -445,6 +540,43 @@ app.get('/api/loans', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Gagal mengambil data peminjaman'
+    });
+  }
+});
+
+app.get('/api/books', async (req, res) => {
+  try {
+    const pool = await sql.connect(dbConfig);
+
+    const result = await pool.request().query(`
+      SELECT 
+        id,
+        no_induk,
+        no_klasifikasi,
+        title,
+        author,
+        publisher,
+        year,
+        isbn,
+        category,
+        stock,
+        available,
+        description,
+        image_url
+      FROM Buku
+      ORDER BY id DESC
+    `);
+
+    res.json({
+      success: true,
+      books: result.recordset
+    });
+
+  } catch (err) {
+    console.error('Get Books Error:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Gagal mengambil data buku'
     });
   }
 });

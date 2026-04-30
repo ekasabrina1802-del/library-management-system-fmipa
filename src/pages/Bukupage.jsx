@@ -3,6 +3,7 @@ import { Plus, Pencil, Trash2, X, Check, Search, Filter } from 'lucide-react';
 import { useApp } from '../components/AppContext';
 import { useAuth } from '../components/AuthContext';
 
+const API_URL = import.meta.env.VITE_API_URL;
 const CATEGORIES = ['Semua Kategori', 'Matematika', 'Fisika', 'Kimia', 'Biologi'];
 const COVER_COLORS = { MTK: '#7B1C1C', FIS: '#0D1B2A', KIM: '#1B5E20', BIO: '#1A237E' };
 
@@ -52,26 +53,31 @@ function BookModal({ book, onSave, onClose }) {
     category: book?.category || 'Mathematics',
     stock: book?.stock || 1,
     description: book?.description || '',
-    image: book?.image || null
+    image: null,
+imagePreview: book?.image_url ? `${API_URL}${book.image_url}` : null
   });
 
   const handleSubmit = (e) => {
   e.preventDefault();
 
   // validasi semua field
-  const requiredFields = [
-    'no_induk',
-    'no_klasifikasi',
-    'title',
-    'author',
-    'publisher',
-    'year',
-    'isbn',
-    'category',
-    'stock',
-    'description',
-    'image'
-  ];
+ const requiredFields = [
+  'no_induk',
+  'no_klasifikasi',
+  'title',
+  'author',
+  'publisher',
+  'year',
+  'isbn',
+  'category',
+  'stock',
+  'description'
+];
+
+if (!isEdit && !form.image) {
+  alert('Field image wajib diisi!');
+  return;
+}
 
     for (let field of requiredFields) {
       if (!form[field] || form[field] === '') {
@@ -153,18 +159,22 @@ function BookModal({ book, onSave, onClose }) {
               type="file"
               className="form-control"
               accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files[0];
-                if (file) {
-                  setForm(p => ({ ...p, image: URL.createObjectURL(file) }));
-                }
-              }}
+             onChange={(e) => {
+              const file = e.target.files[0];
+              if (file) {
+                setForm(p => ({
+                  ...p,
+                  image: file,
+                  imagePreview: URL.createObjectURL(file)
+                }));
+              }
+            }}
               required={!isEdit}
             />
 
-            {form.image && (
-              <img
-                src={form.image}
+            {form.imagePreview && (
+            <img
+              src={form.imagePreview}
                 alt="preview"
                 style={{ width: 80, marginTop: 8, borderRadius: 6 }}
               />
@@ -385,7 +395,7 @@ export default function BukuPage() {
                     <td>
                       {b.image_url ? (
                         <img
-                          src={`http://localhost:3000${b.image_url}`}
+                          src={`${API_URL}${b.image_url}`}
                           style={{
                             width: 44,
                             height: 58,
