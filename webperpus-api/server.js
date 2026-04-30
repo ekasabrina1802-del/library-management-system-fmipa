@@ -368,7 +368,7 @@ app.get('/api/members', async (req, res) => {
     });
   }
 });
-
+// test contribution
 app.post('/api/members', async (req, res) => {
   const { name, nim, departemen, prodi, type, email, phone, address, password } = req.body;
 
