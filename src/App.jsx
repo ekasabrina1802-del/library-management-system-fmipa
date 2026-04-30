@@ -3,7 +3,9 @@ import { Routes, Route } from "react-router-dom";
 import LoginPage from "./pages/login";
 import DashboardPage from "./pages/Dashboardpage";
 import BukuPage from "./pages/Bukupage";
-import AnggotaPage from "./pages/Anggotapage";
+import PetugasAnggotaPage from "./pages/PetugasAnggotapage";
+import UserAnggotaPage from "./pages/UserAnggotaPage";
+import AdminAnggotaPage from "./pages/AdminAnggotaPage";
 import PetugasPeminjamanPage from "./pages/PetugasPeminjamanPage";
 import PetugasPengembalianPage from "./pages/PetugasPengembalianPage";
 import AdminPeminjamanPage from './pages/AdminPeminjamanPage';
@@ -47,10 +49,28 @@ function App() {
       />
 
       <Route
-        path="/anggota"
+        path="/petugas/anggota"
         element={
           <Layout>
-            <AnggotaPage />
+            <PetugasAnggotaPage />
+          </Layout>
+        }
+      />
+
+      <Route
+        path="/admin/anggota"
+        element={
+          <Layout>
+            <AdminAnggotaPage />
+          </Layout>
+        }
+      />
+
+      <Route
+        path="/user/anggota"
+        element={
+          <Layout>
+            <UserAnggotaPage />
           </Layout>
         }
       />

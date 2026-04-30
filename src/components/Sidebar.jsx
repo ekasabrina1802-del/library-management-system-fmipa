@@ -8,7 +8,7 @@ export default function Sidebar() {
  const adminNav = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/buku', icon: BookOpen, label: 'Buku' },
-  { to: '/anggota', icon: Users, label: 'Anggota' },
+  { to: '/admin/anggota', icon: Users, label: 'Anggota' },
   { to: '/admin/peminjaman', icon: ArrowDownToLine, label: 'Peminjaman' },
   { to: '/admin/pengembalian', icon: ArrowUpFromLine, label: 'Pengembalian' },
   { to: '/denda', icon: FileText, label: 'Denda & Laporan' },
@@ -24,6 +24,7 @@ const petugasNav = [
 ];
 
 const userNav = [
+  { to: '/user/anggota', icon: Users, label: 'Anggota' },
   { to: '/user/peminjaman', icon: ArrowDownToLine, label: 'Peminjaman' },
   { to: '/user/pengembalian', icon: ArrowUpFromLine, label: 'Pengembalian' },
 ];
