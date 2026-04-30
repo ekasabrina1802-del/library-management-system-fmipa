@@ -165,7 +165,7 @@ export default function AdminPeminjamanPage() {
         </div>
       </div>
 
-      {/* Modal Edit */}
+    
       {editLoan && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div className="card" style={{ width: 380, position: 'relative' }}>
