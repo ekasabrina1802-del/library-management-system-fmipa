@@ -4,6 +4,15 @@ import { ACTIVITY_LOG } from '../data/db';
 const AppContext = createContext(null);
 const API_URL = import.meta.env.VITE_API_URL;
 
+const ngrokHeaders = {
+  'ngrok-skip-browser-warning': 'true'
+};
+
+const jsonHeaders = {
+  'Content-Type': 'application/json',
+  'ngrok-skip-browser-warning': 'true'
+};
+
 export function AppProvider({ children }) {
   const [books, setBooks] = useState([]);
   const [members, setMembers] = useState([]);
@@ -12,7 +21,9 @@ export function AppProvider({ children }) {
 
   const fetchBooks = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/books`);
+      const res = await fetch(`${API_URL}/api/books`, {
+        headers: ngrokHeaders
+      });
       const data = await res.json();
       if (data.success) setBooks(data.books);
     } catch (err) {
@@ -22,7 +33,9 @@ export function AppProvider({ children }) {
 
   const fetchMembers = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/members`);
+      const res = await fetch(`${API_URL}/api/members`, {
+        headers: ngrokHeaders
+      });
       const data = await res.json();
       if (data.success) setMembers(data.members);
     } catch (err) {
@@ -32,7 +45,9 @@ export function AppProvider({ children }) {
 
   const fetchLoans = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/loans`);
+      const res = await fetch(`${API_URL}/api/loans`, {
+        headers: ngrokHeaders
+      });
       const data = await res.json();
       if (data.success) setLoans(data.loans);
     } catch (err) {
@@ -56,7 +71,7 @@ export function AppProvider({ children }) {
     try {
       const res = await fetch(`${API_URL}/api/books`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: jsonHeaders,
         body: JSON.stringify(book)
       });
 
@@ -81,7 +96,7 @@ export function AppProvider({ children }) {
     try {
       const res = await fetch(`${API_URL}/api/books/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: jsonHeaders,
         body: JSON.stringify(updates)
       });
 
@@ -106,7 +121,8 @@ export function AppProvider({ children }) {
     try {
       for (const id of ids) {
         const res = await fetch(`${API_URL}/api/books/${id}`, {
-          method: 'DELETE'
+          method: 'DELETE',
+          headers: ngrokHeaders
         });
 
         const data = await res.json();
@@ -131,7 +147,7 @@ export function AppProvider({ children }) {
     try {
       const res = await fetch(`${API_URL}/api/members`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: jsonHeaders,
         body: JSON.stringify(member)
       });
 
@@ -156,7 +172,7 @@ export function AppProvider({ children }) {
     try {
       const res = await fetch(`${API_URL}/api/members/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: jsonHeaders,
         body: JSON.stringify(updates)
       });
 
@@ -181,7 +197,7 @@ export function AppProvider({ children }) {
     try {
       const res = await fetch(`${API_URL}/api/loans`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: jsonHeaders,
         body: JSON.stringify({ bookCode, memberId })
       });
 
@@ -204,7 +220,8 @@ export function AppProvider({ children }) {
   const returnBook = async (bookCode) => {
     try {
       const res = await fetch(`${API_URL}/api/loans/return/${encodeURIComponent(bookCode)}`, {
-        method: 'PUT'
+        method: 'PUT',
+        headers: ngrokHeaders
       });
 
       const data = await res.json();
