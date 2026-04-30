@@ -25,7 +25,7 @@ function MemberModal({ member, onSave, onClose, role }) {
     e.preventDefault();
 
     if (isAdmin && !isEdit && !form.password) {
-      alert('Password wajib diisi untuk staff/petugas.');
+      alert('Password wajib diisi untuk staff/petugas perpus.');
       return;
     }
 
