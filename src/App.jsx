@@ -12,7 +12,8 @@ import AdminPeminjamanPage from './pages/AdminPeminjamanPage';
 import AdminPengembalianPage from './pages/AdminPengembalianPage';
 import UserPeminjamanPage from './pages/UserPeminjamanPage';
 import UserPengembalianPage from './pages/UserPengembalianPage';
-import DendaPage from "./pages/Dendapage";
+import PetugasDendaPage from "./pages/PetugasDendaPage";
+import UserDendaPage from "./pages/UserDendaPage";
 import MahasiswaPage from "./pages/Mahasiswapage";
 import RegisterPage from "./pages/Register";
 
@@ -130,10 +131,19 @@ function App() {
       />
 
       <Route
-        path="/denda"
+        path="/petugas/denda"
         element={
           <Layout>
-            <DendaPage />
+            <PetugasDendaPage />
+          </Layout>
+        }
+      />
+
+      <Route
+        path="/user/denda"
+        element={
+          <Layout>
+            <UserDendaPage />
           </Layout>
         }
       />
