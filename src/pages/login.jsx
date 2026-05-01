@@ -20,23 +20,14 @@ export default function LoginPage() {
     const result = await login(form.email, form.password);
 
     if (result.success) {
-<<<<<<< HEAD
-     const redirectMap = {
-    admin: '/admin/dashboard',
-    petugas: '/admin/dashboard',
-    mahasiswa: '/mahasiswa',
-    dosen: '/mahasiswa',
-};
-
-=======
-      // Menyatukan mahasiswa dan dosen ke satu tujuan
+      
       const redirectMap = {
         admin: '/dashboard',
         petugas: '/dashboard',
         mahasiswa: '/mahasiswa', // Dashboard untuk user
         dosen: '/mahasiswa',     // Dashboard untuk user (disamakan)
       };
->>>>>>> 761e0f9c3e4c7c23a7478ef45acf371962967a91
+
 
       navigate(redirectMap[result.role] || '/');
     } else {

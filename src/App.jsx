@@ -1,14 +1,9 @@
 import { Routes, Route } from "react-router-dom";
 
 import LoginPage from "./pages/login";
-<<<<<<< HEAD
+
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import PetugasBukuPage from "./pages/PetugasBukupage";
-=======
-import DashboardPage from "./pages/Dashboardpage";
-import UserDashboard from "./pages/UserDashboard";
-import BukuPage from "./pages/Bukupage";
->>>>>>> 761e0f9c3e4c7c23a7478ef45acf371962967a91
 import PetugasAnggotaPage from "./pages/PetugasAnggotapage";
 import UserAnggotaPage from "./pages/UserAnggotaPage";
 import AdminAnggotaPage from "./pages/AdminAnggotaPage";
@@ -60,18 +55,6 @@ function App() {
 
   <Route path="/mahasiswa" element={<UserDashboard />} />
 
-<<<<<<< HEAD
-      {/* DASHBOARD */}
-      <Route
-        path="/admin/dashboard"
-        element={
-          <Layout>
-            <AdminDashboardPage />
-          </Layout>
-        }
-      />
-=======
->>>>>>> 761e0f9c3e4c7c23a7478ef45acf371962967a91
 
       {/* MENU */}
       <Route
