@@ -1,8 +1,8 @@
 import { Routes, Route } from "react-router-dom";
 
 import LoginPage from "./pages/login";
-import DashboardPage from "./pages/Dashboardpage";
-import BukuPage from "./pages/Bukupage";
+import AdminDashboardPage from "./pages/AdminDashboardPage";
+import PetugasBukuPage from "./pages/PetugasBukupage";
 import PetugasAnggotaPage from "./pages/PetugasAnggotapage";
 import UserAnggotaPage from "./pages/UserAnggotaPage";
 import AdminAnggotaPage from "./pages/AdminAnggotaPage";
@@ -31,20 +31,20 @@ function App() {
 
       {/* DASHBOARD */}
       <Route
-        path="/dashboard"
+        path="/admin/dashboard"
         element={
           <Layout>
-            <DashboardPage />
+            <AdminDashboardPage />
           </Layout>
         }
       />
 
       {/* MENU */}
       <Route
-        path="/buku"
+        path="/petugas/buku"
         element={
           <Layout>
-            <BukuPage />
+            <PetugasBukuPage />
           </Layout>
         }
       />
@@ -77,7 +77,7 @@ function App() {
       />
 
       <Route
-        path="/peminjaman"
+        path="/petugas/peminjaman"
         element={
           <Layout>
             <PetugasPeminjamanPage />
@@ -86,7 +86,7 @@ function App() {
       />
 
       <Route
-        path="/pengembalian"
+        path="/petugas/pengembalian"
         element={
           <Layout>
             <PetugasPengembalianPage />

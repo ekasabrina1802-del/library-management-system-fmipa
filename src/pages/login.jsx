@@ -24,10 +24,10 @@ export default function LoginPage() {
 
     if (result.success) {
      const redirectMap = {
-  admin: '/dashboard',
-  petugas: '/dashboard',
-  mahasiswa: '/mahasiswa',
-  dosen: '/mahasiswa',
+    admin: '/admin/dashboard',
+    petugas: '/admin/dashboard',
+    mahasiswa: '/mahasiswa',
+    dosen: '/mahasiswa',
 };
 
 
