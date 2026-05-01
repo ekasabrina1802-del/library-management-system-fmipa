@@ -6,27 +6,28 @@ export default function Sidebar() {
   const { user, logout } = useAuth();
 
  const adminNav = [
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/buku', icon: BookOpen, label: 'Buku' },
+  { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/admin/buku', icon: BookOpen, label: 'Buku' },
   { to: '/admin/anggota', icon: Users, label: 'Anggota' },
   { to: '/admin/peminjaman', icon: ArrowDownToLine, label: 'Peminjaman' },
   { to: '/admin/pengembalian', icon: ArrowUpFromLine, label: 'Pengembalian' },
-  { to: '/denda', icon: FileText, label: 'Denda & Laporan' },
+  { to: '/admin/denda', icon: FileText, label: 'Denda & Laporan' },
 ];
 
 const petugasNav = [
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/buku', icon: BookOpen, label: 'Buku' },
-  { to: '/anggota', icon: Users, label: 'Anggota' },
-  { to: '/peminjaman', icon: ArrowDownToLine, label: 'Peminjaman' },
-  { to: '/pengembalian', icon: ArrowUpFromLine, label: 'Pengembalian' },
-  { to: '/denda', icon: FileText, label: 'Denda & Laporan' },
+  { to: '/petugas/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/petugas/buku', icon: BookOpen, label: 'Buku' },
+  { to: '/petugas/anggota', icon: Users, label: 'Anggota' },
+  { to: '/petugas/peminjaman', icon: ArrowDownToLine, label: 'Peminjaman' },
+  { to: '/petugas/pengembalian', icon: ArrowUpFromLine, label: 'Pengembalian' },
+  { to: '/petugas/denda', icon: FileText, label: 'Denda & Laporan' },
 ];
 
 const userNav = [
   { to: '/user/anggota', icon: Users, label: 'Anggota' },
   { to: '/user/peminjaman', icon: ArrowDownToLine, label: 'Peminjaman' },
   { to: '/user/pengembalian', icon: ArrowUpFromLine, label: 'Pengembalian' },
+  { to: '/user/denda', icon: FileText, label: 'Denda'}
 ];
 
 let nav = petugasNav; // default
