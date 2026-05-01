@@ -24,6 +24,7 @@ const petugasNav = [
 ];
 
 const userNav = [
+  { to: '/user/dashboard', icon: Users, label: 'Dashboard' },
   { to: '/user/anggota', icon: Users, label: 'Anggota' },
   { to: '/user/peminjaman', icon: ArrowDownToLine, label: 'Peminjaman' },
   { to: '/user/pengembalian', icon: ArrowUpFromLine, label: 'Pengembalian' },

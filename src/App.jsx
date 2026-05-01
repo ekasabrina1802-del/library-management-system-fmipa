@@ -1,8 +1,14 @@
 import { Routes, Route } from "react-router-dom";
 
 import LoginPage from "./pages/login";
+<<<<<<< HEAD
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import PetugasBukuPage from "./pages/PetugasBukupage";
+=======
+import DashboardPage from "./pages/Dashboardpage";
+import UserDashboard from "./pages/UserDashboard";
+import BukuPage from "./pages/Bukupage";
+>>>>>>> 761e0f9c3e4c7c23a7478ef45acf371962967a91
 import PetugasAnggotaPage from "./pages/PetugasAnggotapage";
 import UserAnggotaPage from "./pages/UserAnggotaPage";
 import AdminAnggotaPage from "./pages/AdminAnggotaPage";
@@ -19,16 +25,42 @@ import RegisterPage from "./pages/Register";
 
 
 import Layout from "./components/Layout";
+import { useAuth } from "./components/AuthContext";
+
 
 function App() {
+  const { user } = useAuth();
   return (
     <Routes>
-      {/* LOGIN */}
-      <Route path="/" element={<LoginPage />} />
+  {/* LOGIN */}
+  <Route path="/" element={<LoginPage />} />
 
-      {/* REGISTER */}
-      <Route path="/register" element={<RegisterPage />} />
+  {/* REGISTER */}
+  <Route path="/register" element={<RegisterPage />} />
 
+  {/* ADMIN DASHBOARD */}
+  <Route
+    path="/dashboard"
+    element={
+      <Layout>
+        <DashboardPage />
+      </Layout>
+    }
+  />
+
+  {/* USER DASHBOARD */}
+  <Route
+    path="/user/dashboard"
+    element={
+      <Layout>
+        <UserDashboard />
+      </Layout>
+    }
+  />
+
+  <Route path="/mahasiswa" element={<UserDashboard />} />
+
+<<<<<<< HEAD
       {/* DASHBOARD */}
       <Route
         path="/admin/dashboard"
@@ -38,6 +70,8 @@ function App() {
           </Layout>
         }
       />
+=======
+>>>>>>> 761e0f9c3e4c7c23a7478ef45acf371962967a91
 
       {/* MENU */}
       <Route
@@ -59,19 +93,11 @@ function App() {
       />
 
       <Route
-        path="/admin/anggota"
+        path="/anggota"
         element={
           <Layout>
-            <AdminAnggotaPage />
-          </Layout>
-        }
-      />
-
-      <Route
-        path="/user/anggota"
-        element={
-          <Layout>
-            <UserAnggotaPage />
+            {user.role === "admin" && <AdminAnggotaPage />}
+            {user.role === "petugas" && <PetugasAnggotaPage />}
           </Layout>
         }
       />
