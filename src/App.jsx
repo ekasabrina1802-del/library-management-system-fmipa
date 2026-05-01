@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 
 import LoginPage from "./pages/login";
 import DashboardPage from "./pages/Dashboardpage";
+import UserDashboard from "./pages/UserDashboard";
 import BukuPage from "./pages/Bukupage";
 import PetugasAnggotaPage from "./pages/PetugasAnggotapage";
 import UserAnggotaPage from "./pages/UserAnggotaPage";
@@ -19,25 +20,41 @@ import RegisterPage from "./pages/Register";
 
 
 import Layout from "./components/Layout";
+import { useAuth } from "./components/AuthContext";
+
 
 function App() {
+  const { user } = useAuth();
   return (
     <Routes>
-      {/* LOGIN */}
-      <Route path="/" element={<LoginPage />} />
+  {/* LOGIN */}
+  <Route path="/" element={<LoginPage />} />
 
-      {/* REGISTER */}
-      <Route path="/register" element={<RegisterPage />} />
+  {/* REGISTER */}
+  <Route path="/register" element={<RegisterPage />} />
 
-      {/* DASHBOARD */}
-      <Route
-        path="/dashboard"
-        element={
-          <Layout>
-            <DashboardPage />
-          </Layout>
-        }
-      />
+  {/* ADMIN DASHBOARD */}
+  <Route
+    path="/dashboard"
+    element={
+      <Layout>
+        <DashboardPage />
+      </Layout>
+    }
+  />
+
+  {/* USER DASHBOARD */}
+  <Route
+    path="/user/dashboard"
+    element={
+      <Layout>
+        <UserDashboard />
+      </Layout>
+    }
+  />
+
+  <Route path="/mahasiswa" element={<UserDashboard />} />
+
 
       {/* MENU */}
       <Route
@@ -59,19 +76,11 @@ function App() {
       />
 
       <Route
-        path="/admin/anggota"
+        path="/anggota"
         element={
           <Layout>
-            <AdminAnggotaPage />
-          </Layout>
-        }
-      />
-
-      <Route
-        path="/user/anggota"
-        element={
-          <Layout>
-            <UserAnggotaPage />
+            {user.role === "admin" && <AdminAnggotaPage />}
+            {user.role === "petugas" && <PetugasAnggotaPage />}
           </Layout>
         }
       />

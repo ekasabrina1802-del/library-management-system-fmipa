@@ -17,25 +17,21 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
 
-
-    // Memanggil fungsi login async yang tersambung ke database
     const result = await login(form.email, form.password);
 
-
     if (result.success) {
-     const redirectMap = {
-  admin: '/dashboard',
-  petugas: '/dashboard',
-  mahasiswa: '/mahasiswa',
-  dosen: '/mahasiswa',
-};
-
+      // Menyatukan mahasiswa dan dosen ke satu tujuan
+      const redirectMap = {
+        admin: '/dashboard',
+        petugas: '/dashboard',
+        mahasiswa: '/mahasiswa', // Dashboard untuk user
+        dosen: '/mahasiswa',     // Dashboard untuk user (disamakan)
+      };
 
       navigate(redirectMap[result.role] || '/');
     } else {
       setError(result.message);
     }
-
 
     setLoading(false);
   };
