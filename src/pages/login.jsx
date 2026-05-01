@@ -24,8 +24,8 @@ export default function LoginPage() {
       const redirectMap = {
         admin: '/dashboard',
         petugas: '/dashboard',
-        mahasiswa: '/mahasiswa', // Dashboard untuk user
-        dosen: '/mahasiswa',     // Dashboard untuk user (disamakan)
+        mahasiswa: '/user/dashboard', // Dashboard untuk user
+        dosen: '/user/dashboard',     // Dashboard untuk user (disamakan)
       };
 
 

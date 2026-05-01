@@ -42,8 +42,7 @@ export default function AnggotaUserPage() {
     <div>
       {/* Page Header */}
       <div className="page-header">
-        <div className="page-breadcrumb">Profil Saya</div>
-        <h1 className="page-title">Profil Anggota</h1>
+        <h1 className="page-title">Profil Saya</h1>
         <p className="page-subtitle">Informasi keanggotaan dan riwayat peminjaman buku kamu.</p>
       </div>
 
