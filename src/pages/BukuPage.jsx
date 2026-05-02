@@ -24,7 +24,7 @@ function BookCover({ no_klasifikasi }) {
 }
 
 function BookModal({ book, onSave, onClose, isReadOnly, user }) {
-  const { loans } = useApp(); // Mengambil data peminjaman aktif
+  const { loans, addLoan, addReminder } = useApp();
   const isEdit = !!book?.id;
   
   const [form, setForm] = useState({
@@ -43,9 +43,9 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
   });
 
   // Logika Aturan Peminjaman
-  const handleBorrowAction = () => {
+  const handleBorrowAction = async () => {
     // 1. Cek stok fisik
-    if (book.available <= 0) {
+    if ((book.available ?? 0) <= 0) {
       alert(`Stok buku "${book.title}" sedang kosong. Kami akan mencatat permintaan notifikasi Anda.`);
       return;
     }
@@ -77,10 +77,16 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
     );
 
     if (confirmBorrow) {
+      // ✅ Panggil addLoan ke API
+      const result = await addLoan(book.no_induk, user?.id);
+
+    if (result.success) {
       alert('Permintaan berhasil! Silahkan ambil buku di meja petugas dengan menunjukkan kode buku.');
       onClose();
+    } else {
+      alert(`Gagal meminjam: ${result.message}`);
     }
-  };
+  }};
 
   const handleSubmit = (e) => {
   e.preventDefault();
@@ -203,13 +209,18 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
             
             {/* FITUR PINJAM UNTUK USER (MAHASISWA/DOSEN) */}
             {isReadOnly && (user?.role === 'mahasiswa' || user?.role === 'dosen') && (
-              book.available > 0 ? (
+              (book.available ?? book.stock ?? 0) > 0 ? (
                 <button type="button" className="btn btn-primary" style={{ background: '#2D6A4F' }} onClick={handleBorrowAction}>
                   <BookOpen size={14} /> Pinjam Buku
                 </button>
               ) : (
-                <button type="button" className="btn btn-outline" style={{ color: '#D69E2E', borderColor: '#D69E2E' }} onClick={() => alert('Notifikasi diaktifkan! Kami akan memberi tahu Anda jika buku ini sudah tersedia.')}>
-                  <Clock size={14} /> Ingatkan Saya
+                <button
+                  onClick={() => {
+                  addReminder(book, user.memberId || user.id);
+                  alert("Notifikasi diaktifkan!");
+                }}
+                >
+                  Ingatkan Saya
                 </button>
               )
             )}
@@ -239,10 +250,21 @@ export default function BukuPage() {
   const [selected, setSelected] = useState([]);
 
   // --- LOGIKA STATISTIK ---
-  const totalJudul = books.length; 
-  const totalUnitTersedia = books.reduce((s, b) => s + Number(b.available || 0), 0); 
-  const totalDipinjam = books.reduce((s, b) => s + (Number(b.stock || 0) - Number(b.available || 0)), 0);
-  const totalJudulHabis = books.filter(b => Number(b.available) === 0).length;
+  const totalJudul = books.length;
+
+  const totalUnitTersedia = books.reduce((s, b) => 
+    s + Number(b.available ?? 0), 0
+  );
+
+  const totalDipinjam = books.reduce((s, b) => {
+    const stock = Number(b.stock ?? 0);
+    const available = Number(b.available ?? 0);
+    return s + (stock - available);
+  }, 0);
+
+  const totalJudulHabis = books.filter(b => 
+    Number(b.available ?? 0) === 0
+  ).length;
 
   const filtered = books.filter(b => {
     const matchCat = filter === 'Semua Kategori' || b.category === filter;

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { BookOpen, Clock, AlertCircle, CheckCircle, Search, ChevronRight, BookMarked, Info } from 'lucide-react';
 import { useApp } from '../components/AppContext';
+import { useAuth } from '../components/AuthContext';
 
 const API_BASE_URL = "http://localhost:5000";
 
@@ -23,7 +24,7 @@ function DueBadge({ dueDate, status }) {
 
 export default function UserPeminjamanPage() {
   const { books, loans, members } = useApp();
-  const { user } = useApp(); // pastikan AppContext expose user yang sedang login
+  const { user } = useAuth();
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState('aktif'); // 'aktif' | 'riwayat' | 'katalog'
 

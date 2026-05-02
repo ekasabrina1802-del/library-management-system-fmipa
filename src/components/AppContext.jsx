@@ -14,6 +14,11 @@ const jsonHeaders = {
 };
 
 export function AppProvider({ children }) {
+  const [reminders, setReminders] = useState([]);
+  useEffect(() => {
+  console.log("REMINDERS:", reminders);
+}, [reminders]);
+
   const [books, setBooks] = useState([]);
   const [members, setMembers] = useState([]);
   const [loans, setLoans] = useState([]);
@@ -278,6 +283,37 @@ export function AppProvider({ children }) {
       .reduce((sum, l) => sum + l.denda, 0);
   };
 
+  const addReminder = (book, userId) => {
+  setReminders(prev => [
+    ...prev,
+    {
+      id: Date.now(),
+      bookId: book.id,
+      title: book.title,
+      userId,
+      notified: false
+    }
+  ]);
+};
+
+const getUserNotifications = (userId) => {
+  return reminders
+    .filter(r => String(r.userId) === String(userId))
+    .map(r => {
+      const book = books.find(
+        b => String(b.id || b.book_id) === String(r.bookId)
+      );
+
+      const stock = Number(book?.available ?? book?.stock ?? 0);
+
+      return {
+        ...r,
+        stock,
+        available: stock > 0
+      };
+    });
+};
+
   return (
     <AppContext.Provider
       value={{
@@ -285,6 +321,9 @@ export function AppProvider({ children }) {
         members,
         loans,
         activityLog,
+        reminders,
+        addReminder,
+        getUserNotifications,
         addBook,
         updateBook,
         deleteBook,
