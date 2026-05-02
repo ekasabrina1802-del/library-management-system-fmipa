@@ -3,7 +3,7 @@ import { Search, Plus, Clock, AlertCircle } from 'lucide-react';
 import { useApp } from '../components/AppContext';
 
 // Variabel untuk alamat server backend
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const COVER_COLORS = { MTK: '#7B1C1C', FIS: '#0D1B2A', KIM: '#1B5E20', BIO: '#1A237E' };
 
@@ -36,7 +36,18 @@ export default function PeminjamanPage() {
     setResult(null);
 
     const member = findMemberByNim(nimInput.trim());
-
+    if (
+        member &&
+        !['mahasiswa', 'dosen'].includes(
+          member.role?.toLowerCase()
+        )
+      ) {
+        setError(
+          `${member.name} (${member.role}) tidak memiliki hak peminjaman.`
+        );
+        return;
+      }
+      
     if (!member) {
       setError('Anggota tidak ditemukan. Periksa NIM/NIP.');
       return;
@@ -165,24 +176,44 @@ export default function PeminjamanPage() {
             {activeLoans.length === 0 ? (
               <div style={{ textAlign: 'center', padding: 40, color: 'var(--gray-text)' }}>Tidak ada peminjaman aktif</div>
             ) : activeLoans.map(l => {
-              const prefix = l.bookCode?.split('/')[0] || 'BK';
+             const prefix = l.bookCode?.split('/')[0] || 'BK';
+
+                // cari buku yang cocok dengan loan
+                const book = books.find(
+                  b => b.no_induk === l.bookCode
+                );
 
               return (
                 <div key={l.id} className="loan-card">
                   {/* Bagian Gambar yang diperbaiki */}
                   <div style={{ width: 44, height: 58, borderRadius: 4, overflow: 'hidden', flexShrink: 0, background: '#eee' }}>
-                    {l.image_url ? (
-                      <img 
-                        src={`${API_BASE_URL}${l.image_url}`} 
-                        alt="cover" 
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        onError={(e) => { e.target.src = 'https://via.placeholder.com/44x58?text=Book'; }}
-                      />
-                    ) : (
-                      <div style={{ width: '100%', height: '100%', background: COVER_COLORS[prefix] || '#555', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 10, fontWeight: 700 }}>
-                        {prefix}
-                      </div>
-                    )}
+                    {book?.image_url ? (
+                    <img
+                      src={`${API_BASE_URL}${book.image_url}`}
+                      alt={l.bookTitle}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover'
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        background: COVER_COLORS[prefix] || '#555',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'white',
+                        fontSize: 10,
+                        fontWeight: 700
+                      }}
+                    >
+                      {prefix}
+                    </div>
+                  )}
                   </div>
 
                   <div style={{ flex: 1, minWidth: 0 }}>

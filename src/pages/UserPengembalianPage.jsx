@@ -112,62 +112,7 @@ export default function UserPengembalianPage() {
           </div>
         </div>
       )}
-
-      {/* Buku yang masih dipinjam & belum dikembalikan */}
-      {activeLoans.length > 0 && (
-        <div className="card" style={{ marginBottom: 20 }}>
-          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>Buku Belum Dikembalikan</div>
-          <div style={{ fontSize: 12, color: 'var(--gray-text)', marginBottom: 16 }}>
-            Segera kembalikan ke petugas perpustakaan jika sudah selesai dibaca.
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {activeLoans.map(l => {
-              const days = daysUntilDue(l.dueDate);
-              const isLate = days < 0;
-              return (
-                <div key={l.id} style={{
-                  display: 'flex',
-                  gap: 14,
-                  padding: '12px 14px',
-                  background: isLate ? 'rgba(183,28,28,0.04)' : 'rgba(74,85,226,0.04)',
-                  borderRadius: 8,
-                  border: `1px solid ${isLate ? 'rgba(183,28,28,0.18)' : 'rgba(74,85,226,0.12)'}`,
-                  alignItems: 'center',
-                }}>
-                  <BookOpen size={20} style={{ color: isLate ? 'var(--danger)' : 'var(--primary)', flexShrink: 0 }} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 600, fontSize: 13 }}>{l.bookTitle}</div>
-                    <div style={{ fontSize: 11, color: 'var(--gray-text)', marginTop: 2 }}>
-                      <code style={{ background: 'var(--gray-light)', padding: '1px 5px', borderRadius: 3 }}>{l.bookCode}</code>
-                      {' · '}Batas: <strong style={{ color: isLate ? 'var(--danger)' : 'inherit' }}>{l.dueDate}</strong>
-                    </div>
-                  </div>
-                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    {isLate ? (
-                      <>
-                        <span className="due-badge due-late" style={{ display: 'block', marginBottom: 4 }}>
-                          Terlambat {Math.abs(days)} hari
-                        </span>
-                        <div style={{ fontSize: 11, color: 'var(--danger)', fontWeight: 700 }}>
-                          +Rp {(Math.abs(days) * 1000).toLocaleString('id-ID')}
-                        </div>
-                      </>
-                    ) : days <= 3 ? (
-                      <span className="due-badge due-soon">Sisa {days} hari</span>
-                    ) : (
-                      <span className="due-badge due-ok">Sisa {days} hari</span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <div style={{ marginTop: 14, fontSize: 12, color: 'var(--gray-text)', fontStyle: 'italic' }}>
-            💬 Hubungi petugas di meja sirkulasi untuk memproses pengembalian.
-          </div>
-        </div>
-      )}
-
+      
       {/* Riwayat Pengembalian */}
       <div className="card">
         <div className="flex-between mb-16">

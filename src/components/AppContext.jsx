@@ -60,7 +60,10 @@ export function AppProvider({ children }) {
         headers: ngrokHeaders
       });
       const data = await res.json();
-      if (data.success) setLoans(data.loans);
+      if (data.success) {
+        console.log("LOANS:", data.loans);
+        setLoans(data.loans);
+      }
     } catch (err) {
       console.error('Gagal ambil data peminjaman:', err);
     }

@@ -219,7 +219,6 @@ const [editMember, setEditMember] = useState(null);
   return (
     <div>
       {addModal && <MemberModal onSave={(m) => { addMember(m); setAddModal(false); }} onClose={() => setAddModal(false)} />}
-      // GANTI DENGAN INI:
 {detailMember && (
   <MemberDetailModal
     member={detailMember}
