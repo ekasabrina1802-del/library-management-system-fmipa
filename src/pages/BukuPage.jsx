@@ -83,12 +83,34 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
   };
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    if (isReadOnly) return;
-    onSave(form);
-  };
+  e.preventDefault();
+  if (isReadOnly) return;
+  // Jika sedang Tambah Buku (isEdit = false) dan file image masih kosong
+  if (!isEdit && !form.image) {
+    alert("Foto buku wajib diunggah untuk buku baru!");
+    return; // Berhenti di sini, jangan lanjut simpan
+  }
+  onSave(form);
+};
 
-  const f = (k) => (e) => !isReadOnly && setForm(p => ({ ...p, [k]: e.target.value }));
+  const f = (k) => (e) => {
+  if (isReadOnly) return;
+
+  if (e.target.type === 'file') {
+    const file = e.target.files[0];
+    if (file) {
+      setForm(p => ({ ...p, [k]: file }));
+      // Membuat preview gambar
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setForm(p => ({ ...p, imagePreview: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  } else {
+    setForm(p => ({ ...p, [k]: e.target.value }));
+  }
+};
 
   return (
     <div className="modal-overlay">
@@ -143,8 +165,34 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
             <input className="form-control" type="number" value={form.stock} onChange={f('stock')} disabled={isReadOnly} />
           </div>
           <div className="form-group">
-            <label className="form-label">Foto Buku</label>
-            {form.imagePreview && <img src={form.imagePreview} alt="preview" style={{ width: 100, marginTop: 8, borderRadius: 6, display: 'block' }} />}
+            <label className="form-label">Foto Buku {!isEdit && '*'}</label>
+            
+            {!isReadOnly && (
+              <input 
+                type="file" 
+                className="form-control" 
+                accept="image/*" 
+                onChange={f('image')} 
+                style={{ marginBottom: 8 }}
+                // Wajib diisi jika sedang tambah buku baru (bukan edit)
+                required={!isEdit} 
+              />
+            )}
+
+            {/* Preview Gambar tetap seperti sebelumnya */}
+            {form.imagePreview ? (
+              <div style={{ position: 'relative', width: 100 }}>
+                <img 
+                  src={form.imagePreview} 
+                  alt="preview" 
+                  style={{ width: 100, height: 130, objectFit: 'cover', borderRadius: 6, display: 'block', border: '1px solid #ddd' }} 
+                />
+              </div>
+            ) : (
+              <div style={{ width: 100, height: 130, border: '2px dashed #ddd', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999', fontSize: 12 }}>
+                No Image
+              </div>
+            )}
           </div>
           <div className="form-group">
             <label className="form-label">Deskripsi *</label>
@@ -179,7 +227,9 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
 export default function BukuPage() {
   const { books, addBook, updateBook, deleteBook } = useApp();
   const { user } = useAuth();
-  const isAdminOrPetugas = user?.role === 'admin' || user?.role === 'petugas';
+  const isPetugas = user?.role === 'petugas';
+  const isAdmin = user?.role === 'admin';
+  const isAdminOrPetugas = isPetugas || isAdmin;
 
   const [filter, setFilter] = useState('Semua Kategori');
   const [search, setSearch] = useState('');
@@ -201,10 +251,18 @@ export default function BukuPage() {
   }).slice(0, rowsPerPage);
 
   const handleRowClick = (book) => {
-    if (deleteMode) toggleSelect(book.id);
-    else if (isAdminOrPetugas) setSelected([book.id]); 
-    else setModal({ mode: 'view', book });
-  };
+  if (isPetugas) {
+    if (deleteMode) {
+      toggleSelect(book.id);
+    } else {
+      // Petugas klik baris untuk memilih (untuk edit/hapus)
+      setSelected([book.id]); 
+    }
+  } else {
+    // Admin dan Mahasiswa klik baris langsung buka Detail (Read Only)
+    setModal({ mode: 'view', book });
+  }
+};
 
   const toggleSelect = (id) => setSelected(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
 
@@ -262,18 +320,25 @@ export default function BukuPage() {
       <div className="card">
         <div className="flex-between mb-16">
           <div style={{ display: 'flex', gap: 8 }}>
-            {isAdminOrPetugas ? (
-              <>
-                <button className="btn btn-primary btn-sm" onClick={() => setModal({ mode: 'add' })}><Plus size={14} /> Tambah Buku</button>
-                <button className="btn btn-outline btn-sm" onClick={() => selected.length === 1 ? setModal({ mode: 'edit', book: books.find(b => b.id === selected[0]) }) : alert('Pilih 1 buku')}>
-                   <Pencil size={14} /> Edit
-                </button>
-                <button className={`btn btn-sm ${deleteMode ? 'btn-danger' : 'btn-ghost'}`} onClick={() => deleteMode ? (deleteBook(selected), setSelected([]), setDeleteMode(false)) : setDeleteMode(true)}>
-                   <Trash2 size={14} /> {deleteMode ? `Hapus (${selected.length})` : 'Hapus'}
-                </button>
-              </>
-            ) : <div className="info-text" style={{ color: '#666', fontSize: '13px' }}><Eye size={14} /> Klik baris untuk detail & peminjaman</div>}
-          </div>
+          {isPetugas ? (
+            <>
+              <button className="btn btn-primary btn-sm" onClick={() => setModal({ mode: 'add' })}>
+                <Plus size={14} /> Tambah Buku
+              </button>
+              <button className="btn btn-outline btn-sm" onClick={() => selected.length === 1 ? setModal({ mode: 'edit', book: books.find(b => b.id === selected[0]) }) : alert('Pilih 1 buku')}>
+                <Pencil size={14} /> Edit
+              </button>
+              <button className={`btn btn-sm ${deleteMode ? 'btn-danger' : 'btn-ghost'}`} onClick={() => deleteMode ? (deleteBook(selected), setSelected([]), setDeleteMode(false)) : setDeleteMode(true)}>
+                <Trash2 size={14} /> {deleteMode ? `Hapus (${selected.length})` : 'Hapus'}
+              </button>
+            </>
+          ) : (
+            <div className="info-text" style={{ color: '#666', fontSize: '13px' }}>
+              <Eye size={14} /> Klik baris untuk melihat detail buku
+            </div>
+          )}
+        </div>
+
           <div style={{ display: 'flex', gap: 8 }}>
             <div style={{ position: 'relative' }}>
               <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#999' }} />
