@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { BookOpen, Clock, AlertCircle, CheckCircle, Search, ChevronRight, BookMarked, Info } from 'lucide-react';
 import { useApp } from '../components/AppContext';
 
+const API_BASE_URL = "http://localhost:5000";
+
 const COVER_COLORS = { MTK: '#7B1C1C', FIS: '#0D1B2A', KIM: '#1B5E20', BIO: '#1A237E' };
 const COVER_LABELS = { MTK: 'Matematika', FIS: 'Fisika', KIM: 'Kimia', BIO: 'Biologi' };
 
@@ -151,6 +153,7 @@ export default function UserPeminjamanPage() {
 
           {/* ── TAB: PINJAMAN AKTIF ── */}
           {activeTab === 'aktif' && (
+            
             <div>
               {activeLoans.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--gray-text)' }}>
@@ -174,28 +177,22 @@ export default function UserPeminjamanPage() {
                         border: `1px solid ${isLate ? 'rgba(183,28,28,0.2)' : 'var(--gray-light)'}`,
                         alignItems: 'flex-start',
                       }}>
-                        {/* Cover mini */}
-                        <div style={{
-                          width: 48,
-                          height: 64,
-                          borderRadius: 5,
-                          background: COVER_COLORS[prefix] || '#555',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: 'white',
-                          fontSize: 9,
-                          fontWeight: 700,
-                          flexShrink: 0,
-                          flexDirection: 'column',
-                          gap: 2,
-                          textAlign: 'center',
-                          padding: 4,
-                          letterSpacing: '0.3px',
-                        }}>
-                          <BookOpen size={14} />
-                          <span>{prefix}</span>
-                        </div>
+                        {/* Cover mini BARU dengan logika gambar */}
+<div style={{ width: 48, height: 64, borderRadius: 5, overflow: 'hidden', flexShrink: 0, background: '#eee' }}>
+  {l.image_url ? (
+    <img 
+      src={`${API_BASE_URL}${l.image_url}`} 
+      alt="cover"
+      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+      onError={(e) => { e.target.src = 'https://via.placeholder.com/48x64?text=Book'; }}
+    />
+  ) : (
+    <div style={{ width: '100%', height: '100%', background: COVER_COLORS[prefix] || '#555', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 9, fontWeight: 700, flexDirection: 'column', textAlign: 'center', padding: 4 }}>
+      <BookOpen size={14} />
+      <span>{prefix}</span>
+    </div>
+  )}
+</div>
 
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 3 }}>{l.bookTitle}</div>
@@ -320,11 +317,21 @@ export default function UserPeminjamanPage() {
                       borderRadius: 10,
                       overflow: 'hidden',
                     }}>
-                      {/* Book cover strip */}
-                      <div style={{
-                        height: 8,
-                        background: COVER_COLORS[prefix] || '#555',
-                      }} />
+                      {/* Box Cover Katalog BARU */}
+<div style={{ height: 140, width: '100%', background: '#eee', overflow: 'hidden', borderBottom: '1px solid var(--gray-light)' }}>
+  {b.image_url ? (
+    <img 
+      src={`${API_BASE_URL}${b.image_url}`} 
+      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+      alt="book cover"
+      onError={(e) => { e.target.src = 'https://via.placeholder.com/220x140?text=No+Image'; }}
+    />
+  ) : (
+    <div style={{ width: '100%', height: '100%', background: COVER_COLORS[prefix] || '#555', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700 }}>
+      {prefix}
+    </div>
+  )}
+</div>
                       <div style={{ padding: '12px 14px' }}>
                         <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--gray-text)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>
                           {COVER_LABELS[prefix] || prefix}

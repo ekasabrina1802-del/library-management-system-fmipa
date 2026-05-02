@@ -41,7 +41,7 @@ const dbConfig = {
     }
 };
 
-// 🔹 Route LOGIN
+// 🔹 Route LOGIN (VERSI BERSIH)
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -51,44 +51,42 @@ app.post('/api/login', async (req, res) => {
     const result = await pool.request()
       .input('email', sql.VarChar, email)
       .query(`
-        SELECT username, email, password, role
-        FROM Users
-        WHERE email = @email
+        SELECT u.id AS userId, u.username, u.email, u.password, u.role,
+               a.id AS memberId, a.nim, a.jenis
+        FROM Users u
+        LEFT JOIN Anggota a ON u.id = a.user_id
+        WHERE u.email = @email
       `);
 
     if (result.recordset.length === 0) {
-      return res.status(401).json({
-        success: false,
-        message: 'Email atau Password salah!'
-      });
+      return res.status(401).json({ success: false, message: 'Email tidak terdaftar!' });
     }
 
     const user = result.recordset[0];
     const passwordMatch = await bcrypt.compare(password, user.password);
 
     if (!passwordMatch) {
-      return res.status(401).json({
-        success: false,
-        message: 'Email atau Password salah!'
-      });
+      return res.status(401).json({ success: false, message: 'Password salah!' });
     }
 
+    // Kirim data lengkap ke Frontend (Hanya satu kali)
     res.json({
       success: true,
       user: {
+        id: user.userId,
+        memberId: user.memberId,
         name: user.username,
         email: user.email,
         role: user.role,
+        nim: user.nim, 
+        type: user.jenis,
         avatar: user.username.charAt(0).toUpperCase()
       }
     });
 
   } catch (err) {
     console.error('Login Error:', err);
-    res.status(500).json({
-      success: false,
-      message: 'Terjadi kesalahan pada server'
-    });
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 });
 
@@ -341,6 +339,7 @@ app.get('/api/members', async (req, res) => {
   SELECT
     id,
     user_id,
+    member_id,
     nama AS name,
     nim,
     jurusan AS departemen,
@@ -455,55 +454,62 @@ app.put('/api/members/:id', async (req, res) => {
   try {
     const pool = await sql.connect(dbConfig);
 
-  await pool.request()
-  .input('id', sql.Int, id)
-  .input('nama', sql.VarChar, name)
-  .input('nim', sql.VarChar, nim)
-  .input('jurusan', sql.VarChar, departemen || prodi || null)
-  .input('jenis', sql.VarChar, type)
-  .input('email', sql.VarChar, email || null)
-  .input('phone', sql.VarChar, phone || null)
-  .input('address', sql.VarChar, address || null)
-  .query(`
-    UPDATE Anggota
-    SET
-      nama = @nama,
-      nim = @nim,
-      jurusan = @jurusan,
-      jenis = @jenis,
-      email = @email,
-      phone = @phone,
-      address = @address
-    WHERE id = @id
-  `);
+    const anggotaCheck = await pool.request()
+      .input('id', sql.Int, id)
+      .query(`SELECT user_id FROM Anggota WHERE id = @id`);
 
-  await pool.request()
-  .input('anggota_id', sql.Int, id)
-  .input('username', sql.VarChar, name)
-  .input('email', sql.VarChar, email || null)
-  .input('role', sql.VarChar, type === 'staff' ? 'petugas' : type)
-  .query(`
-    UPDATE Users
-    SET
-      username = @username,
-      email = @email,
-      role = @role
-    WHERE id = (
-      SELECT user_id FROM Anggota WHERE id = @anggota_id
-    )
-  `);
+    if (anggotaCheck.recordset.length === 0) {
+      return res.json({ success: false, message: 'Anggota tidak ditemukan' });
+    }
 
-    res.json({
-      success: true,
-      message: 'Anggota berhasil diupdate'
-    });
+    const userId = anggotaCheck.recordset[0].user_id;
+
+    await pool.request()
+      .input('id', sql.Int, id)
+      .input('nama', sql.VarChar, name)
+      .input('nim', sql.VarChar, nim)
+      .input('jurusan', sql.VarChar, departemen || prodi || null)
+      .input('jenis', sql.VarChar, type)
+      .input('email', sql.VarChar, email || null)
+      .input('phone', sql.VarChar, phone || null)
+      .input('address', sql.VarChar, address || null)
+      .query(`
+        UPDATE Anggota
+        SET nama=@nama, nim=@nim, jurusan=@jurusan,
+            jenis=@jenis, email=@email, phone=@phone, address=@address
+        WHERE id = @id
+      `);
+
+    if (userId) {
+      await pool.request()
+        .input('userId', sql.Int, userId)
+        .input('username', sql.VarChar, name)
+        .input('email', sql.VarChar, email || null)
+        .input('role', sql.VarChar, type === 'staff' ? 'petugas' : type)
+        .query(`
+          UPDATE Users
+          SET username=@username, email=@email, role=@role
+          WHERE id = @userId
+        `);
+    }
+
+    const updated = await pool.request()
+      .input('id', sql.Int, id)
+      .query(`
+        SELECT id, member_id, user_id,
+          nama AS name, nim,
+          jurusan AS departemen, jurusan AS prodi,
+          jenis AS type, email, phone, address,
+          'aktif' AS status,
+          CONVERT(varchar, created_at, 23) AS joinDate
+        FROM Anggota WHERE id = @id
+      `);
+
+    res.json({ success: true, message: 'Anggota berhasil diupdate', member: updated.recordset[0] });
 
   } catch (err) {
     console.error('Update Member Error:', err);
-    res.status(500).json({
-      success: false,
-      message: err.message || 'Gagal mengupdate anggota'
-    });
+    res.status(500).json({ success: false, message: err.message || 'Gagal mengupdate anggota' });
   }
 });
 
@@ -516,6 +522,7 @@ app.get('/api/loans', async (req, res) => {
         P.id,
         B.no_induk AS bookCode,
         B.title AS bookTitle,
+        B.image_url,
         A.id AS memberId,
         A.nama AS memberName,
         A.jenis AS memberType,
@@ -541,6 +548,26 @@ app.get('/api/loans', async (req, res) => {
       success: false,
       message: 'Gagal mengambil data peminjaman'
     });
+  }
+});
+
+// --- GET RIWAYAT KHUSUS PER USER (NIM) ---
+app.get('/api/loans/user/:nim', async (req, res) => {
+  try {
+    const pool = await sql.connect(dbConfig);
+    const result = await pool.request().input('nim', sql.VarChar, req.params.nim).query(`
+      SELECT P.id, B.no_induk AS bookCode, B.title AS bookTitle, B.image_url, P.status, P.denda,
+             CONVERT(varchar, P.tgl_pinjam, 23) AS loanDate, 
+             CONVERT(varchar, P.tgl_jatuh_tempo, 23) AS dueDate
+      FROM Peminjaman P 
+      JOIN Buku B ON P.buku_id = B.id 
+      JOIN Anggota A ON P.anggota_id = A.id
+      WHERE A.nim = @nim 
+      ORDER BY P.id DESC
+    `);
+    res.json({ success: true, loans: result.recordset });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Gagal mengambil riwayat' });
   }
 });
 
@@ -693,16 +720,17 @@ app.put('/api/loans/return/:bookCode', async (req, res) => {
 
     const loan = loanResult.recordset[0];
 
-    const dendaResult = await new sql.Request(transaction)
-      .input('dueDate', sql.Date, loan.tgl_jatuh_tempo)
-      .query(`
-        SELECT 
-          CASE 
-            WHEN DATEDIFF(DAY, @dueDate, CAST(GETDATE() AS DATE)) > 0
-            THEN DATEDIFF(DAY, @dueDate, CAST(GETDATE() AS DATE)) * 10000
-            ELSE 0
-          END AS denda
-      `);
+    // Potongan logika dalam transaksi return di server.js
+const dendaResult = await new sql.Request(transaction)
+  .input('dueDate', sql.Date, loan.tgl_jatuh_tempo)
+  .query(`
+    SELECT 
+      CASE 
+        WHEN DATEDIFF(DAY, @dueDate, CAST(GETDATE() AS DATE)) > 0
+        THEN DATEDIFF(DAY, @dueDate, CAST(GETDATE() AS DATE)) * 1000 -- Ubah jadi 1000
+        ELSE 0
+      END AS denda
+  `);
 
     const denda = dendaResult.recordset[0].denda;
 
@@ -744,12 +772,28 @@ app.put('/api/loans/return/:bookCode', async (req, res) => {
 });
 
 
-
+// --- LOGIKA UPDATE OTOMATIS STATUS TERLAMBAT ---
+const updateOverdueStatus = async () => {
+  try {
+    const pool = await sql.connect(dbConfig);
+    const result = await pool.request().query(`
+      UPDATE Peminjaman 
+      SET status = 'terlambat'
+      WHERE status = 'dipinjam' AND tgl_jatuh_tempo < CAST(GETDATE() AS DATE)
+    `);
+    if (result.rowsAffected[0] > 0) {
+      console.log(`[System] ${result.rowsAffected[0]} buku terdeteksi terlambat.`);
+    }
+  } catch (err) {
+    console.error('[System Error] Gagal update status terlambat:', err);
+  }
+};
 
 
 // 🔹 Jalankan server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`Server Backend WebPerpusFMIPA jalan di http://localhost:${PORT}`);
+app.listen(PORT, async () => { // Tambahkan 'async' di sini
+  console.log(`Server Backend WebPerpusFMIPA jalan di http://localhost:${PORT}`);
+  await updateOverdueStatus(); 
 });
 

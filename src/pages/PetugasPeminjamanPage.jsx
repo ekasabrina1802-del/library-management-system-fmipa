@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { Search, Plus, Clock, AlertCircle } from 'lucide-react';
 import { useApp } from '../components/AppContext';
 
+// Variabel untuk alamat server backend
+const API_BASE_URL = "http://localhost:5000";
+
 const COVER_COLORS = { MTK: '#7B1C1C', FIS: '#0D1B2A', KIM: '#1B5E20', BIO: '#1A237E' };
 
 function daysUntilDue(dueDate) {
@@ -166,8 +169,20 @@ export default function PeminjamanPage() {
 
               return (
                 <div key={l.id} className="loan-card">
-                  <div style={{ width: 44, height: 58, borderRadius: 4, background: COVER_COLORS[prefix] || '#555', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 10, fontWeight: 700, flexShrink: 0 }}>
-                    {prefix}
+                  {/* Bagian Gambar yang diperbaiki */}
+                  <div style={{ width: 44, height: 58, borderRadius: 4, overflow: 'hidden', flexShrink: 0, background: '#eee' }}>
+                    {l.image_url ? (
+                      <img 
+                        src={`${API_BASE_URL}${l.image_url}`} 
+                        alt="cover" 
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        onError={(e) => { e.target.src = 'https://via.placeholder.com/44x58?text=Book'; }}
+                      />
+                    ) : (
+                      <div style={{ width: '100%', height: '100%', background: COVER_COLORS[prefix] || '#555', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 10, fontWeight: 700 }}>
+                        {prefix}
+                      </div>
+                    )}
                   </div>
 
                   <div style={{ flex: 1, minWidth: 0 }}>

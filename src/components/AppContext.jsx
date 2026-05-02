@@ -32,16 +32,22 @@ export function AppProvider({ children }) {
   };
 
   const fetchMembers = async () => {
-    try {
-      const res = await fetch(`${API_URL}/api/members`, {
-        headers: ngrokHeaders
-      });
-      const data = await res.json();
-      if (data.success) setMembers(data.members);
-    } catch (err) {
-      console.error('Gagal ambil data anggota:', err);
+  try {
+    const res = await fetch(`${API_URL}/api/members`, {
+      headers: ngrokHeaders
+    });
+    const data = await res.json();
+    if (data.success) {
+      const mapped = data.members.map(m => ({
+        ...m,
+        displayId: m.member_id || String(m.id),
+      }));
+      setMembers(mapped);
     }
-  };
+  } catch (err) {
+    console.error('Gagal ambil data anggota:', err);
+  }
+};
 
   const fetchLoans = async () => {
     try {

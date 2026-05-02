@@ -161,6 +161,7 @@ export default function AnggotaPage() {
   const [search, setSearch] = useState('');
   const [addModal, setAddModal] = useState(false);
   const [detailMember, setDetailMember] = useState(null);
+const [editMember, setEditMember] = useState(null);
 
   const filtered = members.filter(m =>
     !search || m.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -180,7 +181,28 @@ export default function AnggotaPage() {
   return (
     <div>
       {addModal && <MemberModal onSave={(m) => { addMember(m); setAddModal(false); }} onClose={() => setAddModal(false)} />}
-      {detailMember && <MemberDetailModal member={detailMember} loans={loans} onClose={() => setDetailMember(null)} onEdit={() => {}} />}
+      // GANTI DENGAN INI:
+{detailMember && (
+  <MemberDetailModal
+    member={detailMember}
+    loans={loans}
+    onClose={() => setDetailMember(null)}
+    onEdit={(m) => {
+      setDetailMember(null);
+      setEditMember(m);
+    }}
+  />
+)}
+
+{editMember && (
+  <MemberModal
+    onSave={async (m) => {
+      const success = await updateMember(editMember.id, m);
+      if (success) setEditMember(null);
+    }}
+    onClose={() => setEditMember(null)}
+  />
+)}
 
       <div className="page-header">
         <div className="page-breadcrumb">Data Anggota</div>
@@ -237,7 +259,7 @@ export default function AnggotaPage() {
             </thead>
             <tbody>
               {filtered.map(m => (
-                <tr key={m.id} style={{ cursor: 'pointer' }} onClick={() => setDetailMember(m)}>
+                <tr key=  {m.member_id || m.id}style={{ cursor: 'pointer' }} onClick={() => setDetailMember(m)}>
                   <td><code style={{ background: 'var(--gray-light)', padding: '2px 6px', borderRadius: 4, fontSize: 11 }}>{m.id}</code></td>
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

@@ -413,10 +413,10 @@ export default function AnggotaPage() {
                   </td>
                 </tr>
               ) : filtered.map(m => (
-                <tr key={m.id} style={{ cursor: 'pointer' }} onClick={() => setDetailMember(m)}>
+                <tr key={m.member_id || m.id} style={{ cursor: 'pointer' }} onClick={() => setDetailMember(m)}>
                   <td>
                     <code style={{ background: 'var(--gray-light)', padding: '2px 6px', borderRadius: 4, fontSize: 11 }}>
-                      {m.id}
+                      {m.member_id || m.id}
                     </code>
                   </td>
 

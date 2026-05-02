@@ -7,8 +7,11 @@ export default function AnggotaUserPage() {
   const { user } = useAuth();
 
   // Cari data member berdasarkan user yang login
-  // Asumsi: user.memberId atau user.nim dipakai untuk match ke members
-  const member = members.find(m => m.id === user?.memberId || m.nim === user?.nim || m.email === user?.email);
+  const member = members.find(
+    m => m.id === user?.memberId || 
+         m.nim === user?.nim || 
+         m.email === user?.email
+  );
 
   // Jika tidak ditemukan
   if (!member) {
