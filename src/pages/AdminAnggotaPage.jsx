@@ -3,7 +3,7 @@ import { Plus, X, Check, Search, Printer, BookOpen, History } from 'lucide-react
 import { useApp } from '../components/AppContext';
 import { useAuth } from '../components/AuthContext';
 
-function MemberModal({ member, onSave, onClose, role }) {
+function MemberModal({ member = null, onSave, onClose, role }) {
   const isEdit = !!member?.id;
   const isAdmin = role === 'admin';
 
@@ -16,24 +16,36 @@ function MemberModal({ member, onSave, onClose, role }) {
     email: member?.email || '',
     phone: member?.phone || '',
     address: member?.address || '',
-    password: ''
+    password: '',
+    photo: null,
+    existingPhoto: member?.photo || null
   });
 
+  const handleFile = (e) => {
+  const file = e.target.files[0];
+  setForm(p => ({ ...p, photo: file }));
+};
   const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
 
   const handleSubmit = (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (isAdmin && !isEdit && !form.password) {
-      alert('Password wajib diisi untuk staff/petugas perpus.');
-      return;
-    }
+  if (isAdmin && !isEdit && !form.password) {
+    alert('Password wajib diisi untuk staff/petugas perpus.');
+    return;
+  }
 
-    onSave({
-      ...form,
-      type: isAdmin ? 'staff' : form.type
-    });
-  };
+  if (!form.photo && !form.existingPhoto) {
+    alert('Foto anggota wajib diisi!');
+    return;
+  }
+
+  onSave({
+    ...form,
+    type: isAdmin ? 'staff' : form.type,
+    photo: form.photo || form.existingPhoto // ⬅️ penting
+  });
+};
 
   return (
     <div className="modal-overlay">
@@ -62,7 +74,7 @@ function MemberModal({ member, onSave, onClose, role }) {
 
           {isAdmin ? (
             <div className="form-group">
-              <label className="form-label">Tipe Anggota</label>
+              <label className="form-label">Tipe Anggota *</label>
               <input className="form-control" value="Staff / Petugas" disabled />
             </div>
           ) : (
@@ -77,13 +89,13 @@ function MemberModal({ member, onSave, onClose, role }) {
 
           <div className="grid-2">
             <div className="form-group">
-              <label className="form-label">Departemen</label>
-              <input className="form-control" value={form.departemen} onChange={f('departemen')} />
+              <label className="form-label">Departemen *</label>
+              <input className="form-control" value={form.departemen} onChange={f('departemen')}  required />
             </div>
 
             <div className="form-group">
-              <label className="form-label">Program Studi</label>
-              <input className="form-control" value={form.prodi} onChange={f('prodi')} />
+              <label className="form-label">Program Studi *</label>
+              <input className="form-control" value={form.prodi} onChange={f('prodi')}  required />
             </div>
           </div>
 
@@ -115,14 +127,36 @@ function MemberModal({ member, onSave, onClose, role }) {
 
           <div className="grid-2">
             <div className="form-group">
-              <label className="form-label">No. Telp</label>
-              <input className="form-control" value={form.phone} onChange={f('phone')} />
+              <label className="form-label">No. Telp *</label>
+              <input className="form-control" value={form.phone} onChange={f('phone')}  required />
             </div>
 
             <div className="form-group">
-              <label className="form-label">Alamat</label>
-              <input className="form-control" value={form.address} onChange={f('address')} />
+              <label className="form-label">Alamat *</label>
+              <input className="form-control" value={form.address} onChange={f('address')} required />
             </div>
+            <div className="form-group">
+              <label className="form-label">Foto Anggota *</label>
+              <input 
+                type="file"
+                className="form-control"
+                accept="image/*"
+                onChange={handleFile}
+              />
+            </div>
+            {form.photo && (
+              <img
+                src={URL.createObjectURL(form.photo)}
+                alt="preview"
+                style={{
+                  width: 80,
+                  height: 80,
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  marginTop: 10
+                }}
+              />
+            )}
           </div>
 
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>

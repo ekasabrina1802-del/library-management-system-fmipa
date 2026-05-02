@@ -2,9 +2,16 @@
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, BookOpen, Users, ArrowDownToLine, ArrowUpFromLine, FileText, LogOut } from 'lucide-react';
 import { useAuth } from './AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 export default function Sidebar() {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout(); // hapus data
+    navigate('/');
+  };
 
   const adminNav = [
     { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -55,7 +62,7 @@ export default function Sidebar() {
       </nav>
 
       <div className="sidebar-footer">
-        <button className="nav-item logout-btn" onClick={logout} style={{ color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', width: '100%', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>
+        <button className="nav-item logout-btn" onClick={handleLogout} style={{ color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', width: '100%', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>
           <LogOut size={16} />
           Keluar
         </button>

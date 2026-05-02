@@ -3,10 +3,26 @@ import { Plus, X, Check, Search, Printer, BookOpen, History } from 'lucide-react
 import { useApp } from '../components/AppContext';
 import { useAuth } from '../components/AuthContext';
 
-function MemberModal({ onSave, onClose }) {
-  const [form, setForm] = useState({ name: '', nim: '', departemen: '', prodi: '', type: 'mahasiswa', email: '', phone: '', address: '' });
+function MemberModal({ member = null, onSave, onClose }) {
+  const [form, setForm] = useState({ name: '', nim: '', departemen: '', prodi: '', type: 'mahasiswa', email: '', phone: '', address: '', photo: null, existingPhoto: member?.photo || null });
   const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
-  const handleSubmit = (e) => { e.preventDefault(); onSave(form); };
+
+  const handleSubmit = (e) => {
+  e.preventDefault();
+
+  if (!form.photo) {
+    alert('Foto anggota wajib diisi!');
+    return;
+  }
+
+  onSave(form);
+};
+
+  const handleFile = (e) => {
+  const file = e.target.files[0];
+  setForm(p => ({ ...p, photo: file }));
+};  
+
   return (
     <div className="modal-overlay">
       <div className="modal">
@@ -36,26 +52,48 @@ function MemberModal({ onSave, onClose }) {
           <div className="grid-2">
             <div className="form-group">
               <label className="form-label">Departemen</label>
-              <input className="form-control" value={form.departemen} onChange={f('departemen')} />
+              <input className="form-control" value={form.departemen} onChange={f('departemen')}  required />
             </div>
             <div className="form-group">
               <label className="form-label">Program Studi</label>
-              <input className="form-control" value={form.prodi} onChange={f('prodi')} />
+              <input className="form-control" value={form.prodi} onChange={f('prodi')}  required />
             </div>
           </div>
           <div className="form-group">
             <label className="form-label">Email</label>
-            <input className="form-control" type="email" value={form.email} onChange={f('email')} />
+            <input className="form-control" type="email" value={form.email} onChange={f('email')}  required />
           </div>
           <div className="grid-2">
             <div className="form-group">
               <label className="form-label">No. Telp</label>
-              <input className="form-control" value={form.phone} onChange={f('phone')} />
+              <input className="form-control" value={form.phone} onChange={f('phone')}  required />
             </div>
             <div className="form-group">
               <label className="form-label">Alamat</label>
-              <input className="form-control" value={form.address} onChange={f('address')} />
+              <input className="form-control" value={form.address} onChange={f('address')}  required />
             </div>
+            <div className="form-group">
+              <label className="form-label">Foto Anggota *</label>
+              <input 
+                type="file"
+                className="form-control"
+                accept="image/*"
+                onChange={handleFile}
+              />
+            </div>
+            {form.photo && (
+              <img
+                src={URL.createObjectURL(form.photo)}
+                alt="preview"
+                style={{
+                  width: 80,
+                  height: 80,
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                  marginTop: 10
+                }}
+              />
+            )}
           </div>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
             <button type="button" className="btn btn-ghost" onClick={onClose}>Batal</button>
