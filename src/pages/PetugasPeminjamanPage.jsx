@@ -39,11 +39,11 @@ export default function PeminjamanPage() {
     if (
         member &&
         !['mahasiswa', 'dosen'].includes(
-          member.role?.toLowerCase()
+          member.type?.toLowerCase()
         )
       ) {
         setError(
-          `${member.name} (${member.role}) tidak memiliki hak peminjaman.`
+          `${member.name} (${member.type}) tidak memiliki hak peminjaman.`
         );
         return;
       }
