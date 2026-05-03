@@ -62,8 +62,8 @@ export default function RegisterPage() {
       {/* Right Panel */}
       <div className="login-right">
         <div>
-          <h2>Buat Akun Mahasiswa</h2>
-          <p>Isi data di bawah untuk mendaftarkan akun mahasiswa FMIPA kamu.</p>
+          <h2>Buat Akun!</h2>
+          <p>Isi data di bawah untuk terdaftar di perpustakaan FMIPA.</p>
 
           <form onSubmit={handleSubmit}>
             {/* Nama */}
