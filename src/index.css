@@ -106,6 +106,9 @@ tbody td { padding: 10px 14px; font-size: 13px; }
 .page-subtitle { font-size: 13px; color: var(--gray-text); margin-top: 4px; }
 
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .full-width {
+    grid-column: span 2;
+  }
 .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 
