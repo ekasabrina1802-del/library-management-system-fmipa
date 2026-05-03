@@ -85,8 +85,8 @@ export default function LoginPage() {
       {/* Right Panel */}
       <div className="login-right">
         <div>
-          <h2>Masuk ke Sistem<br />Admin & Petugas</h2>
-          <p>Gunakan akun Administrator atau Petugas Anda untuk mengelola repositori perpustakaan digital.</p>
+          <h2>Masuk ke Sistem<br />Perpustakaan FMIPA</h2>
+          <p>Masuk menggunakan akun terdaftar untuk mengakses layanan dan koleksi digital Perpustakaan FMIPA.</p>
 
 
           <form onSubmit={handleSubmit}>
@@ -173,22 +173,7 @@ export default function LoginPage() {
           </a>
         </div>
         <div>
-          <div className="login-footer-cards">
-            <div className="login-feature-card">
-              <BookOpen size={18} />
-              <div>
-                <div className="card-label">Katalog</div>
-                <div className="card-value">24k+ Literatur</div>
-              </div>
-            </div>
-            <div className="login-feature-card">
-              <FlaskConical size={18} />
-              <div>
-                <div className="card-label">Riset</div>
-                <div className="card-value">Jurnal FMIPA</div>
-              </div>
-            </div>
-          </div>
+         
           <div style={{ textAlign: 'center', marginTop: 24, fontSize: 11, color: 'var(--gray-text)', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
             © 2026 FMIPA UNESA — Library Management System Developed by Team 10
           </div>

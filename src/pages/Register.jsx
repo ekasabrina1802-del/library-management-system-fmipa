@@ -62,7 +62,7 @@ export default function RegisterPage() {
       {/* Right Panel */}
       <div className="login-right">
         <div>
-          <h2>Buat Akun<br />Mahasiswa</h2>
+          <h2>Buat Akun Mahasiswa</h2>
           <p>Isi data di bawah untuk mendaftarkan akun mahasiswa FMIPA kamu.</p>
 
           <form onSubmit={handleSubmit}>
@@ -111,7 +111,23 @@ export default function RegisterPage() {
                   onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
                   required
                 />
-                <button type="button" onClick={() => setShowPass(s => !s)}>
+                <button
+                  type="button"
+                  onClick={() => setShowPass(s => !s)}
+                  style={{
+                    position: 'absolute',
+                    right: 46,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    color: 'var(--gray-mid)',
+                    padding: 0
+                  }}
+                >
                   {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
@@ -150,7 +166,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               className="btn btn-primary btn-lg"
-              style={{ width: '100%' }}
+              style={{ width: '100%', justifyContent:'center' }}
               disabled={loading}
             >
               {loading ? 'Mendaftarkan...' : 'Buat Akun'}
@@ -171,22 +187,7 @@ export default function RegisterPage() {
 
         {/* Footer */}
         <div>
-          <div className="login-footer-cards">
-            <div className="login-feature-card">
-              <BookOpen size={18} />
-              <div>
-                <div>Katalog</div>
-                <div>24k+ Literatur</div>
-              </div>
-            </div>
-            <div className="login-feature-card">
-              <FlaskConical size={18} />
-              <div>
-                <div>Riset</div>
-                <div>Jurnal FMIPA</div>
-              </div>
-            </div>
-          </div>
+          
         </div>
       </div>
     </div>
