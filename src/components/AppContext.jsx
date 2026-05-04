@@ -24,7 +24,10 @@ export function AppProvider({ children }) {
   const [books, setBooks] = useState([]);
   const [members, setMembers] = useState([]);
   const [loans, setLoans] = useState([]);
-  const [activityLog, setActivityLog] = useState(ACTIVITY_LOG);
+  const [activityLog, setActivityLog] = useState(() => {
+    const saved = localStorage.getItem('activityLog');
+    return saved ? JSON.parse(saved) : [];
+  });
 
   const uploadMemberPhoto = async (memberId, file) => {
   try {
@@ -101,10 +104,20 @@ export function AppProvider({ children }) {
   }, []);
 
   const addLog = (type, desc, icon = 'info') => {
-    const now = new Date();
-    const time = `${now.toLocaleDateString('id-ID')} ${now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`;
-    setActivityLog(prev => [{ id: Date.now(), time, type, desc, icon }, ...prev]);
-  };
+  const now = new Date();
+  const time = `${now.toLocaleDateString('id-ID')} ${now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`;
+
+  setActivityLog(prev => {
+    const updated = [
+      { id: Date.now(), time, type, desc, icon },
+      ...prev
+    ].slice(0, 100); // max 100 log
+
+    localStorage.setItem('activityLog', JSON.stringify(updated));
+
+    return updated;
+  });
+};
 
   const addBook = async (book) => {
       try {
@@ -126,7 +139,8 @@ export function AppProvider({ children }) {
 
         if (data.success) {
           await fetchBooks();
-          addLog('book', `Buku baru: ${book.title}`, 'book');
+          addLog('book', `Menambahkan buku baru: "${book.title}" (${book.no_induk}) — Stok: ${book.stock}, Kategori: ${book.category}`, 'book');
+
           return true;
         }
 
@@ -159,7 +173,8 @@ export function AppProvider({ children }) {
 
         if (data.success) {
           await fetchBooks();
-          addLog('book', `Buku diperbarui: ${updates.title}`, 'book');
+          addLog('book', `Memperbarui data buku: "${updates.title}" (ID: ${id}) — Stok diubah ke ${updates.stock}, Kategori: ${updates.category}`, 'book');
+
           return true;
         }
 
@@ -189,7 +204,8 @@ export function AppProvider({ children }) {
       }
 
       await fetchBooks();
-      addLog('delete', `${ids.length} buku dihapus`, 'delete');
+      addLog('delete', `Menghapus ${ids.length} eksemplar buku dari koleksi (ID: ${ids.join(', ')})`, 'delete');
+
       return true;
     } catch (err) {
       console.error('Gagal hapus buku:', err);
@@ -210,7 +226,8 @@ export function AppProvider({ children }) {
 
       if (data.success) {
         await fetchMembers();
-        addLog('member', `Anggota baru: ${member.name}`, 'member');
+        addLog('member', `Mendaftarkan anggota baru: ${member.name} (${member.nim}) — ${member.type === 'mahasiswa' ? 'Mahasiswa' : 'Dosen'}, ${member.prodi || member.departemen}`, 'member');
+
         return true;
       }
 
@@ -235,7 +252,8 @@ export function AppProvider({ children }) {
 
       if (data.success) {
         await fetchMembers();
-        addLog('member', `Data anggota diperbarui: ${updates.name}`, 'member');
+        addLog('member', `Memperbarui data anggota: ${updates.name} (${updates.nim}) — Prodi: ${updates.prodi}, Kontak: ${updates.email}`, 'member');
+
         return true;
       }
 
@@ -261,7 +279,7 @@ export function AppProvider({ children }) {
       if (data.success) {
         await fetchBooks();
         await fetchLoans();
-        addLog('loan', 'Peminjaman buku berhasil diproses', 'loan');
+        addLog('loan', `Peminjaman dicatat oleh ${user?.name}: buku "${bookCode}" dipinjam oleh anggota ID ${memberId}`, 'loan');
         return { success: true };
       }
 
@@ -273,45 +291,50 @@ export function AppProvider({ children }) {
   };
 
   const returnBook = async (bookCode) => {
-    try {
-      const res = await fetch(`${API_URL}/api/loans/return/${encodeURIComponent(bookCode)}`, {
-        method: 'PUT',
-        headers: ngrokHeaders
-      });
+  try {
+    // Cari data loan aktif sebelum dikembalikan
+    const activeLoan = loans.find(
+      l => l.bookCode === bookCode && (l.status === 'dipinjam' || l.status === 'terlambat')
+    );
+    const memberName = activeLoan?.memberName || 'Tidak diketahui';
 
-      const data = await res.json();
+    const res = await fetch(`${API_URL}/api/loans/return/${encodeURIComponent(bookCode)}`, {
+      method: 'PUT',
+      headers: ngrokHeaders
+    });
 
-      if (data.success) {
-        await fetchBooks();
-        await fetchLoans();
-        addLog('return', 'Pengembalian buku berhasil diproses', 'return');
+    const data = await res.json();
 
-        return {
-          success: true,
-          loan: { bookCode, bookTitle: '', memberName: '' },
-          denda: data.denda || 0
-        };
-      }
+    if (data.success) {
+      await fetchBooks();
+      await fetchLoans();
+      addLog('return', `Pengembalian buku "${bookCode}" oleh ${memberName} selesai — Denda: ${data.denda > 0 ? 'Rp ' + data.denda.toLocaleString('id-ID') : 'Tidak ada'}`, 'return');
 
-      return { success: false, message: data.message };
-    } catch (err) {
-      console.error('Gagal pengembalian buku:', err);
-      return { success: false, message: 'Gagal memproses pengembalian' };
+      return {
+        success: true,
+        loan: { bookCode, bookTitle: '', memberName },
+        denda: data.denda || 0
+      };
     }
-  };
 
-  const getDendaTotal = () => {
-    const thisMonth = new Date().getMonth();
-    return loans
-      .filter(l => {
-        if (l.denda === 0) return false;
-        const d = new Date(l.returnDate || l.dueDate);
-        return d.getMonth() === thisMonth;
-      })
-      .reduce((sum, l) => sum + l.denda, 0);
-  };
+    return { success: false, message: data.message };
+  } catch (err) {
+    console.error('Gagal pengembalian buku:', err);
+    return { success: false, message: 'Gagal memproses pengembalian' };
+  }
+};
 
-  // Di dalam AppContext, ubah addReminder menjadi:
+// Fungsi getDendaTotal
+const getDendaTotal = (userId) => {
+  return loans
+    .filter(l => {
+      if (Number(l.denda) === 0) return false;
+      if (userId && String(l.user_id || l.memberId) !== String(userId)) return false;
+      return true;
+    })
+    .reduce((sum, l) => sum + Number(l.denda), 0);
+};
+
 const addReminder = (book, userId) => {
   const key = `reminders_${userId}`;
   const existing = JSON.parse(localStorage.getItem(key) || '[]');
@@ -331,8 +354,7 @@ const addReminder = (book, userId) => {
   const updated = [...existing, newReminder];
   localStorage.setItem(key, JSON.stringify(updated));
   
-  // Update state juga
-  setReminders(updated); // atau apapun nama state-nya di konteks kamu
+  setReminders(updated); 
 };
 
 useEffect(() => {
@@ -343,6 +365,7 @@ useEffect(() => {
   }
 }, [user?.id, books]);
 
+// Fungsi notifikasi
 const getUserNotifications = () => {
   return reminders.map(r => {
     const book = books.find(
@@ -357,6 +380,16 @@ const getUserNotifications = () => {
       available: stock > 0
     };
   });
+};
+
+const updateMemberPhoto = (photo_url) => {
+  setMembers(prev =>
+    prev.map(m =>
+      m.id === user.memberId
+        ? { ...m, photo_url }
+        : m
+    )
+  );
 };
 
   return (
@@ -378,6 +411,7 @@ const getUserNotifications = () => {
         returnBook,
         getDendaTotal,
         uploadMemberPhoto,
+        updateMemberPhoto,
         addLog
       }}
     >

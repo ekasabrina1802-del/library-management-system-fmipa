@@ -127,34 +127,52 @@ export default function DashboardPage() {
       </div>
 
       {/* Activity Log */}
-      <div className="card">
-        <div className="flex-between mb-16">
-          <div>
-            <div style={{ fontWeight: 700, color: 'var(--navy)', fontSize: 15 }}>Aktivitas Terbaru</div>
-            <div style={{ fontSize: 12, color: 'var(--gray-text)' }}>Log semua aktivitas sistem</div>
-          </div>
-          <span className="badge badge-info">{activityLog.length} entri</span>
+{user?.role === 'admin' && (
+  <div className="card">
+    <div className="flex-between mb-16">
+      <div>
+        <div style={{ fontWeight: 700, color: 'var(--navy)', fontSize: 15 }}>
+          Aktivitas Terbaru
         </div>
-        <div style={{ maxHeight: 300, overflowY: 'auto' }}>
-          {activityLog.slice(0, 15).map(a => (
-            <div key={a.id} className="activity-item">
-              <div className="activity-dot" />
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-                  <div>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700, color: 'var(--maroon)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                      {activityIcons[a.icon] || <Clock size={12} />}
-                      {a.type}
-                    </span>
-                    <div className="activity-text">{a.desc}</div>
-                  </div>
-                  <div className="activity-time" style={{ flexShrink: 0 }}>{a.time}</div>
-                </div>
-              </div>
-            </div>
-          ))}
+        <div style={{ fontSize: 12, color: 'var(--gray-text)' }}>
+          Log semua aktivitas sistem
         </div>
       </div>
+      <span className="badge badge-info">{activityLog.length} entri</span>
     </div>
-  );
+
+    <div style={{ maxHeight: 300, overflowY: 'auto' }}>
+      {activityLog.slice(0, 15).map(a => (
+        <div key={a.id} className="activity-item">
+          <div className="activity-dot" />
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+              <div>
+                <span style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: 'var(--maroon)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px'
+                }}>
+                  {activityIcons[a.icon] || <Clock size={12} />}
+                  {a.type}
+                </span>
+                <div className="activity-text">{a.desc}</div>
+              </div>
+              <div className="activity-time" style={{ flexShrink: 0 }}>
+                {a.time}
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+</div>
+);
 }

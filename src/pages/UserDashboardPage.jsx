@@ -31,14 +31,17 @@ function LiveClock() {
   return (
     <div style={{ textAlign: 'right' }}>
       <div style={{
-        fontSize: 38, fontWeight: 700, letterSpacing: '-1px',
+        fontSize: 32,
+        fontWeight: 700,
+        letterSpacing: '-1px',
         fontVariantNumeric: 'tabular-nums',
-        color: 'white', fontFamily: "'DM Mono', monospace",
+        color: 'white',
+        fontFamily: "'DM Mono', monospace",
         textShadow: '0 2px 12px rgba(0,0,0,0.5)',
       }}>
         {now.toLocaleTimeString('id-ID')}
       </div>
-      <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', letterSpacing: '0.04em', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
+      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', letterSpacing: '0.04em', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
         {now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
       </div>
     </div>
@@ -62,7 +65,7 @@ function PhotoSlider({ current, onPrev, onNext, onDot }) {
       {/* Dark overlay */}
       <div style={{
         position: 'absolute', inset: 0, zIndex: 1,
-        background: 'linear-gradient(to bottom, rgba(10,15,30,0.55) 0%, rgba(10,15,30,0.72) 60%, rgba(10,15,30,0.85) 100%)',
+        background: 'linear-gradient(to bottom, rgba(10,15,30,0.55) 0%, rgba(10,15,30,0.72) 60%, rgba(10,15,30,0.88) 100%)',
       }} />
       {/* Prev/Next arrows */}
       <button onClick={onPrev} style={arrowBtn('left')}>
@@ -73,7 +76,7 @@ function PhotoSlider({ current, onPrev, onNext, onDot }) {
       </button>
       {/* Dot indicators */}
       <div style={{
-        position: 'absolute', bottom: 80, left: '50%', transform: 'translateX(-50%)',
+        position: 'absolute', bottom: 56, left: '50%', transform: 'translateX(-50%)',
         display: 'flex', gap: 8, zIndex: 10,
       }}>
         {SLIDES.map((_, i) => (
@@ -112,7 +115,6 @@ function StatCard({ icon, value, label, accent, delay = 0, visible }) {
       transition: `transform 0.6s cubic-bezier(.22,1,.36,1) ${delay}ms, opacity 0.6s ease ${delay}ms`,
       position: 'relative', overflow: 'hidden',
     }}>
-      {/* Accent glow */}
       <div style={{
         position: 'absolute', top: -20, right: -20,
         width: 80, height: 80, borderRadius: '50%',
@@ -141,9 +143,6 @@ export default function UserDashboardPage() {
   const { user } = useAuth();
   const notifications = getUserNotifications();
 
-  // 🔥 TARUH DI SINI
-  console.log("NOTIFICATIONS:", notifications);
-
   const isDosen = user?.role === 'dosen';
   const rules = isDosen
     ? { max: 10, durasi: '1 Bulan', perpanjang: 'N/A' }
@@ -156,17 +155,14 @@ export default function UserDashboardPage() {
       l.memberNim === user?.nim
   );
 
-// 🔍 DEBUG DI SINI
-console.log("USER:", user);
-console.log("LOANS:", loans);
-console.log("MY LOANS:", myLoans);
-
   const activeLoans = myLoans.filter(l =>
     ['dipinjam', 'Dipinjam'].includes(l.status)
   );
   const overdueLoans = myLoans.filter(l =>
     ['terlambat', 'Terlambat'].includes(l.status)
   );
+
+  // ✅ FIX: kirim user.id agar denda hanya milik user yang login
   const dendaSaya = getDendaTotal(user?.id);
 
   // Slideshow state
@@ -180,7 +176,6 @@ console.log("MY LOANS:", myLoans);
 
   // Scroll reveal
   const dashRef = useRef(null);
-  const heroRef = useRef(null);
   const [visible, setVisible] = useState(false);
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -191,68 +186,63 @@ console.log("MY LOANS:", myLoans);
     return () => observer.disconnect();
   }, []);
 
-  // Scroll to dashboard section
   const scrollDown = () => dashRef.current?.scrollIntoView({ behavior: 'smooth' });
 
-  // Get initials
   const initials = user?.name?.split(' ').map(w => w[0]).slice(0, 2).join('') || 'U';
+  const [showNotif, setShowNotif] = useState(false);
 
   return (
     <div style={{ fontFamily: "'Nunito', 'Segoe UI', sans-serif", margin: 0, padding: 0 }}>
+
       {/* ── HERO SECTION ─────────────────────────────────────────────────── */}
-      {/* Uses negative margin to escape the page wrapper's padding */}
-      <div ref={heroRef} style={{
+      <div style={{
         height: '100vh',
         display: 'flex', flexDirection: 'column',
         justifyContent: 'center', alignItems: 'stretch',
         position: 'relative', overflow: 'hidden',
-        /* Pull out of parent padding so it's truly edge-to-edge */
         margin: '-24px -24px 0 -24px',
       }}>
-        {/* Photo slideshow bg */}
-        <PhotoSlider
-          current={slide}
-          onPrev={prevSlide}
-          onNext={nextSlide}
-          onDot={setSlide}
-        />
+        <PhotoSlider current={slide} onPrev={prevSlide} onNext={nextSlide} onDot={setSlide} />
 
-        {/* Content — sits above overlay (z-index > 1) */}
-        <div style={{ position: 'relative', zIndex: 5, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 40px' }}>
+        {/* Clock — pojok kanan atas */}
+        <div style={{ position: 'absolute', top: 24, right: 32, zIndex: 20 }}>
+          <LiveClock />
+        </div>
 
-          {/* Top right clock */}
-          <div style={{ position: 'absolute', top: -'calc(50vh - 60px)', right: 0 }} />
-          <div style={{ position: 'fixed', top: 20, right: 32, zIndex: 100 }}>
-            <LiveClock />
-          </div>
+        {/* Konten utama hero */}
+        <div style={{
+          position: 'relative', zIndex: 5,
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          padding: '0 40px',
+          // sedikit geser ke atas agar "Lihat Statistik" tidak menumpuk
+          marginTop: '-40px',
+        }}>
 
           {/* Avatar */}
-<div style={{
-  width: 110, height: 110, borderRadius: '50%',
-  background: 'linear-gradient(135deg, #7B1C1C, #C53030)',
-  display: 'flex', alignItems: 'center', justifyContent: 'center',
-  fontSize: 38, fontWeight: 800, color: 'white',
-  boxShadow: '0 0 0 5px rgba(255,255,255,0.15), 0 0 0 10px rgba(255,255,255,0.06), 0 8px 32px rgba(0,0,0,0.4)',
-  marginBottom: 24,
-  animation: 'fadeInDown 0.8s cubic-bezier(.22,1,.36,1)',
-  fontFamily: "'DM Mono', monospace",
-  overflow: 'hidden', padding: 0,
-}}>
-  {user?.photo_url ? (
-    <img
-      src={`${API_URL}${user.photo_url}`}
-      alt={user.name}
-      style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
-    />
-  ) : (
-    initials
-  )}
-</div>
+          <div style={{
+            width: 90, height: 90, borderRadius: '50%',
+            background: 'linear-gradient(135deg, #7B1C1C, #C53030)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 30, fontWeight: 800, color: 'white',
+            boxShadow: '0 0 0 4px rgba(255,255,255,0.15), 0 0 0 8px rgba(255,255,255,0.06), 0 8px 32px rgba(0,0,0,0.4)',
+            marginBottom: 16,
+            animation: 'fadeInDown 0.8s cubic-bezier(.22,1,.36,1)',
+            fontFamily: "'DM Mono', monospace",
+            overflow: 'hidden', padding: 0, flexShrink: 0,
+          }}>
+            {user?.photo_url ? (
+              <img
+                src={`${API_URL}${user.photo_url}`}
+                alt={user.name}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+              />
+            ) : initials}
+          </div>
 
-           {/* Header */}
+          {/* Nama */}
           <h1 style={{
-            fontSize: 'clamp(36px, 5vw, 64px)', fontWeight: 700,
-            color: 'white', margin: 0, textAlign: 'center',
+            fontSize: 'clamp(28px, 4vw, 52px)', fontWeight: 700,
+            color: 'white', margin: '0 0 12px', textAlign: 'center',
             fontFamily: "'Playfair Display', Georgia, serif",
             letterSpacing: '-0.5px', lineHeight: 1.1,
             textShadow: '0 4px 24px rgba(0,0,0,0.5)',
@@ -261,126 +251,149 @@ console.log("MY LOANS:", myLoans);
             {user?.name}
           </h1>
 
-          {/* Notifikasi */}
-          {notifications.length > 0 && (
-            <div style={{
-              marginTop: 20,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 8,
-              width: '100%',
-              maxWidth: 480,
-            }}>
-              {notifications.map(n => {
-                const isAvailable = n.available === true;
-                return (
-                  <div key={n.id} style={{
-                    background: isAvailable
-                      ? 'rgba(209,250,229,0.92)'   // hijau transparan
-                      : 'rgba(254,243,199,0.92)',  // kuning transparan
-                    border: `1px solid ${isAvailable ? '#6EE7B7' : '#FCD34D'}`,
-                    borderRadius: 14,
-                    padding: '14px 18px',
-                    backdropFilter: 'blur(8px)',
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: 10,
-                  }}>
-                    <span style={{ fontSize: 18 }}>{isAvailable ? '✅' : '⏳'}</span>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: isAvailable ? '#065F46' : '#92400E' }}>
-                        {isAvailable ? 'Buku Tersedia!' : 'Belum Tersedia'}
-                      </div>
-                      <div style={{ fontSize: 13, color: isAvailable ? '#047857' : '#B45309' }}>
-                        Buku <strong>{n.title}</strong>{' '}
-                        {isAvailable ? 'sekarang sudah bisa dipinjam.' : 'masih belum tersedia.'}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
           {/* Role badges */}
           <div style={{
-            marginTop: 18,
-            display: 'flex', gap: 10, alignItems: 'center',
+            display: 'flex', gap: 10, alignItems: 'center', marginBottom: 20,
             animation: 'fadeInUp 1s cubic-bezier(.22,1,.36,1)',
           }}>
             <span style={{
-              padding: '6px 20px', borderRadius: 100,
-              background: 'rgba(255,255,255,0.14)',
-              backdropFilter: 'blur(8px)',
+              padding: '5px 16px', borderRadius: 100,
+              background: 'rgba(255,255,255,0.14)', backdropFilter: 'blur(8px)',
               border: '1px solid rgba(255,255,255,0.25)',
-              color: 'white', fontSize: 12,
-              fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
+              color: 'white', fontSize: 11, fontWeight: 700,
+              letterSpacing: '0.12em', textTransform: 'uppercase',
               textShadow: '0 1px 4px rgba(0,0,0,0.3)',
             }}>
               {user?.role}
             </span>
             <span style={{
-              padding: '6px 20px', borderRadius: 100,
-              background: 'rgba(123,28,28,0.5)',
-              backdropFilter: 'blur(8px)',
+              padding: '5px 16px', borderRadius: 100,
+              background: 'rgba(123,28,28,0.5)', backdropFilter: 'blur(8px)',
               border: '1px solid rgba(220,80,80,0.4)',
-              color: '#FFB3B3', fontSize: 12, fontWeight: 600,
+              color: '#FFB3B3', fontSize: 11, fontWeight: 600,
             }}>
               Perpustakaan FMIPA
             </span>
           </div>
 
+          {/* NOTIFIKASI */}
+          {notifications.length > 0 && (() => {
+          const availableCount = notifications.filter(n => n.available).length;
+          const unavailableCount = notifications.length - availableCount;
+
+          return (
+            <div style={{
+              width: '100%',
+              maxWidth: 460,
+              marginBottom: 16,
+            }}>
+              {/* 🔔 SUMMARY */}
+              <div
+                onClick={() => setShowNotif(!showNotif)}
+                style={{
+                  background: 'rgba(255,255,255,0.12)',
+                  border: '1px solid rgba(255,255,255,0.25)',
+                  borderRadius: 12,
+                  padding: '10px 14px',
+                  backdropFilter: 'blur(10px)',
+                  cursor: 'pointer',
+                }}
+              >
+                <div style={{ fontWeight: 700, fontSize: 13, color: 'white' }}>
+                  🔔 {notifications.length} Notifikasi
+                </div>
+
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)' }}>
+                  {availableCount > 0 && `✅ ${availableCount} tersedia`}
+                  {availableCount > 0 && unavailableCount > 0 && ' • '}
+                  {unavailableCount > 0 && `⏳ ${unavailableCount} buku belum tersedia`}
+                </div>
+              </div>
+
+              {/* ⬇️ DETAIL */}
+              {showNotif && (
+                <div style={{
+                  marginTop: 8,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 6,
+                }}>
+                  {notifications.map(n => {
+                    const isAvailable = n.available === true;
+
+                    return (
+                      <div key={n.id} style={{
+                        background: isAvailable
+                          ? 'rgba(209,250,229,0.95)'
+                          : 'rgba(254,243,199,0.95)',
+                        border: `1px solid ${isAvailable ? '#6EE7B7' : '#FCD34D'}`,
+                        borderRadius: 10,
+                        padding: '8px 12px',
+                        fontSize: 12,
+                      }}>
+                        <strong>"{n.title}"</strong><br />
+                        {isAvailable
+                          ? ' Kini dapat dipinjam. Segera kunjungi perpustakaan!'
+                           : ' Masih sedang dipinjam oleh anggota lain.'}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
           {/* Rules glass card */}
           <div style={{
-            marginTop: 36,
             background: 'rgba(255,255,255,0.08)',
             backdropFilter: 'blur(16px)',
             border: '1px solid rgba(255,255,255,0.14)',
-            borderRadius: 20, padding: '22px 40px',
-            display: 'flex', gap: 0, alignItems: 'center',
-            animation: 'fadeInUp 1.1s cubic-bezier(.22,1,.36,1)',
+            borderRadius: 16,
+            padding: '16px 32px',
+            display: 'flex',
+            alignItems: 'center',
           }}>
             {[
               { label: 'Maks. Buku', val: rules.max },
               { label: 'Durasi', val: rules.durasi },
               { label: 'Perpanjangan', val: rules.perpanjang },
             ].map((r, i) => (
-              <div key={i} style={{ textAlign: 'center', padding: '0 28px', borderRight: i < 2 ? '1px solid rgba(255,255,255,0.15)' : 'none' }}>
-                <div style={{
-                  fontSize: 26, fontWeight: 800, color: 'white',
-                  fontFamily: "'DM Mono', monospace",
-                  textShadow: '0 2px 8px rgba(0,0,0,0.3)',
-                }}>{r.val}</div>
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.12em', marginTop: 4 }}>{r.label}</div>
+              <div key={i} style={{
+                textAlign: 'center',
+                padding: '0 22px',
+                borderRight: i < 2 ? '1px solid rgba(255,255,255,0.15)' : 'none',
+              }}>
+                <div style={{ fontSize: 22, fontWeight: 800, color: 'white' }}>
+                  {r.val}
+                </div>
+                <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.5)' }}>
+                  {r.label}
+                </div>
               </div>
             ))}
           </div>
 
-          {/* Slide caption */}
-          <div style={{
-            marginTop: 24, fontSize: 13, color: 'rgba(255,255,255,0.5)',
-            letterSpacing: '0.1em', textTransform: 'uppercase',
-            animation: 'fadeInUp 1.2s ease',
-          }}>
-            {SLIDES[slide].caption}
+          {/* ⬇️ BUTTON HARUS DI DALAM CONTAINER YANG SAMA */}
+          <div style={{ marginTop: 12 }}>
+            <button
+              onClick={scrollDown}
+              style={{
+                fontSize: 11,
+                color: 'rgba(255,255,255,0.7)',
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              Lihat Statistik &nbsp;
+              <ChevronDown size={14} />
+            </button>
           </div>
-        </div>
-
-        {/* Scroll CTA */}
-        <button
-          onClick={scrollDown}
-          style={{
-            position: 'absolute', bottom: 32, left: '50%', transform: 'translateX(-50%)',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-            background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.5)',
-            fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', zIndex: 10,
-            animation: 'bounce 2s infinite',
-          }}
-        >
-          Lihat Statistik
-          <ChevronDown size={18} />
-        </button>
-      </div>
+          </div>
+          </div>
 
       {/* ── DASHBOARD SECTION ────────────────────────────────────────────── */}
       <div ref={dashRef} style={{
@@ -416,65 +429,47 @@ console.log("MY LOANS:", myLoans);
           </p>
         </div>
 
-        {/* Notifikasi */}
+        {/* ✅ FIX NOTIFIKASI dashboard section — kalimat diperjelas */}
         {notifications.length > 0 && (
-          <div style={{ marginTop: 32, marginBottom: 24, width: '100%' }}>
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 12,
-              width: '100%',
-            }}>
-              {notifications.map(n => {
-                const isAvailable = n.available === true;
-
-                return (
-                  <div
-                    key={n.id}
-                    style={{
-                      width: '100%', // full lebar
-                      background: isAvailable
-                        ? 'rgba(209,250,229,0.92)'   // hijau
-                        : 'rgba(254,243,199,0.92)',  // kuning
-                      border: `1px solid ${isAvailable ? '#6EE7B7' : '#FCD34D'}`,
-                      borderRadius: 16,
-                      padding: '16px 20px',
-                      backdropFilter: 'blur(8px)',
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: 12,
-                    }}
-                  >
-                    <span style={{ fontSize: 20 }}>
-                      {isAvailable ? '✅' : '⏳'}
-                    </span>
-
-                    <div>
-                      <div style={{
-                        fontWeight: 700,
-                        fontSize: 14,
-                        color: isAvailable ? '#065F46' : '#92400E'
-                      }}>
-                        {isAvailable ? 'Buku Tersedia!' : 'Belum Tersedia'}
-                      </div>
-
-                      <div style={{
-                        fontSize: 14,
-                        color: isAvailable ? '#047857' : '#B45309'
-                      }}>
-                        Buku <strong>{n.title}</strong>{' '}
-                        {isAvailable
-                          ? 'sekarang sudah bisa dipinjam.'
-                          : 'masih belum tersedia.'}
-                      </div>
+          <div style={{ marginBottom: 32, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {notifications.map(n => {
+              const isAvailable = n.available === true;
+              return (
+                <div key={n.id} style={{
+                  width: '100%',
+                  background: isAvailable ? 'rgba(209,250,229,0.92)' : 'rgba(254,243,199,0.92)',
+                  border: `1px solid ${isAvailable ? '#6EE7B7' : '#FCD34D'}`,
+                  borderRadius: 16, padding: '16px 20px',
+                  display: 'flex', alignItems: 'flex-start', gap: 12,
+                }}>
+                  <span style={{ fontSize: 20, flexShrink: 0 }}>
+                    {isAvailable ? '✅' : '⏳'}
+                  </span>
+                  <div>
+                    <div style={{
+                      fontWeight: 700, fontSize: 14,
+                      color: isAvailable ? '#065F46' : '#92400E',
+                    }}>
+                      {isAvailable
+                        ? 'Buku yang Anda pantau sudah tersedia!'
+                        : 'Buku yang Anda pantau belum tersedia'}
+                    </div>
+                    <div style={{
+                      fontSize: 14, marginTop: 2,
+                      color: isAvailable ? '#047857' : '#B45309',
+                    }}>
+                      <strong>"{n.title}"</strong> (ID: {n.bookId})
+                      {isAvailable
+                        ? ' kini dapat dipinjam. Segera kunjungi perpustakaan dan tunjukkan kode buku ke petugas.'
+                        : ' masih sedang dipinjam oleh anggota lain. Kami akan terus memantaukan untuk Anda.'}
                     </div>
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
           </div>
         )}
-        
+
         {/* Info banner */}
         <div style={{
           background: 'linear-gradient(135deg, #EBF8FF, #DBEAFE)',
@@ -498,7 +493,9 @@ console.log("MY LOANS:", myLoans);
               Aturan Peminjaman {isDosen ? 'Dosen' : 'Mahasiswa'}
             </div>
             <div style={{ fontSize: 14, color: '#3730A3', marginTop: 2 }}>
-              Maksimal <strong>{rules.max} buku</strong> &nbsp;·&nbsp; Durasi <strong>{rules.durasi}</strong> &nbsp;·&nbsp; Perpanjangan: <strong>{rules.perpanjang}</strong>
+              Maksimal <strong>{rules.max} buku</strong> &nbsp;·&nbsp;
+              Durasi <strong>{rules.durasi}</strong> &nbsp;·&nbsp;
+              Perpanjangan: <strong>{rules.perpanjang}</strong>
             </div>
           </div>
         </div>
@@ -531,8 +528,8 @@ console.log("MY LOANS:", myLoans);
           />
           <StatCard
             icon={<DollarSign size={22} color="#059669" />}
-            value={`Rp ${dendaSaya?.toLocaleString('id-ID') ?? 0}`}
-            label="Total Denda"
+            value={`Rp ${(dendaSaya ?? 0).toLocaleString('id-ID')}`}
+            label="Total Denda Saya"
             accent="#059669"
             delay={300} visible={visible}
           />
@@ -580,8 +577,8 @@ console.log("MY LOANS:", myLoans);
           to   { opacity: 1; transform: translateY(0); }
         }
         @keyframes bounce {
-          0%, 100% { transform: translateY(0); }
-          50%       { transform: translateY(-8px); }
+          0%, 100% { transform: translateX(-50%) translateY(0); }
+          50%       { transform: translateX(-50%) translateY(-6px); }
         }
       `}</style>
     </div>

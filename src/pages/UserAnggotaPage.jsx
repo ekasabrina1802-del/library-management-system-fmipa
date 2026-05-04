@@ -1,12 +1,29 @@
 import { BookOpen, Clock, AlertCircle, Phone, Mail, MapPin, GraduationCap, Building2, History, User } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Pencil } from 'lucide-react';
 import { useApp } from '../components/AppContext';
 import { useAuth } from '../components/AuthContext';
+
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function AnggotaUserPage() {
-  const { members, loans } = useApp();
+  const { members, loans, updateMemberPhoto } = useApp();
   const { user } = useAuth();
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef(null);
+  const [preview, setPreview] = useState(null);
+
+  useEffect(() => {
+  function handleClickOutside(e) {
+    if (menuRef.current && !menuRef.current.contains(e.target)) {
+      setShowMenu(false);
+    }
+  }
+
+  document.addEventListener('mousedown', handleClickOutside);
+  return () => document.removeEventListener('mousedown', handleClickOutside);
+}, []);
 
   // Cari data member berdasarkan user yang login
   const member = members.find(
@@ -44,183 +61,198 @@ export default function AnggotaUserPage() {
   const isActive = member.status === 'aktif';
 
   return (
-    <div>
-      {/* Page Header */}
-      <div className="page-header">
-        <h1 className="page-title">Profil Saya</h1>
-        <p className="page-subtitle">Informasi keanggotaan dan riwayat peminjaman buku kamu.</p>
+  <div>
+    {/* Page Header */}
+    <div className="page-header">
+      <h1 className="page-title">Profil Saya</h1>
+      <p className="page-subtitle">
+        Informasi keanggotaan kamu.
+      </p>
+    </div>
+
+    {/* Alert jika nonaktif */}
+    {!isActive && (
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          padding: '12px 16px',
+          background: '#fef2f2',
+          border: '1px solid #fecaca',
+          borderRadius: 8,
+          marginBottom: 20,
+          fontSize: 13,
+          color: '#dc2626',
+        }}
+      >
+        <AlertCircle size={16} />
+        <span>
+          Status keanggotaan kamu saat ini <strong>nonaktif</strong>.
+        </span>
       </div>
+    )}
 
-      {/* Alert jika nonaktif */}
-      {!isActive && (
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 12,
-          padding: '12px 16px', background: '#fef2f2', border: '1px solid #fecaca',
-          borderRadius: 8, marginBottom: 20, fontSize: 13, color: '#dc2626'
-        }}>
-          <AlertCircle size={16} />
-          <span>Status keanggotaan kamu saat ini <strong>nonaktif</strong>. Kamu tidak dapat melakukan peminjaman baru. Hubungi petugas untuk informasi lebih lanjut.</span>
-        </div>
-      )}
+    {/* Layout utama */}
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+      }}
+    >
+      <div
+        style={{
+          width: 420,
+          background: 'white',
+          borderRadius: 16,
+          padding: 24,
+          boxShadow: '0 8px 24px rgba(0,0,0,0.06)',
+        }}
+      >
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 20, alignItems: 'start' }}>
-
-        {/* ── Kolom Kiri: Kartu Profil ── */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-          {/* Avatar & Info Utama */}
-          <div className="card" style={{ textAlign: 'center', padding: 28 }}>
-{member.photo_url ? (
-  <img
-    src={`${API_URL}${member.photo_url}`}
-    alt={member.name}
-    style={{
-      width: 72, height: 72, borderRadius: '50%',
-      objectFit: 'cover', margin: '0 auto 14px', display: 'block'
-    }}
-  />
-) : (
-  <div style={{
-    width: 72, height: 72, borderRadius: '50%',
-    background: isActive ? 'var(--maroon)' : '#9ca3af',
-    color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: 24, fontWeight: 700, margin: '0 auto 14px'
-  }}>
-    {initials}
-  </div>
-)}
-
-            <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 4 }}>{member.name}</div>
-            <div style={{ fontSize: 12, color: 'var(--gray-text)', marginBottom: 12 }}>{member.prodi}</div>
-            <div style={{ display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap' }}>
-              <span className={`badge ${isActive ? 'badge-success' : 'badge-danger'}`}>{member.status}</span>
-              <span className="badge badge-info">{member.type}</span>
+        {/* Avatar + Nama */}
+        <div style={{ position: 'relative', display: 'inline-block' }} ref={menuRef}>
+          {preview || member.photo_url ? (
+            <img
+              src={preview ? preview : `${API_URL}${member.photo_url}`}
+              alt={member.name}
+              style={{
+                width: 100,
+                height: 100,
+                borderRadius: '50%',
+                objectFit: 'cover',
+                display: 'block',
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                width: 100,
+                height: 100,
+                borderRadius: '50%',
+                background: 'var(--maroon)',
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 30,
+                fontWeight: 700,
+              }}
+            >
+              {initials}
             </div>
-          </div>
+          )}
 
-          {/* Info Detail */}
-          <div className="card">
-            <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 14 }}>Informasi Keanggotaan</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <InfoRow icon={<GraduationCap size={14} />} label="NIM / NIP" value={member.nim} mono />
-              <InfoRow icon={<Building2 size={14} />} label="Departemen" value={member.departemen} />
-              <InfoRow icon={<GraduationCap size={14} />} label="Program Studi" value={member.prodi} />
-              <InfoRow icon={<Mail size={14} />} label="Email" value={member.email} />
-              {member.phone && <InfoRow icon={<Phone size={14} />} label="No. Telp" value={member.phone} />}
-              {member.address && <InfoRow icon={<MapPin size={14} />} label="Alamat" value={member.address} />}
-              <InfoRow icon={<Clock size={14} />} label="Bergabung Sejak" value={member.joinDate} />
-            </div>
+          {/* ✏️ Tombol edit */}
+          <div
+            onClick={() => document.getElementById('upload-photo').click()}
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              right: 0,
+              background: 'white',
+              borderRadius: '50%',
+              padding: 6,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+              cursor: 'pointer',
+            }}
+          >
+            <Pencil size={16} />
           </div>
         </div>
 
-        {/* ── Kolom Kanan: Statistik + Riwayat ── */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-          {/* Stat Cards */}
-          <div className="grid-3">
-            <StatMini
-              value={activeLoans.length}
-              label="Sedang Dipinjam"
-              color="var(--navy)"
-              bg="var(--off-white)"
-              icon={<BookOpen size={15} />}
-            />
-            <StatMini
-              value={lateLoans.length}
-              label="Terlambat"
-              color="#dc2626"
-              bg="#fef2f2"
-              icon={<AlertCircle size={15} />}
-            />
-            <StatMini
-              value={returnedLoans.length}
-              label="Sudah Dikembalikan"
-              color="#16a34a"
-              bg="#f0fdf4"
-              icon={<History size={15} />}
-            />
-          </div>
-
-          {/* Peminjaman Aktif */}
-          {(activeLoans.length > 0 || lateLoans.length > 0) && (
-            <div className="card">
-              <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <BookOpen size={15} color="var(--maroon)" />
-                Buku yang Sedang Dipinjam
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {[...activeLoans, ...lateLoans].map(l => (
-                  <div key={l.id} style={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    padding: '10px 14px',
-                    background: l.status === 'terlambat' ? '#fef2f2' : 'var(--off-white)',
-                    borderRadius: 8,
-                    border: l.status === 'terlambat' ? '1px solid #fecaca' : '1px solid transparent'
-                  }}>
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: 13 }}>{l.bookTitle}</div>
-                      <div style={{ fontSize: 11, color: 'var(--gray-text)', marginTop: 2 }}>
-                        Dipinjam: {l.loanDate} · Jatuh tempo: {l.dueDate}
-                      </div>
-                    </div>
-                    <span className={`badge ${l.status === 'terlambat' ? 'badge-danger' : 'badge-warning'}`}>
-                      {l.status}
-                    </span>
-                  </div>
-                ))}
+          {/* Dropdown */}
+          {showMenu && (
+            <div
+              style={{
+                position: 'absolute',
+                marginTop: 8,
+                background: 'white',
+                borderRadius: 10,
+                boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                padding: 8,
+              }}
+            >
+              <div
+                style={{
+                  padding: '10px 12px',
+                  fontSize: 13,
+                  cursor: 'pointer',
+                }}
+                onClick={() => {
+                  setShowMenu(false);
+                  document.getElementById('upload-photo').click();
+                }}
+              >
+                Change Photo
               </div>
             </div>
           )}
 
-          {/* Riwayat Peminjaman */}
-          <div className="card">
-            <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <History size={15} /> Riwayat Peminjaman
-            </div>
-            <div className="table-container" style={{ maxHeight: 320, overflowY: 'auto' }}>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Judul Buku</th>
-                    <th>Tgl Pinjam</th>
-                    <th>Tgl Kembali</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {myLoans.length === 0 ? (
-                    <tr>
-                      <td colSpan={4} style={{ textAlign: 'center', padding: 32, color: 'var(--gray-text)' }}>
-                        <BookOpen size={28} style={{ marginBottom: 8, display: 'block', margin: '0 auto 8px' }} />
-                        Belum ada riwayat peminjaman
-                      </td>
-                    </tr>
-                  ) : (
-                    // Terbaru dulu
-                    [...myLoans].reverse().map(l => (
-                      <tr key={l.id}>
-                        <td style={{ fontWeight: 500 }}>{l.bookTitle}</td>
-                        <td style={{ color: 'var(--gray-text)', fontSize: 12 }}>{l.loanDate}</td>
-                        <td style={{ color: 'var(--gray-text)', fontSize: 12 }}>{l.returnDate || l.dueDate}</td>
-                        <td>
-                          <span className={`badge ${
-                            l.status === 'dikembalikan' ? 'badge-success' :
-                            l.status === 'terlambat' ? 'badge-danger' : 'badge-warning'
-                          }`}>{l.status}</span>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+          <div style={{ fontSize: 18, fontWeight: 700 }}>
+            {member.name}
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--gray-text)' }}>
+            {member.prodi}
           </div>
 
+          <div style={{ marginTop: 8 }}>
+            <span className={`badge ${isActive ? 'badge-success' : 'badge-danger'}`}>
+              {member.status}
+            </span>
+          </div>
         </div>
+
+        {/* Upload hidden */}
+        <input
+          id="upload-photo"
+          type="file"
+          accept="image/*"
+          style={{ display: 'none' }}
+          onChange={async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const url = URL.createObjectURL(file);
+            setPreview(url);
+
+            const formData = new FormData();
+            formData.append('photo', file);
+
+            try {
+              const res = await fetch(`${API_URL}/members/upload-photo`, {
+                method: 'POST',
+                body: formData,
+              });
+
+              const data = await res.json();
+              updateMemberPhoto(data.photo_url);
+            } catch (err) {
+              console.error(err);
+            }
+          }}
+        />
+
+        {/* Info Detail */}
+        <div className="card">
+          <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 14 }}>
+            Informasi Keanggotaan
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <InfoRow icon={<GraduationCap size={14} />} label="NIM / NIP" value={member.nim} mono />
+            <InfoRow icon={<Building2 size={14} />} label="Departemen" value={member.departemen} />
+            <InfoRow icon={<GraduationCap size={14} />} label="Program Studi" value={member.prodi} />
+            <InfoRow icon={<Mail size={14} />} label="Email" value={member.email} />
+            {member.phone && <InfoRow icon={<Phone size={14} />} label="No. Telp" value={member.phone} />}
+            {member.address && <InfoRow icon={<MapPin size={14} />} label="Alamat" value={member.address} />}
+            <InfoRow icon={<Clock size={14} />} label="Bergabung Sejak" value={member.joinDate} />
+          </div>
+        </div>
+
       </div>
     </div>
-  );
-}
+);
 
 // ─── Helper Components ────────────────────────────────────────────────────────
 
@@ -244,4 +276,4 @@ function StatMini({ value, label, color, bg, icon }) {
       <div style={{ fontSize: 11, color: 'var(--gray-text)', marginTop: 4 }}>{label}</div>
     </div>
   );
-}
+}}
