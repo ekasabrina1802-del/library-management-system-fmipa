@@ -137,7 +137,7 @@ function StatCard({ icon, value, label, accent, delay = 0, visible }) {
 export default function UserDashboardPage() {
   const { loans, getDendaTotal, getUserNotifications } = useApp();
   const { user } = useAuth();
-  const notifications = getUserNotifications(user?.memberId || user?.id);
+  const notifications = getUserNotifications();
 
   // 🔥 TARUH DI SINI
   console.log("NOTIFICATIONS:", notifications);
@@ -202,7 +202,7 @@ console.log("MY LOANS:", myLoans);
       <div ref={heroRef} style={{
         height: '100vh',
         display: 'flex', flexDirection: 'column',
-        justifyContent: 'center', alignItems: 'center',
+        justifyContent: 'center', alignItems: 'stretch',
         position: 'relative', overflow: 'hidden',
         /* Pull out of parent padding so it's truly edge-to-edge */
         margin: '-24px -24px 0 -24px',
@@ -238,25 +238,6 @@ console.log("MY LOANS:", myLoans);
             {initials}
           </div>
 
-          {notifications.map(n => (
-  <div
-    key={n.id}
-    style={{
-      background: n.available ? '#e6fffa' : '#fff3cd',
-      padding: '12px',
-      borderRadius: 8,
-      marginBottom: 10
-    }}
-  >
-    <strong>🔔 Notifikasi Buku</strong>
-    <div>
-      {n.available
-        ? `Buku "${n.title}" sekarang sudah tersedia!`
-        : `⏳ Buku "${n.title}" masih belum tersedia`}
-    </div>
-  </div>
-))}
-
            {/* Header */}
           <h1 style={{
             fontSize: 'clamp(36px, 5vw, 64px)', fontWeight: 700,
@@ -272,21 +253,41 @@ console.log("MY LOANS:", myLoans);
           {/* Notifikasi */}
           {notifications.length > 0 && (
             <div style={{
-              background: '#FEF3C7',
-              border: '1px solid #FCD34D',
-              borderRadius: 12,
-              padding: '14px 16px',
-              marginBottom: 20
+              marginTop: 20,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8,
+              width: '100%',
+              maxWidth: 480,
             }}>
-              <div style={{ fontWeight: 700, marginBottom: 6 }}>
-                🔔 Notifikasi Buku
-              </div>
-
-              {notifications.map(n => (
-                <div key={n.id} style={{ fontSize: 14 }}>
-                  Buku <strong>{n.title}</strong> sekarang sudah tersedia!
-                </div>
-              ))}
+              {notifications.map(n => {
+                const isAvailable = n.available === true;
+                return (
+                  <div key={n.id} style={{
+                    background: isAvailable
+                      ? 'rgba(209,250,229,0.92)'   // hijau transparan
+                      : 'rgba(254,243,199,0.92)',  // kuning transparan
+                    border: `1px solid ${isAvailable ? '#6EE7B7' : '#FCD34D'}`,
+                    borderRadius: 14,
+                    padding: '14px 18px',
+                    backdropFilter: 'blur(8px)',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 10,
+                  }}>
+                    <span style={{ fontSize: 18 }}>{isAvailable ? '✅' : '⏳'}</span>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: isAvailable ? '#065F46' : '#92400E' }}>
+                        {isAvailable ? 'Buku Tersedia!' : 'Belum Tersedia'}
+                      </div>
+                      <div style={{ fontSize: 13, color: isAvailable ? '#047857' : '#B45309' }}>
+                        Buku <strong>{n.title}</strong>{' '}
+                        {isAvailable ? 'sekarang sudah bisa dipinjam.' : 'masih belum tersedia.'}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
 
@@ -404,26 +405,65 @@ console.log("MY LOANS:", myLoans);
           </p>
         </div>
 
+        {/* Notifikasi */}
         {notifications.length > 0 && (
-        <div style={{
-          background: '#FEF3C7',
-          border: '1px solid #FCD34D',
-          borderRadius: 16,
-          padding: '16px 20px',
-          marginBottom: 24,
-        }}>
-          <div style={{ fontWeight: 700, marginBottom: 8 }}>
-            🔔 Notifikasi Buku Tersedia
-          </div>
+          <div style={{ marginTop: 32, marginBottom: 24, width: '100%' }}>
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 12,
+              width: '100%',
+            }}>
+              {notifications.map(n => {
+                const isAvailable = n.available === true;
 
-          {notifications.map(n => (
-            <div key={n.id} style={{ fontSize: 14 }}>
-              Buku <strong>{n.title}</strong> sekarang sudah tersedia!
+                return (
+                  <div
+                    key={n.id}
+                    style={{
+                      width: '100%', // full lebar
+                      background: isAvailable
+                        ? 'rgba(209,250,229,0.92)'   // hijau
+                        : 'rgba(254,243,199,0.92)',  // kuning
+                      border: `1px solid ${isAvailable ? '#6EE7B7' : '#FCD34D'}`,
+                      borderRadius: 16,
+                      padding: '16px 20px',
+                      backdropFilter: 'blur(8px)',
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: 12,
+                    }}
+                  >
+                    <span style={{ fontSize: 20 }}>
+                      {isAvailable ? '✅' : '⏳'}
+                    </span>
+
+                    <div>
+                      <div style={{
+                        fontWeight: 700,
+                        fontSize: 14,
+                        color: isAvailable ? '#065F46' : '#92400E'
+                      }}>
+                        {isAvailable ? 'Buku Tersedia!' : 'Belum Tersedia'}
+                      </div>
+
+                      <div style={{
+                        fontSize: 14,
+                        color: isAvailable ? '#047857' : '#B45309'
+                      }}>
+                        Buku <strong>{n.title}</strong>{' '}
+                        {isAvailable
+                          ? 'sekarang sudah bisa dipinjam.'
+                          : 'masih belum tersedia.'}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          ))}
-        </div>
-      )}
-
+          </div>
+        )}
+        
         {/* Info banner */}
         <div style={{
           background: 'linear-gradient(135deg, #EBF8FF, #DBEAFE)',

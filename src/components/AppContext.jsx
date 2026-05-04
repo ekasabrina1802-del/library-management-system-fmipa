@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { ACTIVITY_LOG } from '../data/db';
+import { useAuth } from '../components/AuthContext';
 
 const AppContext = createContext(null);
 const API_URL = import.meta.env.VITE_API_URL;
@@ -14,6 +15,7 @@ const jsonHeaders = {
 };
 
 export function AppProvider({ children }) {
+  const { user } = useAuth();
   const [reminders, setReminders] = useState([]);
   useEffect(() => {
   console.log("REMINDERS:", reminders);
@@ -101,7 +103,7 @@ export function AppProvider({ children }) {
 
         if (data.success) {
           await fetchBooks();
-          addLog('Tambah Buku', `Buku baru: ${book.title}`, 'book');
+          addLog('book', `Buku baru: ${book.title}`, 'book');
           return true;
         }
 
@@ -134,7 +136,7 @@ export function AppProvider({ children }) {
 
         if (data.success) {
           await fetchBooks();
-          addLog('Edit Buku', `Buku ${updates.title} diperbarui`, 'book');
+          addLog('book', `Buku diperbarui: ${updates.title}`, 'book');
           return true;
         }
 
@@ -164,7 +166,7 @@ export function AppProvider({ children }) {
       }
 
       await fetchBooks();
-      addLog('Hapus Buku', `${ids.length} buku dihapus`, 'delete');
+      addLog('delete', `${ids.length} buku dihapus`, 'delete');
       return true;
     } catch (err) {
       console.error('Gagal hapus buku:', err);
@@ -185,7 +187,7 @@ export function AppProvider({ children }) {
 
       if (data.success) {
         await fetchMembers();
-        addLog('Tambah Anggota', `Anggota baru: ${member.name}`, 'member');
+        addLog('member', `Anggota baru: ${member.name}`, 'member');
         return true;
       }
 
@@ -210,7 +212,7 @@ export function AppProvider({ children }) {
 
       if (data.success) {
         await fetchMembers();
-        addLog('Edit Anggota', `Data anggota ${updates.name} diperbarui`, 'member');
+        addLog('member', `Data anggota diperbarui: ${updates.name}`, 'member');
         return true;
       }
 
@@ -236,7 +238,7 @@ export function AppProvider({ children }) {
       if (data.success) {
         await fetchBooks();
         await fetchLoans();
-        addLog('Peminjaman Buku', 'Peminjaman buku berhasil diproses', 'loan');
+        addLog('loan', 'Peminjaman buku berhasil diproses', 'loan');
         return { success: true };
       }
 
@@ -259,7 +261,7 @@ export function AppProvider({ children }) {
       if (data.success) {
         await fetchBooks();
         await fetchLoans();
-        addLog('Pengembalian Buku', 'Pengembalian buku berhasil diproses', 'return');
+        addLog('return', 'Pengembalian buku berhasil diproses', 'return');
 
         return {
           success: true,
@@ -286,35 +288,52 @@ export function AppProvider({ children }) {
       .reduce((sum, l) => sum + l.denda, 0);
   };
 
-  const addReminder = (book, userId) => {
-  setReminders(prev => [
-    ...prev,
-    {
-      id: Date.now(),
-      bookId: book.id,
-      title: book.title,
-      userId,
-      notified: false
-    }
-  ]);
+  // Di dalam AppContext, ubah addReminder menjadi:
+const addReminder = (book, userId) => {
+  const key = `reminders_${userId}`;
+  const existing = JSON.parse(localStorage.getItem(key) || '[]');
+  
+  // Hindari duplikat
+  const alreadyExists = existing.find(r => r.bookId === book.id || r.bookId === book.no_induk);
+  if (alreadyExists) return;
+
+  const newReminder = {
+    id: Date.now(),
+    bookId: book.id || book.no_induk,
+    title: book.title,
+    userId,
+    available: false,
+  };
+
+  const updated = [...existing, newReminder];
+  localStorage.setItem(key, JSON.stringify(updated));
+  
+  // Update state juga
+  setReminders(updated); // atau apapun nama state-nya di konteks kamu
 };
 
-const getUserNotifications = (userId) => {
-  return reminders
-    .filter(r => String(r.userId) === String(userId))
-    .map(r => {
-      const book = books.find(
-        b => String(b.id || b.book_id) === String(r.bookId)
-      );
+useEffect(() => {
+  if (user?.id) {
+    const key = `reminders_${user.id}`;
+    const saved = JSON.parse(localStorage.getItem(key) || '[]');
+    setReminders(saved);
+  }
+}, [user?.id, books]);
 
-      const stock = Number(book?.available ?? book?.stock ?? 0);
+const getUserNotifications = () => {
+  return reminders.map(r => {
+    const book = books.find(
+      b => String(b.id || b.book_id) === String(r.bookId)
+    );
 
-      return {
-        ...r,
-        stock,
-        available: stock > 0
-      };
-    });
+    const stock = Number(book?.available ?? book?.stock ?? 0);
+
+    return {
+      ...r,
+      stock,
+      available: stock > 0
+    };
+  });
 };
 
   return (
@@ -334,7 +353,8 @@ const getUserNotifications = (userId) => {
         updateMember,
         addLoan,
         returnBook,
-        getDendaTotal
+        getDendaTotal,
+        addLog
       }}
     >
       {children}

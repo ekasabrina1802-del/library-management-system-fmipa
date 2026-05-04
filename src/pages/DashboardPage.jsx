@@ -3,7 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { BookOpen, Users, Banknote, TrendingUp, Clock, RotateCcw, UserPlus, BookMarked, Database, AlertCircle, FileDown } from 'lucide-react';
 import { useApp } from '../components/AppContext';
 import { useAuth } from '../components/AuthContext';
-import { MONTHLY_LOANS, DAILY_LOANS, VISITORS } from '../data/db';
+import { MONTHLY_LOANS, DAILY_LOANS } from '../data/db';
 
 function LiveClock() {
   const [now, setNow] = useState(new Date());
@@ -45,7 +45,6 @@ export default function DashboardPage() {
   const dendaTotal = getDendaTotal();
   const chartData = chartType === 'bulanan' ? MONTHLY_LOANS : DAILY_LOANS;
   const chartKey = chartType === 'bulanan' ? 'month' : 'day';
-  const todayVisitors = VISITORS[0];
 
   return (
     <div>
@@ -100,7 +99,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid-2 mb-24" style={{ gridTemplateColumns: '2fr 1fr' }}>
+      <div className="grid-2 mb-24" style={{ gridTemplateColumns: '1fr' }}>
         {/* Chart */}
         <div className="card">
           <div className="flex-between mb-16">
@@ -124,39 +123,6 @@ export default function DashboardPage() {
               <Bar dataKey="kembali" name="Dikembalikan" fill="#0D1B2A" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-        </div>
-
-        {/* Visitors */}
-        <div className="card">
-          <div className="flex-between mb-16">
-            <div style={{ fontWeight: 700, color: 'var(--navy)', fontSize: 15 }}>Pengunjung Hari Ini</div>
-            {user?.role === 'admin' && (
-              <button className="btn btn-ghost btn-sm"><FileDown size={13} /> Laporan</button>
-            )}
-          </div>
-          <div style={{ textAlign: 'center', padding: '16px 0' }}>
-            <div style={{ fontSize: 48, fontWeight: 700, color: 'var(--maroon)' }}>{todayVisitors.count}</div>
-            <div style={{ fontSize: 13, color: 'var(--gray-text)' }}>Pengunjung Perpustakaan</div>
-            <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 16 }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--navy)' }}>{todayVisitors.mahasiswa}</div>
-                <div style={{ fontSize: 11, color: 'var(--gray-text)' }}>Mahasiswa</div>
-              </div>
-              <div style={{ width: 1, background: 'var(--gray-light)' }} />
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--navy)' }}>{todayVisitors.dosen}</div>
-                <div style={{ fontSize: 11, color: 'var(--gray-text)' }}>Dosen</div>
-              </div>
-            </div>
-          </div>
-          <div style={{ borderTop: '1px solid var(--gray-light)', paddingTop: 12 }}>
-            {VISITORS.slice(1, 4).map(v => (
-              <div key={v.date} className="flex-between" style={{ padding: '5px 0', fontSize: 12 }}>
-                <span style={{ color: 'var(--gray-text)' }}>{new Date(v.date).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
-                <span style={{ fontWeight: 600 }}>{v.count} pengunjung</span>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
 

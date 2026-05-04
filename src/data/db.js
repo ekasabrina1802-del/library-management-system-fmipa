@@ -162,11 +162,3 @@ export const ACTIVITY_LOG = [
     cover: "https://covers.openlibrary.org/b/isbn/9780980232776-L.jpg"
   }
 ];
-
-export const VISITORS = [
-  { date: '2025-04-23', count: 47, mahasiswa: 38, dosen: 9 },
-  { date: '2025-04-22', count: 52, mahasiswa: 44, dosen: 8 },
-  { date: '2025-04-21', count: 61, mahasiswa: 50, dosen: 11 },
-  { date: '2025-04-18', count: 39, mahasiswa: 32, dosen: 7 },
-  { date: '2025-04-17', count: 55, mahasiswa: 46, dosen: 9 },
-];
