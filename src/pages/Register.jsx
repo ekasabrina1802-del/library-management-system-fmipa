@@ -11,7 +11,7 @@ export default function RegisterPage() {
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  // (tambahan baru, setTiemout dihapus, soalnya udah nyambung ke database)
+  // (tambahan baruu, setTiemout dihapus, soalnya udah nyambung ke database)
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
