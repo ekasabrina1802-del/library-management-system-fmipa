@@ -3,6 +3,8 @@ import { BookOpen, Clock, AlertCircle, DollarSign, Info, ChevronDown, ChevronLef
 import { useApp } from '../components/AppContext';
 import { useAuth } from '../components/AuthContext';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 // ── Foto slideshow (Unsplash – perpustakaan/buku) ────────────────────────────
 const SLIDES = [
   {
@@ -225,18 +227,27 @@ console.log("MY LOANS:", myLoans);
           </div>
 
           {/* Avatar */}
-          <div style={{
-            width: 110, height: 110, borderRadius: '50%',
-            background: 'linear-gradient(135deg, #7B1C1C, #C53030)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 38, fontWeight: 800, color: 'white',
-            boxShadow: '0 0 0 5px rgba(255,255,255,0.15), 0 0 0 10px rgba(255,255,255,0.06), 0 8px 32px rgba(0,0,0,0.4)',
-            marginBottom: 24,
-            animation: 'fadeInDown 0.8s cubic-bezier(.22,1,.36,1)',
-            fontFamily: "'DM Mono', monospace",
-          }}>
-            {initials}
-          </div>
+<div style={{
+  width: 110, height: 110, borderRadius: '50%',
+  background: 'linear-gradient(135deg, #7B1C1C, #C53030)',
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  fontSize: 38, fontWeight: 800, color: 'white',
+  boxShadow: '0 0 0 5px rgba(255,255,255,0.15), 0 0 0 10px rgba(255,255,255,0.06), 0 8px 32px rgba(0,0,0,0.4)',
+  marginBottom: 24,
+  animation: 'fadeInDown 0.8s cubic-bezier(.22,1,.36,1)',
+  fontFamily: "'DM Mono', monospace",
+  overflow: 'hidden', padding: 0,
+}}>
+  {user?.photo_url ? (
+    <img
+      src={`${API_URL}${user.photo_url}`}
+      alt={user.name}
+      style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+    />
+  ) : (
+    initials
+  )}
+</div>
 
            {/* Header */}
           <h1 style={{

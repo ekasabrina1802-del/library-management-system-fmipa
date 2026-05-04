@@ -2,6 +2,8 @@ import { BookOpen, Clock, AlertCircle, Phone, Mail, MapPin, GraduationCap, Build
 import { useApp } from '../components/AppContext';
 import { useAuth } from '../components/AuthContext';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function AnggotaUserPage() {
   const { members, loans } = useApp();
   const { user } = useAuth();
@@ -68,14 +70,26 @@ export default function AnggotaUserPage() {
 
           {/* Avatar & Info Utama */}
           <div className="card" style={{ textAlign: 'center', padding: 28 }}>
-            <div style={{
-              width: 72, height: 72, borderRadius: '50%',
-              background: isActive ? 'var(--maroon)' : '#9ca3af',
-              color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 24, fontWeight: 700, margin: '0 auto 14px'
-            }}>
-              {initials}
-            </div>
+{member.photo_url ? (
+  <img
+    src={`${API_URL}${member.photo_url}`}
+    alt={member.name}
+    style={{
+      width: 72, height: 72, borderRadius: '50%',
+      objectFit: 'cover', margin: '0 auto 14px', display: 'block'
+    }}
+  />
+) : (
+  <div style={{
+    width: 72, height: 72, borderRadius: '50%',
+    background: isActive ? 'var(--maroon)' : '#9ca3af',
+    color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    fontSize: 24, fontWeight: 700, margin: '0 auto 14px'
+  }}>
+    {initials}
+  </div>
+)}
+
             <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 4 }}>{member.name}</div>
             <div style={{ fontSize: 12, color: 'var(--gray-text)', marginBottom: 12 }}>{member.prodi}</div>
             <div style={{ display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap' }}>

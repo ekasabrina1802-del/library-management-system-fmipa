@@ -20,6 +20,15 @@ export function AuthProvider({ children }) {
     }
   }, [user]);
 
+// upload foto 
+  const updateUserPhoto = (photo_url) => {
+  setUser(prev => {
+    const updated = { ...prev, photo_url };
+    localStorage.setItem('user', JSON.stringify(updated));
+    return updated;
+  });
+};
+
   // LOGIN
   const login = async (email, password) => {
     try {
@@ -67,7 +76,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, register }}>
+    <AuthContext.Provider value={{ user, login, logout, register , updateUserPhoto }}>
       {children}
     </AuthContext.Provider>
   );

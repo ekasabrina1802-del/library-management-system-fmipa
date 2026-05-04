@@ -26,6 +26,29 @@ export function AppProvider({ children }) {
   const [loans, setLoans] = useState([]);
   const [activityLog, setActivityLog] = useState(ACTIVITY_LOG);
 
+  const uploadMemberPhoto = async (memberId, file) => {
+  try {
+    const formData = new FormData();
+    formData.append('photo', file);
+    
+    const res = await fetch(`${API_URL}/api/members/${memberId}/photo`, {
+      method: 'POST',
+      headers: { 'ngrok-skip-browser-warning': 'true' },
+      body: formData
+    });
+    
+    const data = await res.json();
+    if (data.success) {
+      await fetchMembers();
+      return { success: true, photo_url: data.photo_url };
+    }
+    return { success: false };
+  } catch (err) {
+    console.error('Upload photo error:', err);
+    return { success: false };
+  }
+};
+
   const fetchBooks = async () => {
     try {
       const res = await fetch(`${API_URL}/api/books`, {
@@ -47,7 +70,7 @@ export function AppProvider({ children }) {
     if (data.success) {
       const mapped = data.members.map(m => ({
         ...m,
-        displayId: m.member_id || String(m.id),
+        displayId: m.custom_id || String(m.id),
       }));
       setMembers(mapped);
     }
@@ -354,6 +377,7 @@ const getUserNotifications = () => {
         addLoan,
         returnBook,
         getDendaTotal,
+        uploadMemberPhoto,
         addLog
       }}
     >
