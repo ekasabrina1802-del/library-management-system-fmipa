@@ -11,6 +11,7 @@ function MemberModal({ member = null, onSave, onClose }) {
   nim: member?.nim || '',
   type: member?.type || 'staff',
   email: member?.email || '',
+  password: '',
   phone: member?.phone || '',
   address: member?.address || '',
   password: '',
@@ -37,7 +38,7 @@ function MemberModal({ member = null, onSave, onClose }) {
     <div className="modal-overlay">
       <div className="modal">
         <div className="modal-header">
-          <h3 className="modal-title">Edit Data Petugas </h3>
+          <h3 className="modal-title">Tambah Data Petugas </h3>
           <button className="modal-close" onClick={onClose}><X size={20} /></button>
         </div>
         <form onSubmit={handleSubmit}>
@@ -86,6 +87,20 @@ function MemberModal({ member = null, onSave, onClose }) {
             <label className="form-label">Email</label>
             <input className="form-control" type="email" value={form.email} onChange={f('email')}  required />
           </div>
+
+          <div className="form-group full-width">
+            <label className="form-label">Password</label>
+
+            <input
+              type="password"
+              className="form-control"
+              value={form.password}
+              onChange={f('password')}
+              placeholder="Masukkan password"
+              required={!member}
+            />
+          </div>
+
           <div className="grid-2">
             <div className="form-group">
               <label className="form-label">No. Telp</label>
