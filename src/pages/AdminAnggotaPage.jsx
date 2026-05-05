@@ -8,26 +8,30 @@ const API_URL = import.meta.env.VITE_API_URL;
 function MemberModal({ member = null, onSave, onClose }) {
   const [form, setForm] = useState({
   name: member?.name || '',
+  nim: member?.nim || '',
   type: member?.type || 'staff',
   email: member?.email || '',
   phone: member?.phone || '',
   address: member?.address || '',
+  password: '',
+
   photo: null
   });
   const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
 
   const handleSubmit = (e) => {
   e.preventDefault();
+
   const formData = new FormData();
 
-    Object.entries(form).forEach(([key, value]) => {
-      if (value !== null) {
-        formData.append(key, value);
-      }
-    });
+  Object.entries(form).forEach(([key, value]) => {
+    if (value !== null && value !== '') {
+      formData.append(key, value);
+    }
+  });
 
-    onSave(formData);
-  };
+  onSave(formData);
+};
 
   return (
     <div className="modal-overlay">
@@ -54,6 +58,29 @@ function MemberModal({ member = null, onSave, onClose }) {
                   <option value="staff">Staff</option>
               </select>
           </div>
+
+<div className="form-group">
+  <label className="form-label">NIP / Kode Staff</label>
+  <input
+    className="form-control"
+    value={form.nim}
+    onChange={f('nim')}
+    placeholder="Kosongkan jika ingin otomatis"
+  />
+</div>
+
+{!member && (
+  <div className="form-group">
+    <label className="form-label">Password Login *</label>
+    <input
+      className="form-control"
+      type="password"
+      value={form.password}
+      onChange={f('password')}
+      required
+    />
+  </div>
+)}
 
           <div className="form-group">
             <label className="form-label">Email</label>
@@ -227,18 +254,15 @@ const filtered = members.filter(m =>
 
   return (
     <div>
-      {addModal && <MemberModal onSave={(m) => { addMember(m); setAddModal(false); }} onClose={() => setAddModal(false)} />}
-      {detailMember && (
-        <MemberDetailModal
-          member={detailMember}
-          loans={loans}
-          onClose={() => setDetailMember(null)}
-          onEdit={(m) => {
-            setDetailMember(null);
-            setEditMember(m);
-          }}
-        />
-      )}
+      {addModal && (
+  <MemberModal
+    onSave={async (m) => {
+      const success = await addMember(m);
+      if (success) setAddModal(false);
+    }}
+    onClose={() => setAddModal(false)}
+  />
+)}
 
       {editMember && (
         <MemberModal

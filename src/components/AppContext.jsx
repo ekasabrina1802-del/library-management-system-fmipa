@@ -214,57 +214,91 @@ export function AppProvider({ children }) {
     }
   };
 
-  const addMember = async (member) => {
-    try {
-      const res = await fetch(`${API_URL}/api/members`, {
-        method: 'POST',
-        headers: jsonHeaders,
-        body: JSON.stringify(member)
-      });
+  const getField = (obj, key) => {
+  if (obj instanceof FormData) return obj.get(key);
+  return obj?.[key];
+};
 
-      const data = await res.json();
+const addMember = async (member) => {
+  try {
+    const isFormData = member instanceof FormData;
 
-      if (data.success) {
-        await fetchMembers();
-        addLog('member', `Mendaftarkan anggota baru: ${member.name} (${member.nim}) — ${member.type === 'mahasiswa' ? 'Mahasiswa' : 'Dosen'}, ${member.prodi || member.departemen}`, 'member');
+    const res = await fetch(`${API_URL}/api/members`, {
+      method: 'POST',
+      headers: isFormData
+        ? { 'ngrok-skip-browser-warning': 'true' }
+        : jsonHeaders,
+      body: isFormData ? member : JSON.stringify(member)
+    });
 
-        return true;
-      }
+    const data = await res.json();
 
-      alert(data.message);
-      return false;
-    } catch (err) {
-      console.error('Gagal tambah anggota:', err);
-      alert('Gagal menambahkan anggota');
-      return false;
+    if (data.success) {
+      await fetchMembers();
+
+      const name = getField(member, 'name');
+      const nim = getField(member, 'nim');
+      const type = getField(member, 'type');
+      const prodi = getField(member, 'prodi');
+      const departemen = getField(member, 'departemen');
+
+      addLog(
+        'member',
+        `Mendaftarkan anggota baru: ${name || '-'} (${nim || '-'}) — ${type || '-'}, ${prodi || departemen || '-'}`,
+        'member'
+      );
+
+      return true;
     }
-  };
 
-  const updateMember = async (id, updates) => {
-    try {
-      const res = await fetch(`${API_URL}/api/members/${id}`, {
-        method: 'PUT',
-        headers: jsonHeaders,
-        body: JSON.stringify(updates)
-      });
+    alert(data.message || 'Gagal menambahkan anggota');
+    return false;
+  } catch (err) {
+    console.error('Gagal tambah anggota:', err);
+    alert('Gagal menambahkan anggota');
+    return false;
+  }
+};
 
-      const data = await res.json();
+ const updateMember = async (id, updates) => {
+  try {
+    const isFormData = updates instanceof FormData;
 
-      if (data.success) {
-        await fetchMembers();
-        addLog('member', `Memperbarui data anggota: ${updates.name} (${updates.nim}) — Prodi: ${updates.prodi}, Kontak: ${updates.email}`, 'member');
+    const res = await fetch(`${API_URL}/api/members/${id}`, {
+      method: 'PUT',
+      headers: isFormData
+        ? { 'ngrok-skip-browser-warning': 'true' }
+        : jsonHeaders,
+      body: isFormData ? updates : JSON.stringify(updates)
+    });
 
-        return true;
-      }
+    const data = await res.json();
 
-      alert(data.message);
-      return false;
-    } catch (err) {
-      console.error('Gagal update anggota:', err);
-      alert('Gagal mengupdate anggota');
-      return false;
+    if (data.success) {
+      await fetchMembers();
+
+      const name = getField(updates, 'name');
+      const nim = getField(updates, 'nim');
+      const prodi = getField(updates, 'prodi');
+      const email = getField(updates, 'email');
+
+      addLog(
+        'member',
+        `Memperbarui data anggota: ${name || '-'} (${nim || '-'}) — Prodi: ${prodi || '-'}, Kontak: ${email || '-'}`,
+        'member'
+      );
+
+      return true;
     }
-  };
+
+    alert(data.message || 'Gagal mengupdate anggota');
+    return false;
+  } catch (err) {
+    console.error('Gagal update anggota:', err);
+    alert('Gagal mengupdate anggota');
+    return false;
+  }
+};
 
   const addLoan = async (bookCode, memberId) => {
     try {

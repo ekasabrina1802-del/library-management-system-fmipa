@@ -28,6 +28,26 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage });
+
+const fs = require('fs');
+
+const memberUploadDir = path.join(__dirname, 'uploads', 'members');
+
+fs.mkdirSync(memberUploadDir, { recursive: true });
+
+const memberStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, memberUploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = Date.now() + '-' + file.originalname.replace(/\s+/g, '-');
+    cb(null, uniqueName);
+  }
+});
+
+const uploadMember = multer({ storage: memberStorage });
+
+
 // 🔹 Konfigurasi koneksi ke SQL Server
 const dbConfig = {
     user: process.env.DB_USER,
@@ -360,19 +380,34 @@ app.get('/api/members', async (req, res) => {
   }
 });
 // test contribution
-app.post('/api/members', async (req, res) => {
+app.post('/api/members', uploadMember.single('photo'), async (req, res) => {
   const { name, nim, departemen, prodi, type, email, phone, address, password } = req.body;
+
+  const photo_url = req.file ? `/uploads/members/${req.file.filename}` : null;
 
   try {
     const pool = await sql.connect(dbConfig);
 
+    if (!name || !type) {
+      return res.status(400).json({
+        success: false,
+        message: 'Nama dan tipe anggota wajib diisi'
+      });
+    }
+
     if (type === 'staff') {
       if (!password) {
-        return res.json({ success: false, message: 'Password wajib diisi untuk staff/petugas' });
+        return res.status(400).json({
+          success: false,
+          message: 'Password wajib diisi untuk staff/petugas'
+        });
       }
 
-      if (!email.endsWith('@fmipa.ac.id')) {
-        return res.json({ success: false, message: 'Email staff/petugas harus @fmipa.ac.id' });
+      if (!email || !email.endsWith('@fmipa.ac.id')) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email staff/petugas harus @fmipa.ac.id'
+        });
       }
 
       const checkUser = await pool.request()
@@ -380,7 +415,10 @@ app.post('/api/members', async (req, res) => {
         .query(`SELECT id FROM Users WHERE email = @email`);
 
       if (checkUser.recordset.length > 0) {
-        return res.json({ success: false, message: 'Email sudah digunakan sebagai akun login' });
+        return res.status(400).json({
+          success: false,
+          message: 'Email sudah digunakan sebagai akun login'
+        });
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -397,50 +435,68 @@ app.post('/api/members', async (req, res) => {
         `);
 
       const userId = resultUser.recordset[0].id;
+      const staffNim = nim || `STF${String(userId).padStart(3, '0')}`;
 
-      await pool.request()
+      const inserted = await pool.request()
   .input('name', sql.VarChar, name)
-  .input('nim', sql.VarChar, nim)
-  .input('jurusan', sql.VarChar, departemen || prodi || null)
+  .input('nim', sql.VarChar, staffNim)
+  .input('jurusan', sql.VarChar, departemen || prodi || 'Perpustakaan FMIPA')
   .input('jenis', sql.VarChar, 'staff')
   .input('email', sql.VarChar, email)
   .input('phone', sql.VarChar, phone || null)
   .input('address', sql.VarChar, address || null)
+  .input('photo_url', sql.VarChar, photo_url)
   .query(`
-    INSERT INTO Anggota (name, nim, jurusan, jenis, email, phone, address)
-    VALUES (@name, @nim, @jurusan, @jenis, @email, @phone, @address)
+    INSERT INTO Anggota (name, nim, jurusan, jenis, email, phone, address, photo_url)
+    VALUES (@name, @nim, @jurusan, @jenis, @email, @phone, @address, @photo_url);
+
+    SELECT CAST(SCOPE_IDENTITY() AS int) AS id;
   `);
 
-      return res.json({ success: true, message: 'Staff/petugas berhasil ditambahkan' });
+      return res.json({
+        success: true,
+        message: 'Staff/petugas berhasil ditambahkan',
+        id: inserted.recordset[0].id,
+        photo_url
+      });
     }
 
-    await pool.request()
-      .input('name', sql.VarChar, name)
-      .input('nim', sql.VarChar, nim)
-      .input('jurusan', sql.VarChar, departemen || prodi || null)
-      .input('jenis', sql.VarChar, type)
-      .input('email', sql.VarChar, email || null)
-      .input('phone', sql.VarChar, phone || null)
-      .input('address', sql.VarChar, address || null)
-      .query(`
-        INSERT INTO Anggota (name, nim, jurusan, jenis, email, phone, address)
-        VALUES (@name, @nim, @jurusan, @jenis, @email, @phone, @address)
-      `);
+    const inserted = await pool.request()
+  .input('name', sql.VarChar, name)
+  .input('nim', sql.VarChar, nim)
+  .input('jurusan', sql.VarChar, departemen || prodi || null)
+  .input('jenis', sql.VarChar, type)
+  .input('email', sql.VarChar, email || null)
+  .input('phone', sql.VarChar, phone || null)
+  .input('address', sql.VarChar, address || null)
+  .input('photo_url', sql.VarChar, photo_url)
+  .query(`
+    INSERT INTO Anggota (name, nim, jurusan, jenis, email, phone, address, photo_url)
+    VALUES (@name, @nim, @jurusan, @jenis, @email, @phone, @address, @photo_url);
 
-    res.json({ success: true, message: 'Anggota berhasil ditambahkan' });
+    SELECT CAST(SCOPE_IDENTITY() AS int) AS id;
+  `);
+
+    res.json({
+      success: true,
+      message: 'Anggota berhasil ditambahkan',
+      id: inserted.recordset[0].id,
+      photo_url
+    });
 
   } catch (err) {
     console.error('Add Member Error:', err);
     res.status(500).json({
       success: false,
-      message: 'Gagal menambahkan anggota'
+      message: err.message || 'Gagal menambahkan anggota'
     });
   }
 });
 
-app.put('/api/members/:id', async (req, res) => {
+app.put('/api/members/:id', uploadMember.single('photo'), async (req, res) => {
   const { id } = req.params;
   const { name, nim, departemen, prodi, type, email, phone, address } = req.body;
+const photo_url = req.file ? `/uploads/members/${req.file.filename}` : null;
 
   try {
     const pool = await sql.connect(dbConfig);
@@ -465,10 +521,18 @@ await pool.request()
   .input('email', sql.VarChar, email || null)
   .input('phone', sql.VarChar, phone || null)
   .input('address', sql.VarChar, address || null)
+  .input('photo_url', sql.VarChar, photo_url)
   .query(`
     UPDATE Anggota
-    SET name=@name, nim=@nim, jurusan=@jurusan,
-        jenis=@jenis, email=@email, phone=@phone, address=@address
+    SET
+      name = @name,
+      nim = @nim,
+      jurusan = @jurusan,
+      jenis = @jenis,
+      email = @email,
+      phone = @phone,
+      address = @address,
+      photo_url = COALESCE(@photo_url, photo_url)
     WHERE id = @id
   `);
 
@@ -765,37 +829,40 @@ const dendaResult = await new sql.Request(transaction)
   }
 });
 
-
-// Storage khusus untuk foto anggota (members)
-const memberStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/members/');
-  },
-  filename: (req, file, cb) => {
-    const uniqueName = Date.now() + '-' + file.originalname.replace(/\s+/g, '-');
-    cb(null, uniqueName);
-  }
-});
-const uploadMember = multer({ storage: memberStorage });
-
-// Upload foto profil anggota (petugas/admin upload untuk anggota tertentu, atau user upload sendiri)
 app.post('/api/members/:id/photo', uploadMember.single('photo'), async (req, res) => {
   const { id } = req.params;
-  if (!req.file) return res.json({ success: false, message: 'Tidak ada file yang diupload' });
+
+  if (!req.file) {
+    return res.json({
+      success: false,
+      message: 'Tidak ada file yang diupload'
+    });
+  }
 
   const photo_url = `/uploads/members/${req.file.filename}`;
 
   try {
     const pool = await sql.connect(dbConfig);
+
     await pool.request()
       .input('id', sql.Int, id)
       .input('photo_url', sql.VarChar, photo_url)
-      .query(`UPDATE Anggota SET photo_url = @photo_url WHERE id = @id`);
+      .query(`
+        UPDATE Anggota
+        SET photo_url = @photo_url
+        WHERE id = @id
+      `);
 
-    res.json({ success: true, photo_url });
+    res.json({
+      success: true,
+      photo_url
+    });
   } catch (err) {
     console.error('Upload Photo Error:', err);
-    res.status(500).json({ success: false, message: 'Gagal upload foto' });
+    res.status(500).json({
+      success: false,
+      message: 'Gagal upload foto'
+    });
   }
 });
 

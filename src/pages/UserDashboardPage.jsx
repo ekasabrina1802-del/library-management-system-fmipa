@@ -139,8 +139,18 @@ function StatCard({ icon, value, label, accent, delay = 0, visible }) {
 
 // ── Main Component ───────────────────────────────────────────────────────────
 export default function UserDashboardPage() {
-  const { loans, getDendaTotal, getUserNotifications } = useApp();
+  const { loans, members, getDendaTotal, getUserNotifications } = useApp();
   const { user } = useAuth();
+
+const currentMember = members.find(
+  m =>
+    String(m.id) === String(user?.anggotaId || user?.memberId) ||
+    m.nim === user?.nim ||
+    m.email === user?.email
+);
+
+const profilePhoto = currentMember?.photo_url || user?.photo_url;
+
   const notifications = getUserNotifications();
 
   const isDosen = user?.role === 'dosen';
@@ -230,13 +240,13 @@ export default function UserDashboardPage() {
             fontFamily: "'DM Mono', monospace",
             overflow: 'hidden', padding: 0, flexShrink: 0,
           }}>
-            {user?.photo_url ? (
-              <img
-                src={`${API_URL}${user.photo_url}`}
-                alt={user.name}
-                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
-              />
-            ) : initials}
+           {profilePhoto ? (
+  <img
+    src={`${API_URL}${profilePhoto}`}
+    alt={user.name}
+    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+  />
+) : initials}
           </div>
 
           {/* Nama */}

@@ -1,10 +1,29 @@
-import { Bell, Settings, Search } from 'lucide-react';
 import { useAuth } from './AuthContext';
+import { useApp } from './AppContext';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function Header() {
   const { user } = useAuth();
+  const { members = [] } = useApp();
+
+  const currentMember = members.find(
+    m =>
+      String(m.id) === String(user?.anggotaId || user?.memberId) ||
+      String(m.nim) === String(user?.nim) ||
+      m.email === user?.email
+  );
+
+  const profilePhoto = currentMember?.photo_url || user?.photo_url;
+
+  const initials = user?.name
+    ? user.name
+        .split(' ')
+        .map(w => w[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase()
+    : 'U';
 
   return (
     <header className="header">
@@ -20,14 +39,19 @@ export default function Header() {
           </span>
 
           <div className="avatar" style={{ overflow: 'hidden', padding: 0 }}>
-            {user?.photo_url ? (
+            {profilePhoto ? (
               <img
-                src={`${API_URL}${user.photo_url}`}
-                alt="avatar"
-                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                src={`${API_URL}${profilePhoto}`}
+                alt={user?.name || 'User'}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  borderRadius: '50%'
+                }}
               />
             ) : (
-              user?.avatar
+              initials
             )}
           </div>
         </div>

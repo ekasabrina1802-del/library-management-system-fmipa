@@ -8,7 +8,7 @@ import { useAuth } from '../components/AuthContext';
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function AnggotaUserPage() {
-  const { members, loans, updateMemberPhoto } = useApp();
+  const { members, loans, uploadMemberPhoto } = useApp();
   const { user } = useAuth();
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);
@@ -209,28 +209,20 @@ export default function AnggotaUserPage() {
           type="file"
           accept="image/*"
           style={{ display: 'none' }}
-          onChange={async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
+         onChange={async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
 
-            const url = URL.createObjectURL(file);
-            setPreview(url);
+  const url = URL.createObjectURL(file);
+  setPreview(url);
 
-            const formData = new FormData();
-            formData.append('photo', file);
+  const result = await uploadMemberPhoto(member.id, file);
 
-            try {
-              const res = await fetch(`${API_URL}/members/upload-photo`, {
-                method: 'POST',
-                body: formData,
-              });
-
-              const data = await res.json();
-              updateMemberPhoto(data.photo_url);
-            } catch (err) {
-              console.error(err);
-            }
-          }}
+  if (!result.success) {
+    alert('Gagal upload foto');
+    setPreview(null);
+  }
+}}
         />
 
         {/* Info Detail */}
