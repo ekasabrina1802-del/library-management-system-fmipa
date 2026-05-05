@@ -152,14 +152,14 @@ app.post('/api/register', async (req, res) => {
 
     if (checkAnggota.recordset.length === 0) {
       await pool.request()
-        .input('nama', sql.VarChar, name)
+        .input('name', sql.VarChar, name)
         .input('email', sql.VarChar, email)
         .input('jenis', sql.VarChar, 'mahasiswa')
         .input('nim', sql.VarChar, 'AUTO' + userId)
         .input('jurusan', sql.VarChar, null)
         .query(`
-          INSERT INTO Anggota (nama, email, jenis, nim, jurusan)
-          VALUES (@nama, @email, @jenis, @nim, @jurusan)
+          INSERT INTO Anggota (name, email, jenis, nim, jurusan)
+          VALUES (@name, @email, @jenis, @nim, @jurusan)
         `);
     }
     // Jika checkAnggota.length > 0, anggota sudah ada, tidak perlu update apapun
@@ -331,7 +331,7 @@ app.get('/api/members', async (req, res) => {
   SELECT
     id,
     custom_id,
-    nama AS name,
+    name AS name,
     nim,
     jurusan AS departemen,
     jurusan AS prodi,
@@ -399,7 +399,7 @@ app.post('/api/members', async (req, res) => {
       const userId = resultUser.recordset[0].id;
 
       await pool.request()
-  .input('nama', sql.VarChar, name)
+  .input('name', sql.VarChar, name)
   .input('nim', sql.VarChar, nim)
   .input('jurusan', sql.VarChar, departemen || prodi || null)
   .input('jenis', sql.VarChar, 'staff')
@@ -407,15 +407,15 @@ app.post('/api/members', async (req, res) => {
   .input('phone', sql.VarChar, phone || null)
   .input('address', sql.VarChar, address || null)
   .query(`
-    INSERT INTO Anggota (nama, nim, jurusan, jenis, email, phone, address)
-    VALUES (@nama, @nim, @jurusan, @jenis, @email, @phone, @address)
+    INSERT INTO Anggota (name, nim, jurusan, jenis, email, phone, address)
+    VALUES (@name, @nim, @jurusan, @jenis, @email, @phone, @address)
   `);
 
       return res.json({ success: true, message: 'Staff/petugas berhasil ditambahkan' });
     }
 
     await pool.request()
-      .input('nama', sql.VarChar, name)
+      .input('name', sql.VarChar, name)
       .input('nim', sql.VarChar, nim)
       .input('jurusan', sql.VarChar, departemen || prodi || null)
       .input('jenis', sql.VarChar, type)
@@ -423,8 +423,8 @@ app.post('/api/members', async (req, res) => {
       .input('phone', sql.VarChar, phone || null)
       .input('address', sql.VarChar, address || null)
       .query(`
-        INSERT INTO Anggota (nama, nim, jurusan, jenis, email, phone, address)
-        VALUES (@nama, @nim, @jurusan, @jenis, @email, @phone, @address)
+        INSERT INTO Anggota (name, nim, jurusan, jenis, email, phone, address)
+        VALUES (@name, @nim, @jurusan, @jenis, @email, @phone, @address)
       `);
 
     res.json({ success: true, message: 'Anggota berhasil ditambahkan' });
@@ -458,7 +458,7 @@ const anggotaEmail = anggotaCheck.recordset[0].email;
 
 await pool.request()
   .input('id', sql.Int, id)
-  .input('nama', sql.VarChar, name)
+  .input('name', sql.VarChar, name)
   .input('nim', sql.VarChar, nim)
   .input('jurusan', sql.VarChar, departemen || prodi || null)
   .input('jenis', sql.VarChar, type)
@@ -467,7 +467,7 @@ await pool.request()
   .input('address', sql.VarChar, address || null)
   .query(`
     UPDATE Anggota
-    SET nama=@nama, nim=@nim, jurusan=@jurusan,
+    SET name=@name, nim=@nim, jurusan=@jurusan,
         jenis=@jenis, email=@email, phone=@phone, address=@address
     WHERE id = @id
   `);
@@ -490,7 +490,7 @@ if (anggotaEmail) {
   .input('id', sql.Int, id)
   .query(`
     SELECT id, custom_id,
-      nama AS name, nim,
+      name AS name, nim,
       jurusan AS departemen, jurusan AS prodi,
       jenis AS type, email, phone, address,
       photo_url,
@@ -518,7 +518,7 @@ app.get('/api/loans', async (req, res) => {
         B.title AS bookTitle,
         B.image_url,
         A.id AS memberId,
-        A.nama AS memberName,
+        A.name AS memberName,
         A.jenis AS memberType,
         CONVERT(varchar, P.tgl_pinjam, 23) AS loanDate,
         CONVERT(varchar, P.tgl_jatuh_tempo, 23) AS dueDate,
@@ -634,7 +634,7 @@ app.post('/api/loans', async (req, res) => {
     const memberResult = await new sql.Request(transaction)
       .input('memberId', sql.Int, memberId)
       .query(`
-        SELECT id, nama, jenis
+        SELECT id, name, jenis
         FROM Anggota
         WHERE id = @memberId
       `);
@@ -695,7 +695,7 @@ app.put('/api/loans/return/:bookCode', async (req, res) => {
           P.buku_id,
           P.tgl_jatuh_tempo,
           B.title AS bookTitle,
-          A.nama AS memberName
+          A.name AS memberName
         FROM Peminjaman P
         JOIN Buku B ON P.buku_id = B.id
         JOIN Anggota A ON P.anggota_id = A.id
