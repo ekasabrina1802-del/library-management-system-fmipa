@@ -11,13 +11,22 @@ function MemberModal({ member = null, onSave, onClose }) {
   type: member?.type || 'staff',
   email: member?.email || '',
   phone: member?.phone || '',
-  address: member?.address || ''
+  address: member?.address || '',
+  photo: null
   });
   const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
 
   const handleSubmit = (e) => {
   e.preventDefault();
-  onSave(form);
+  const formData = new FormData();
+
+    Object.entries(form).forEach(([key, value]) => {
+      if (value !== null) {
+        formData.append(key, value);
+      }
+    });
+
+    onSave(formData);
   };
 
   return (
@@ -60,6 +69,21 @@ function MemberModal({ member = null, onSave, onClose }) {
               <input className="form-control" value={form.address} onChange={f('address')}  required />
             </div>
             
+            <div className="form-group full-width">
+            <label className="form-label">Foto Profil</label>
+
+            <input
+              type="file"
+              accept="image/*"
+              className="form-control"
+              onChange={(e) =>
+                setForm(p => ({
+                  ...p,
+                  photo: e.target.files[0]
+                }))
+              }
+            />
+          </div>
           </div>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
             <button type="button" className="btn btn-ghost" onClick={onClose}>Batal</button>
