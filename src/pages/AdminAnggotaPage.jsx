@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, X, Check, Search, Printer, BookOpen, History } from 'lucide-react';
+import { Plus, X, Check, Search, Printer, BookOpen, History, Trash2 } from 'lucide-react';
 import { useApp } from '../components/AppContext';
 import { useAuth } from '../components/AuthContext';
 
@@ -36,7 +36,6 @@ function MemberModal({ member = null, onSave, onClose }) {
     }
   });
 
-
   onSave(formData);
 };
 
@@ -68,29 +67,29 @@ function MemberModal({ member = null, onSave, onClose }) {
           </div>
 
 
-<div className="form-group">
-  <label className="form-label">NIP / Kode Staff</label>
-  <input
-    className="form-control"
-    value={form.nim}
-    onChange={f('nim')}
-    placeholder="Kosongkan jika ingin otomatis"
-  />
-</div>
+          <div className="form-group">
+            <label className="form-label">NIP / Kode Staff</label>
+            <input
+              className="form-control"
+              value={form.nim}
+              onChange={f('nim')}
+              placeholder="Kosongkan jika ingin otomatis"
+            />
+          </div>
 
 
-{!member && (
-  <div className="form-group">
-    <label className="form-label">Password Login *</label>
-    <input
-      className="form-control"
-      type="password"
-      value={form.password}
-      onChange={f('password')}
-      required
-    />
-  </div>
-)}
+          {!member && (
+            <div className="form-group">
+              <label className="form-label">Password Login *</label>
+              <input
+                className="form-control"
+                type="password"
+                value={form.password}
+                onChange={f('password')}
+                required
+              />
+            </div>
+          )}
 
 
           <div className="form-group">
@@ -177,11 +176,7 @@ function MemberDetailModal({ member, loans, onClose, onEdit }) {
     {initials}
   </div>
 )}
-
-
           <div>
-
-
             <div
               style={{
                 display: 'flex',
@@ -247,11 +242,7 @@ function MemberDetailModal({ member, loans, onClose, onEdit }) {
                 <div className="text-sm text-muted">Alamat</div>
                 <div className="fw-600">{member.address}</div>
               </div>
-
-
             </div>
-
-
           </div>
         </div>
       </div>
@@ -261,12 +252,13 @@ function MemberDetailModal({ member, loans, onClose, onEdit }) {
 
 
 export default function AnggotaPage() {
-  const { members, loans, addMember, updateMember } = useApp();
+  const { members, loans, addMember, updateMember, deleteMember } = useApp();
   const { user } = useAuth();
   const [search, setSearch] = useState('');
   const [addModal, setAddModal] = useState(false);
   const [detailMember, setDetailMember] = useState(null);
   const [editMember, setEditMember] = useState(null);
+  const [deleteMemberData, setDeleteMemberData] = useState(null);
 
 
 const filtered = members.filter(m =>
@@ -279,11 +271,7 @@ const filtered = members.filter(m =>
 );
 
 
-
-
   const staff = members.filter(m => m.type === 'staff' && m.status === 'aktif').length;
-
-
 
 
   return (
@@ -298,7 +286,6 @@ const filtered = members.filter(m =>
   />
 )}
 
-
       {editMember && (
         <MemberModal
           member={editMember}
@@ -310,6 +297,72 @@ const filtered = members.filter(m =>
         />
       )}
 
+      {detailMember && (
+        <MemberDetailModal
+          member={detailMember}
+          loans={loans}
+          onEdit={(m) => {
+            setDetailMember(null);
+            setEditMember(m);
+          }}
+          onClose={() => setDetailMember(null)}
+        />
+      )}
+
+
+      {deleteMemberData && (
+        <div className="modal-overlay">
+          <div
+            className="modal"
+            style={{
+              maxWidth: 420,
+              textAlign: 'center'
+            }}
+          >
+            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 10 }}>
+              Hapus Petugas?
+            </div>
+
+            <div
+              style={{
+                color: 'var(--gray-text)',
+                marginBottom: 24
+              }}
+            >
+              Yakin ingin menghapus
+              <b> {deleteMemberData.name}</b> ?
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                gap: 10,
+                justifyContent: 'center'
+              }}
+            >
+              <button
+                className="btn btn-ghost"
+                onClick={() => setDeleteMemberData(null)}
+              >
+                Batal
+              </button>
+
+              <button
+                className="btn btn-danger"
+                onClick={async () => {
+                const success = await deleteMember(deleteMemberData.id);
+
+                if (success) {
+                  setDeleteMemberData(null);
+                }
+                }}
+              >
+                Hapus
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="page-header">
         <div className="page-breadcrumb">Data Petugas</div>
@@ -348,13 +401,17 @@ const filtered = members.filter(m =>
                 <th>No. Telp</th>
                 <th>Alamat</th>
                 <th>Tgl Bergabung</th>
+                <th>Aksi</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map(m => (
                 <tr key={m.id} style={{ cursor: 'pointer' }} onClick={() => setDetailMember(m)}>
-  <td><code style={{ background: 'var(--gray-light)', padding: '2px 6px', borderRadius: 4, fontSize: 11 }}>{m.custom_id || m.id}</code></td>
+
   <td>
+    <code style={{ background: 'var(--gray-light)', padding: '2px 6px', borderRadius: 4, fontSize: 11 }}>{m.custom_id || m.id}</code></td>
+  <td>
+
     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
       {m.photo_url ? (
         <img
@@ -387,6 +444,19 @@ const filtered = members.filter(m =>
                   <td style={{ color: 'var(--gray-text)' }}>
                     {m.joinDate}
                   </td>
+
+                  <td>
+                  <button
+                    className="btn btn-danger btn-sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                        setDeleteMemberData(m);
+                      
+                    }}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </td>
                 </tr>
               ))}
             </tbody>

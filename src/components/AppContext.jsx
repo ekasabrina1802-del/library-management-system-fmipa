@@ -279,23 +279,59 @@ const addMember = async (member) => {
 
       const name = getField(updates, 'name');
       const nim = getField(updates, 'nim');
-      const prodi = getField(updates, 'prodi');
       const email = getField(updates, 'email');
 
       addLog(
         'member',
-        `Memperbarui data anggota: ${name || '-'} (${nim || '-'}) — Prodi: ${prodi || '-'}, Kontak: ${email || '-'}`,
+        `Memperbarui data anggota: ${name || '-'} (${nim || '-'}) — ${email || '-'}`,
         'member'
       );
 
       return true;
     }
 
-    alert(data.message || 'Gagal mengupdate anggota');
     return false;
+
   } catch (err) {
-    console.error('Gagal update anggota:', err);
-    alert('Gagal mengupdate anggota');
+    console.error(err);
+    return false;
+  }
+};
+
+
+const deleteMember = async (id) => {
+  try {
+    console.log('DELETE ID:', id);
+
+    const res = await fetch(`${API_URL}/api/members/${id}`, {
+      method: 'DELETE',
+      headers: ngrokHeaders
+    });
+
+    console.log('STATUS:', res.status);
+
+    const data = await res.json();
+
+    console.log('RESPONSE:', data);
+
+    if (data.success) {
+      await fetchMembers();
+
+      addLog(
+        'delete',
+        `Menghapus data petugas ID ${id}`,
+        'delete'
+      );
+
+      return true;
+    }
+
+    alert(data.message || 'Delete gagal');
+    return false;
+
+  } catch (err) {
+    console.error('DELETE ERROR:', err);
+    alert('Backend delete error');
     return false;
   }
 };
@@ -441,6 +477,7 @@ const updateMemberPhoto = (photo_url) => {
         deleteBook,
         addMember,
         updateMember,
+        deleteMember,
         addLoan,
         returnBook,
         getDendaTotal,

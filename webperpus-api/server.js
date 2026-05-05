@@ -319,26 +319,59 @@ app.put('/api/books/:id', upload.single('image'), async (req, res) => {
   }
 });
 
-app.delete('/api/books/:id', async (req, res) => {
+app.delete('/api/members/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
     const pool = await sql.connect(dbConfig);
 
+    // ambil email anggota dulu
+    const anggota = await pool.request()
+      .input('id', sql.Int, id)
+      .query(`
+        SELECT email
+        FROM Anggota
+        WHERE id = @id
+      `);
+
+    if (anggota.recordset.length === 0) {
+      return res.json({
+        success: false,
+        message: 'Anggota tidak ditemukan'
+      });
+    }
+
+    const email = anggota.recordset[0].email;
+
+    // hapus akun login kalau ada
+    if (email) {
+      await pool.request()
+        .input('email', sql.VarChar, email)
+        .query(`
+          DELETE FROM Users
+          WHERE email = @email
+        `);
+    }
+
+    // hapus anggota
     await pool.request()
       .input('id', sql.Int, id)
-      .query(`DELETE FROM Buku WHERE id = @id`);
+      .query(`
+        DELETE FROM Anggota
+        WHERE id = @id
+      `);
 
     res.json({
       success: true,
-      message: 'Buku berhasil dihapus'
+      message: 'Anggota berhasil dihapus'
     });
 
   } catch (err) {
-    console.error('Delete Book Error:', err);
+    console.error('Delete Member Error:', err);
+
     res.status(500).json({
       success: false,
-      message: 'Gagal menghapus buku'
+      message: err.message
     });
   }
 });
