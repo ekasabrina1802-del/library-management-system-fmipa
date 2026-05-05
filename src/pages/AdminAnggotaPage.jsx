@@ -16,6 +16,8 @@ function MemberModal({ member = null, onSave, onClose }) {
   phone: member?.phone || '',
   address: member?.address || '',
   password: '',
+
+
   photo: null
   });
   const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
@@ -23,16 +25,20 @@ function MemberModal({ member = null, onSave, onClose }) {
 
   const handleSubmit = (e) => {
   e.preventDefault();
-    const formData = new FormData();
 
-      Object.entries(form).forEach(([key, value]) => {
-        if (value !== null && value !== '') {
-          formData.append(key, value);
-        }
-      });
 
-      onSave(formData);
-    };
+  const formData = new FormData();
+
+
+  Object.entries(form).forEach(([key, value]) => {
+    if (value !== null && value !== '') {
+      formData.append(key, value);
+    }
+  });
+
+
+  onSave(formData);
+};
 
 
   return (
@@ -72,6 +78,7 @@ function MemberModal({ member = null, onSave, onClose }) {
   />
 </div>
 
+
 {!member && (
   <div className="form-group">
     <label className="form-label">Password Login *</label>
@@ -84,6 +91,7 @@ function MemberModal({ member = null, onSave, onClose }) {
     />
   </div>
 )}
+
 
           <div className="form-group">
             <label className="form-label">Email</label>
@@ -290,6 +298,7 @@ const filtered = members.filter(m =>
   />
 )}
 
+
       {editMember && (
         <MemberModal
           member={editMember}
@@ -301,17 +310,6 @@ const filtered = members.filter(m =>
         />
       )}
 
-{detailMember && (
-  <MemberDetailModal
-    member={detailMember}
-    loans={loans}
-    onEdit={(m) => {
-      setDetailMember(null);
-      setEditMember(m);
-    }}
-    onClose={() => setDetailMember(null)}
-  />
-)}
 
       <div className="page-header">
         <div className="page-breadcrumb">Data Petugas</div>
@@ -401,3 +399,4 @@ const filtered = members.filter(m =>
     </div>
   );
 }
+
