@@ -3,7 +3,9 @@ import { Plus, X, Check, Search, Printer, BookOpen, History } from 'lucide-react
 import { useApp } from '../components/AppContext';
 import { useAuth } from '../components/AuthContext';
 
+
 const API_URL = import.meta.env.VITE_API_URL;
+
 
 function MemberModal({ member = null, onSave, onClose }) {
   const [form, setForm] = useState({
@@ -11,34 +13,33 @@ function MemberModal({ member = null, onSave, onClose }) {
   nim: member?.nim || '',
   type: member?.type || 'staff',
   email: member?.email || '',
-  password: '',
   phone: member?.phone || '',
   address: member?.address || '',
   password: '',
-
   photo: null
   });
   const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
 
+
   const handleSubmit = (e) => {
   e.preventDefault();
+    const formData = new FormData();
 
-  const formData = new FormData();
+      Object.entries(form).forEach(([key, value]) => {
+        if (value !== null && value !== '') {
+          formData.append(key, value);
+        }
+      });
 
-  Object.entries(form).forEach(([key, value]) => {
-    if (value !== null && value !== '') {
-      formData.append(key, value);
-    }
-  });
+      onSave(formData);
+    };
 
-  onSave(formData);
-};
 
   return (
     <div className="modal-overlay">
       <div className="modal">
         <div className="modal-header">
-          <h3 className="modal-title">Tambah Data Petugas </h3>
+          <h3 className="modal-title">Edit Data Petugas </h3>
           <button className="modal-close" onClick={onClose}><X size={20} /></button>
         </div>
         <form onSubmit={handleSubmit}>
@@ -59,6 +60,7 @@ function MemberModal({ member = null, onSave, onClose }) {
                   <option value="staff">Staff</option>
               </select>
           </div>
+
 
 <div className="form-group">
   <label className="form-label">NIP / Kode Staff</label>
@@ -87,20 +89,6 @@ function MemberModal({ member = null, onSave, onClose }) {
             <label className="form-label">Email</label>
             <input className="form-control" type="email" value={form.email} onChange={f('email')}  required />
           </div>
-
-          <div className="form-group full-width">
-            <label className="form-label">Password</label>
-
-            <input
-              type="password"
-              className="form-control"
-              value={form.password}
-              onChange={f('password')}
-              placeholder="Masukkan password"
-              required={!member}
-            />
-          </div>
-
           <div className="grid-2">
             <div className="form-group">
               <label className="form-label">No. Telp</label>
@@ -110,9 +98,10 @@ function MemberModal({ member = null, onSave, onClose }) {
               <label className="form-label">Alamat</label>
               <input className="form-control" value={form.address} onChange={f('address')}  required />
             </div>
-            
+           
             <div className="form-group full-width">
             <label className="form-label">Foto Profil</label>
+
 
             <input
               type="file"
@@ -137,10 +126,12 @@ function MemberModal({ member = null, onSave, onClose }) {
   );
 }
 
+
 function MemberDetailModal({ member, loans, onClose, onEdit }) {
   const memberLoans = loans.filter(l => l.memberId === member.id);
   const initials = member.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
   const activeLoan = memberLoans.filter(l => l.status === 'dipinjam' || l.status === 'terlambat').length;
+
 
   return (
     <div className="modal-overlay">
@@ -149,6 +140,7 @@ function MemberDetailModal({ member, loans, onClose, onEdit }) {
           <h3 className="modal-title">Profil Petugas</h3>
           <button className="modal-close" onClick={onClose}><X size={20} /></button>
         </div>
+
 
         <div
           style={{
@@ -178,7 +170,9 @@ function MemberDetailModal({ member, loans, onClose, onEdit }) {
   </div>
 )}
 
+
           <div>
+
 
             <div
               style={{
@@ -192,10 +186,12 @@ function MemberDetailModal({ member, loans, onClose, onEdit }) {
                   {member.name}
                 </div>
 
+
                 <div style={{ color: 'var(--gray-text)' }}>
                   Staff Perpustakaan FMIPA
                 </div>
               </div>
+
 
               <button
                 className="btn btn-outline btn-sm"
@@ -205,39 +201,48 @@ function MemberDetailModal({ member, loans, onClose, onEdit }) {
               </button>
             </div>
 
+
             <div className="grid-2">
+
 
               <div className="card">
                 <div className="text-sm text-muted">ID</div>
                 <div className="fw-600">{member.id}</div>
               </div>
 
+
               <div className="card">
                 <div className="text-sm text-muted">Tipe Anggota</div>
                 <div className="fw-600">{member.type}</div>
               </div>
+
 
               <div className="card">
                 <div className="text-sm text-muted">Email</div>
                 <div className="fw-600">{member.email}</div>
               </div>
 
+
               <div className="card">
                 <div className="text-sm text-muted">Tgl Bergabung</div>
                 <div className="fw-600">{member.joinDate}</div>
               </div>
+
 
               <div className="card">
                 <div className="text-sm text-muted">No. Telp</div>
                 <div className="fw-600">{member.phone}</div>
               </div>
 
+
               <div className="card">
                 <div className="text-sm text-muted">Alamat</div>
                 <div className="fw-600">{member.address}</div>
               </div>
 
+
             </div>
+
 
           </div>
         </div>
@@ -246,6 +251,7 @@ function MemberDetailModal({ member, loans, onClose, onEdit }) {
   );
 }
 
+
 export default function AnggotaPage() {
   const { members, loans, addMember, updateMember } = useApp();
   const { user } = useAuth();
@@ -253,6 +259,7 @@ export default function AnggotaPage() {
   const [addModal, setAddModal] = useState(false);
   const [detailMember, setDetailMember] = useState(null);
   const [editMember, setEditMember] = useState(null);
+
 
 const filtered = members.filter(m =>
   m.type === 'staff' &&
@@ -264,7 +271,11 @@ const filtered = members.filter(m =>
 );
 
 
+
+
   const staff = members.filter(m => m.type === 'staff' && m.status === 'aktif').length;
+
+
 
 
   return (
@@ -290,11 +301,24 @@ const filtered = members.filter(m =>
         />
       )}
 
+{detailMember && (
+  <MemberDetailModal
+    member={detailMember}
+    loans={loans}
+    onEdit={(m) => {
+      setDetailMember(null);
+      setEditMember(m);
+    }}
+    onClose={() => setDetailMember(null)}
+  />
+)}
+
       <div className="page-header">
         <div className="page-breadcrumb">Data Petugas</div>
         <h1 className="page-title">Manajemen Petugas</h1>
         <p className="page-subtitle">Kelola data petugas (Staff) perpustakaan</p>
       </div>
+
 
       <div className="grid-3 mb-24">
         <div className="stat-card">
@@ -305,6 +329,7 @@ const filtered = members.filter(m =>
           </div>
         </div>
       </div>
+
 
       <div className="card">
         <div className="flex-between mb-16" style={{ flexWrap: 'wrap', gap: 10 }}>
@@ -355,9 +380,11 @@ const filtered = members.filter(m =>
                     {m.phone}
                   </td>
 
+
                   <td style={{ color: 'var(--gray-text)' }}>
                     {m.address}
                   </td>
+
 
                   <td style={{ color: 'var(--gray-text)' }}>
                     {m.joinDate}
