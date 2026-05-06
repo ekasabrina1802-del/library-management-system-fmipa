@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { ACTIVITY_LOG } from '../data/db';
 import { useAuth } from '../components/AuthContext';
 
 const AppContext = createContext(null);
@@ -17,9 +16,10 @@ const jsonHeaders = {
 export function AppProvider({ children }) {
   const { user } = useAuth();
   const [reminders, setReminders] = useState([]);
+
   useEffect(() => {
-  console.log("REMINDERS:", reminders);
-}, [reminders]);
+    console.log("REMINDERS:", reminders);
+  }, [reminders]);
 
   const [books, setBooks] = useState([]);
   const [members, setMembers] = useState([]);
@@ -29,34 +29,11 @@ export function AppProvider({ children }) {
     return saved ? JSON.parse(saved) : [];
   });
 
-  const uploadMemberPhoto = async (memberId, file) => {
-  try {
-    const formData = new FormData();
-    formData.append('photo', file);
-    
-    const res = await fetch(`${API_URL}/api/members/${memberId}/photo`, {
-      method: 'POST',
-      headers: { 'ngrok-skip-browser-warning': 'true' },
-      body: formData
-    });
-    
-    const data = await res.json();
-    if (data.success) {
-      await fetchMembers();
-      return { success: true, photo_url: data.photo_url };
-    }
-    return { success: false };
-  } catch (err) {
-    console.error('Upload photo error:', err);
-    return { success: false };
-  }
-};
+  // ─── Fetch ───────────────────────────────────────────────────────────────────
 
   const fetchBooks = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/books`, {
-        headers: ngrokHeaders
-      });
+      const res = await fetch(`${API_URL}/api/books`, { headers: ngrokHeaders });
       const data = await res.json();
       if (data.success) setBooks(data.books);
     } catch (err) {
@@ -65,28 +42,24 @@ export function AppProvider({ children }) {
   };
 
   const fetchMembers = async () => {
-  try {
-    const res = await fetch(`${API_URL}/api/members`, {
-      headers: ngrokHeaders
-    });
-    const data = await res.json();
-    if (data.success) {
-      const mapped = data.members.map(m => ({
-        ...m,
-        displayId: m.custom_id || String(m.id),
-      }));
-      setMembers(mapped);
+    try {
+      const res = await fetch(`${API_URL}/api/members`, { headers: ngrokHeaders });
+      const data = await res.json();
+      if (data.success) {
+        const mapped = data.members.map(m => ({
+          ...m,
+          displayId: m.custom_id || String(m.id),
+        }));
+        setMembers(mapped);
+      }
+    } catch (err) {
+      console.error('Gagal ambil data anggota:', err);
     }
-  } catch (err) {
-    console.error('Gagal ambil data anggota:', err);
-  }
-};
+  };
 
   const fetchLoans = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/loans`, {
-        headers: ngrokHeaders
-      });
+      const res = await fetch(`${API_URL}/api/loans`, { headers: ngrokHeaders });
       const data = await res.json();
       if (data.success) {
         console.log("LOANS:", data.loans);
@@ -103,89 +76,88 @@ export function AppProvider({ children }) {
     fetchLoans();
   }, []);
 
+  // ─── Activity Log ─────────────────────────────────────────────────────────────
+
   const addLog = (type, desc, icon = 'info') => {
-  const now = new Date();
-  const time = `${now.toLocaleDateString('id-ID')} ${now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`;
+    const now = new Date();
+    const time = `${now.toLocaleDateString('id-ID')} ${now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`;
+    setActivityLog(prev => {
+      const updated = [{ id: Date.now(), time, type, desc, icon }, ...prev].slice(0, 100);
+      localStorage.setItem('activityLog', JSON.stringify(updated));
+      return updated;
+    });
+  };
 
-  setActivityLog(prev => {
-    const updated = [
-      { id: Date.now(), time, type, desc, icon },
-      ...prev
-    ].slice(0, 100); // max 100 log
+  // ─── Books ────────────────────────────────────────────────────────────────────
 
-    localStorage.setItem('activityLog', JSON.stringify(updated));
-
-    return updated;
-  });
-};
+  const uploadMemberPhoto = async (memberId, file) => {
+    try {
+      const formData = new FormData();
+      formData.append('photo', file);
+      const res = await fetch(`${API_URL}/api/members/${memberId}/photo`, {
+        method: 'POST',
+        headers: { 'ngrok-skip-browser-warning': 'true' },
+        body: formData
+      });
+      const data = await res.json();
+      if (data.success) {
+        await fetchMembers();
+        return { success: true, photo_url: data.photo_url };
+      }
+      return { success: false };
+    } catch (err) {
+      console.error('Upload photo error:', err);
+      return { success: false };
+    }
+  };
 
   const addBook = async (book) => {
-      try {
-        const formData = new FormData();
-
-        Object.keys(book).forEach(key => {
-          formData.append(key, book[key]);
-        });
-
-        const res = await fetch(`${API_URL}/api/books`, {
-          method: 'POST',
-          headers: {
-            'ngrok-skip-browser-warning': 'true'
-          },
-          body: formData
-        });
-
-        const data = await res.json();
-
-        if (data.success) {
-          await fetchBooks();
-          addLog('book', `Menambahkan buku baru: "${book.title}" (${book.no_induk}) — Stok: ${book.stock}, Kategori: ${book.category}`, 'book');
-
-          return true;
-        }
-
-        alert(data.message);
-        return false;
-      } catch (err) {
-        console.error('Gagal tambah buku:', err);
-        alert('Gagal menambahkan buku');
-        return false;
+    try {
+      const formData = new FormData();
+      Object.keys(book).forEach(key => formData.append(key, book[key]));
+      const res = await fetch(`${API_URL}/api/books`, {
+        method: 'POST',
+        headers: { 'ngrok-skip-browser-warning': 'true' },
+        body: formData
+      });
+      const data = await res.json();
+      if (data.success) {
+        await fetchBooks();
+        addLog('book', `Menambahkan buku baru: "${book.title}" (${book.no_induk}) — Stok: ${book.stock}, Kategori: ${book.category}`, 'book');
+        return true;
       }
-    };
+      alert(data.message);
+      return false;
+    } catch (err) {
+      console.error('Gagal tambah buku:', err);
+      alert('Gagal menambahkan buku');
+      return false;
+    }
+  };
 
   const updateBook = async (id, updates) => {
-      try {
-        const formData = new FormData();
-
-        Object.keys(updates).forEach(key => {
-          formData.append(key, updates[key]);
-        });
-
-        const res = await fetch(`${API_URL}/api/books/${id}`, {
-          method: 'PUT',
-          headers: {
-            'ngrok-skip-browser-warning': 'true'
-          },
-          body: formData
-        });
-
-        const data = await res.json();
-
-        if (data.success) {
-          await fetchBooks();
-          addLog('book', `Memperbarui data buku: "${updates.title}" (ID: ${id}) — Stok diubah ke ${updates.stock}, Kategori: ${updates.category}`, 'book');
-
-          return true;
-        }
-
-        alert(data.message);
-        return false;
-      } catch (err) {
-        console.error('Gagal update buku:', err);
-        alert('Gagal mengupdate buku');
-        return false;
+    try {
+      const formData = new FormData();
+      Object.keys(updates).forEach(key => formData.append(key, updates[key]));
+      const res = await fetch(`${API_URL}/api/books/${id}`, {
+        method: 'PUT',
+        headers: { 'ngrok-skip-browser-warning': 'true' },
+        body: formData
+      });
+      const data = await res.json();
+      if (data.success) {
+        await fetchBooks();
+        addLog('book', `Memperbarui data buku: "${updates.title}" (ID: ${id}) — Stok diubah ke ${updates.stock}, Kategori: ${updates.category}`, 'book');
+        return true;
       }
-    };
+      alert(data.message);
+      return false;
+    } catch (err) {
+      console.error('Gagal update buku:', err);
+      alert('Gagal mengupdate buku');
+      return false;
+    }
+  };
 
   const deleteBook = async (ids) => {
     try {
@@ -194,18 +166,14 @@ export function AppProvider({ children }) {
           method: 'DELETE',
           headers: ngrokHeaders
         });
-
         const data = await res.json();
-
         if (!data.success) {
           alert(data.message);
           return false;
         }
       }
-
       await fetchBooks();
       addLog('delete', `Menghapus ${ids.length} eksemplar buku dari koleksi (ID: ${ids.join(', ')})`, 'delete');
-
       return true;
     } catch (err) {
       console.error('Gagal hapus buku:', err);
@@ -214,128 +182,94 @@ export function AppProvider({ children }) {
     }
   };
 
+  // ─── Members ──────────────────────────────────────────────────────────────────
+
   const getField = (obj, key) => {
-  if (obj instanceof FormData) return obj.get(key);
-  return obj?.[key];
-};
+    if (obj instanceof FormData) return obj.get(key);
+    return obj?.[key];
+  };
 
-const addMember = async (member) => {
-  try {
-    const isFormData = member instanceof FormData;
-
-    const res = await fetch(`${API_URL}/api/members`, {
-      method: 'POST',
-      headers: isFormData
-        ? { 'ngrok-skip-browser-warning': 'true' }
-        : jsonHeaders,
-      body: isFormData ? member : JSON.stringify(member)
-    });
-
-    const data = await res.json();
-
-    if (data.success) {
-      await fetchMembers();
-
-      const name = getField(member, 'name');
-      const nim = getField(member, 'nim');
-      const type = getField(member, 'type');
-      const prodi = getField(member, 'prodi');
-      const departemen = getField(member, 'departemen');
-
-      addLog(
-        'member',
-        `Mendaftarkan anggota baru: ${name || '-'} (${nim || '-'}) — ${type || '-'}, ${prodi || departemen || '-'}`,
-        'member'
-      );
-
-      return true;
+  const addMember = async (member) => {
+    try {
+      const isFormData = member instanceof FormData;
+      const res = await fetch(`${API_URL}/api/members`, {
+        method: 'POST',
+        headers: isFormData ? { 'ngrok-skip-browser-warning': 'true' } : jsonHeaders,
+        body: isFormData ? member : JSON.stringify(member)
+      });
+      const data = await res.json();
+      if (data.success) {
+        await fetchMembers();
+        const name = getField(member, 'name');
+        const nim = getField(member, 'nim');
+        const type = getField(member, 'type');
+        const prodi = getField(member, 'prodi');
+        const departemen = getField(member, 'departemen');
+        addLog('member', `Mendaftarkan anggota baru: ${name || '-'} (${nim || '-'}) — ${type || '-'}, ${prodi || departemen || '-'}`, 'member');
+        return true;
+      }
+      alert(data.message || 'Gagal menambahkan anggota');
+      return false;
+    } catch (err) {
+      console.error('Gagal tambah anggota:', err);
+      alert('Gagal menambahkan anggota');
+      return false;
     }
+  };
 
-    alert(data.message || 'Gagal menambahkan anggota');
-    return false;
-  } catch (err) {
-    console.error('Gagal tambah anggota:', err);
-    alert('Gagal menambahkan anggota');
-    return false;
-  }
-};
-
- const updateMember = async (id, updates) => {
-  try {
-    const isFormData = updates instanceof FormData;
-
-    const res = await fetch(`${API_URL}/api/members/${id}`, {
-      method: 'PUT',
-      headers: isFormData
-        ? { 'ngrok-skip-browser-warning': 'true' }
-        : jsonHeaders,
-      body: isFormData ? updates : JSON.stringify(updates)
-    });
-
-    const data = await res.json();
-
-    if (data.success) {
-      await fetchMembers();
-
-      const name = getField(updates, 'name');
-      const nim = getField(updates, 'nim');
-      const email = getField(updates, 'email');
-
-      addLog(
-        'member',
-        `Memperbarui data anggota: ${name || '-'} (${nim || '-'}) — ${email || '-'}`,
-        'member'
-      );
-
-      return true;
+  const updateMember = async (id, updates) => {
+    try {
+      const isFormData = updates instanceof FormData;
+      const res = await fetch(`${API_URL}/api/members/${id}`, {
+        method: 'PUT',
+        headers: isFormData ? { 'ngrok-skip-browser-warning': 'true' } : jsonHeaders,
+        body: isFormData ? updates : JSON.stringify(updates)
+      });
+      const data = await res.json();
+      if (data.success) {
+        await fetchMembers();
+        const name = getField(updates, 'name');
+        const nim = getField(updates, 'nim');
+        const email = getField(updates, 'email');
+        addLog('member', `Memperbarui data anggota: ${name || '-'} (${nim || '-'}) — ${email || '-'}`, 'member');
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error(err);
+      return false;
     }
+  };
 
-    return false;
-
-  } catch (err) {
-    console.error(err);
-    return false;
-  }
-};
-
-
-const deleteMember = async (id) => {
-  try {
-    console.log('DELETE ID:', id);
-
-    const res = await fetch(`${API_URL}/api/members/${id}`, {
-      method: 'DELETE',
-      headers: ngrokHeaders
-    });
-
-    console.log('STATUS:', res.status);
-
-    const data = await res.json();
-
-    console.log('RESPONSE:', data);
-
-    if (data.success) {
-      await fetchMembers();
-
-      addLog(
-        'delete',
-        `Menghapus data petugas ID ${id}`,
-        'delete'
-      );
-
-      return true;
+  const deleteMember = async (id) => {
+    try {
+      const res = await fetch(`${API_URL}/api/members/${id}`, {
+        method: 'DELETE',
+        headers: ngrokHeaders
+      });
+      const data = await res.json();
+      if (data.success) {
+        await fetchMembers();
+        addLog('delete', `Menghapus data anggota ID ${id}`, 'delete');
+        return true;
+      }
+      alert(data.message || 'Delete gagal');
+      return false;
+    } catch (err) {
+      console.error('DELETE ERROR:', err);
+      alert('Backend delete error');
+      return false;
     }
+  };
 
-    alert(data.message || 'Delete gagal');
-    return false;
+  // ─── Loans ────────────────────────────────────────────────────────────────────
 
-  } catch (err) {
-    console.error('DELETE ERROR:', err);
-    alert('Backend delete error');
-    return false;
-  }
-};
-
+  /**
+   * Tambah peminjaman baru.
+   * Backend diharapkan menghitung due_date sesuai tipe anggota:
+   *   mahasiswa → +7 hari, dosen → +30 hari
+   * Response: { success, loan: { id, dueDate, memberName, bookTitle, ... }, message }
+   */
   const addLoan = async (bookCode, memberId) => {
     try {
       const res = await fetch(`${API_URL}/api/loans`, {
@@ -343,124 +277,151 @@ const deleteMember = async (id) => {
         headers: jsonHeaders,
         body: JSON.stringify({ bookCode, memberId })
       });
-
       const data = await res.json();
-
       if (data.success) {
         await fetchBooks();
         await fetchLoans();
         addLog('loan', `Peminjaman dicatat oleh ${user?.name}: buku "${bookCode}" dipinjam oleh anggota ID ${memberId}`, 'loan');
-        return { success: true };
+        return { success: true, loan: data.loan || null };
       }
-
-      return { success: false, message: data.message };
+      return { success: false, message: data.message || 'Gagal memproses peminjaman' };
     } catch (err) {
       console.error('Gagal tambah peminjaman:', err);
       return { success: false, message: 'Gagal menambahkan peminjaman' };
     }
   };
 
-  const returnBook = async (bookCode) => {
-  try {
-    // Cari data loan aktif sebelum dikembalikan
-    const activeLoan = loans.find(
-      l => l.bookCode === bookCode && (l.status === 'dipinjam' || l.status === 'terlambat')
-    );
-    const memberName = activeLoan?.memberName || 'Tidak diketahui';
-
-    const res = await fetch(`${API_URL}/api/loans/return/${encodeURIComponent(bookCode)}`, {
-      method: 'PUT',
-      headers: ngrokHeaders
-    });
-
-    const data = await res.json();
-
-    if (data.success) {
-      await fetchBooks();
-      await fetchLoans();
-      addLog('return', `Pengembalian buku "${bookCode}" oleh ${memberName} selesai — Denda: ${data.denda > 0 ? 'Rp ' + data.denda.toLocaleString('id-ID') : 'Tidak ada'}`, 'return');
-
-      return {
-        success: true,
-        loan: { bookCode, bookTitle: '', memberName },
-        denda: data.denda || 0
-      };
+  /**
+   * Perpanjang pinjaman berdasarkan loan ID.
+   * Backend diharapkan:
+   *   - Tambah due_date sesuai tambahHari
+   *   - Increment jumlah_perpanjangan
+   *   - Update status ke 'diperpanjang'
+   * Response: { success, loan: { id, dueDate, jumlahPerpanjangan }, message }
+   */
+  const extendLoan = async (loanId, tambahHari) => {
+    try {
+      const res = await fetch(`${API_URL}/api/loans/${loanId}/extend`, {
+        method: 'PUT',
+        headers: jsonHeaders,
+        body: JSON.stringify({ tambahHari })
+      });
+      const data = await res.json();
+      if (data.success) {
+        await fetchLoans();
+        addLog('loan', `Perpanjangan pinjaman ID ${loanId} oleh ${user?.name} (+${tambahHari} hari)`, 'loan');
+        return { success: true, loan: data.loan || null };
+      }
+      return { success: false, message: data.message || 'Gagal memperpanjang peminjaman' };
+    } catch (err) {
+      console.error('Gagal perpanjang peminjaman:', err);
+      return { success: false, message: 'Gagal memperpanjang peminjaman' };
     }
-
-    return { success: false, message: data.message };
-  } catch (err) {
-    console.error('Gagal pengembalian buku:', err);
-    return { success: false, message: 'Gagal memproses pengembalian' };
-  }
-};
-
-// Fungsi getDendaTotal
-const getDendaTotal = (userId) => {
-  return loans
-    .filter(l => {
-      if (Number(l.denda) === 0) return false;
-      if (userId && String(l.user_id || l.memberId) !== String(userId)) return false;
-      return true;
-    })
-    .reduce((sum, l) => sum + Number(l.denda), 0);
-};
-
-const addReminder = (book, userId) => {
-  const key = `reminders_${userId}`;
-  const existing = JSON.parse(localStorage.getItem(key) || '[]');
-  
-  // Hindari duplikat
-  const alreadyExists = existing.find(r => r.bookId === book.id || r.bookId === book.no_induk);
-  if (alreadyExists) return;
-
-  const newReminder = {
-    id: Date.now(),
-    bookId: book.id || book.no_induk,
-    title: book.title,
-    userId,
-    available: false,
   };
 
-  const updated = [...existing, newReminder];
-  localStorage.setItem(key, JSON.stringify(updated));
-  
-  setReminders(updated); 
-};
+  /**
+   * Kembalikan buku berdasarkan loanId spesifik (bukan hanya bookCode).
+   * Menggunakan loanId agar tidak ambigu jika ada beberapa pinjaman aktif
+   * untuk buku yang sama (edge case).
+   * Response: { success, denda, lateDays, message }
+   */
+  const returnBook = async (bookCode, loanId) => {
+    try {
+      // Ambil data loan aktif untuk keperluan log
+      const activeLoan = loans.find(l => l.id === loanId);
+      const memberName = activeLoan?.memberName || 'Tidak diketahui';
+      const bookTitle = activeLoan?.bookTitle || bookCode;
 
-useEffect(() => {
-  if (user?.id) {
-    const key = `reminders_${user.id}`;
-    const saved = JSON.parse(localStorage.getItem(key) || '[]');
-    setReminders(saved);
-  }
-}, [user?.id, books]);
+      // Kirim loanId jika tersedia, fallback ke endpoint lama
+      const endpoint = loanId
+        ? `${API_URL}/api/loans/${loanId}/return`
+        : `${API_URL}/api/loans/return/${encodeURIComponent(bookCode)}`;
 
-// Fungsi notifikasi
-const getUserNotifications = () => {
-  return reminders.map(r => {
-    const book = books.find(
-      b => String(b.id || b.book_id) === String(r.bookId)
-    );
+      const method = 'PUT';
 
-    const stock = Number(book?.available ?? book?.stock ?? 0);
+      const res = await fetch(endpoint, {
+        method,
+        headers: ngrokHeaders
+      });
+      const data = await res.json();
 
-    return {
-      ...r,
-      stock,
-      available: stock > 0
+      if (data.success) {
+        await fetchBooks();
+        await fetchLoans();
+        addLog(
+          'return',
+          `Pengembalian buku "${bookTitle}" oleh ${memberName} selesai — Denda: ${data.denda > 0 ? 'Rp ' + Number(data.denda).toLocaleString('id-ID') : 'Tidak ada'}`,
+          'return'
+        );
+        return {
+          success: true,
+          denda: data.denda || 0,
+          lateDays: data.lateDays || 0,
+          loan: activeLoan || null
+        };
+      }
+
+      return { success: false, message: data.message || 'Gagal memproses pengembalian' };
+    } catch (err) {
+      console.error('Gagal pengembalian buku:', err);
+      return { success: false, message: 'Gagal memproses pengembalian' };
+    }
+  };
+
+  // ─── Denda ────────────────────────────────────────────────────────────────────
+
+  const getDendaTotal = (userId) => {
+    return loans
+      .filter(l => {
+        if (Number(l.denda) === 0) return false;
+        if (userId && String(l.user_id || l.memberId) !== String(userId)) return false;
+        return true;
+      })
+      .reduce((sum, l) => sum + Number(l.denda), 0);
+  };
+
+  // ─── Reminders ───────────────────────────────────────────────────────────────
+
+  const addReminder = (book, userId) => {
+    const key = `reminders_${userId}`;
+    const existing = JSON.parse(localStorage.getItem(key) || '[]');
+    const alreadyExists = existing.find(r => r.bookId === book.id || r.bookId === book.no_induk);
+    if (alreadyExists) return;
+    const newReminder = {
+      id: Date.now(),
+      bookId: book.id || book.no_induk,
+      title: book.title,
+      userId,
+      available: false,
     };
-  });
-};
+    const updated = [...existing, newReminder];
+    localStorage.setItem(key, JSON.stringify(updated));
+    setReminders(updated);
+  };
 
-const updateMemberPhoto = (photo_url) => {
-  setMembers(prev =>
-    prev.map(m =>
-      m.id === user.memberId
-        ? { ...m, photo_url }
-        : m
-    )
-  );
-};
+  useEffect(() => {
+    if (user?.id) {
+      const key = `reminders_${user.id}`;
+      const saved = JSON.parse(localStorage.getItem(key) || '[]');
+      setReminders(saved);
+    }
+  }, [user?.id, books]);
+
+  const getUserNotifications = () => {
+    return reminders.map(r => {
+      const book = books.find(b => String(b.id || b.book_id) === String(r.bookId));
+      const stock = Number(book?.available ?? book?.stock ?? 0);
+      return { ...r, stock, available: stock > 0 };
+    });
+  };
+
+  const updateMemberPhoto = (photo_url) => {
+    setMembers(prev =>
+      prev.map(m => m.id === user.memberId ? { ...m, photo_url } : m)
+    );
+  };
+
+  // ─── Provider ────────────────────────────────────────────────────────────────
 
   return (
     <AppContext.Provider
@@ -479,6 +440,7 @@ const updateMemberPhoto = (photo_url) => {
         updateMember,
         deleteMember,
         addLoan,
+        extendLoan,
         returnBook,
         getDendaTotal,
         uploadMemberPhoto,
