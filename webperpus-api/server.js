@@ -604,6 +604,13 @@ if (anggotaEmail) {
   }
 });
 
+const DENDA_PER_HARI = 500;
+
+const LOAN_RULES = {
+  mahasiswa: { maxBuku: 3, hariPinjam: 7, maxPerpanjangan: 2 },
+  dosen: { maxBuku: 10, hariPinjam: 30, maxPerpanjangan: 2 },
+};
+
 app.get('/api/loans', async (req, res) => {
   try {
     const pool = await sql.connect(dbConfig);
@@ -621,6 +628,8 @@ app.get('/api/loans', async (req, res) => {
         CONVERT(varchar, P.tgl_jatuh_tempo, 23) AS dueDate,
         CONVERT(varchar, P.tgl_kembali, 23) AS returnDate,
         P.denda,
+        P.denda_bayar AS dendaBayar,
+        P.jumlah_perpanjangan AS jumlahPerpanjangan,
         P.status
       FROM Peminjaman P
       JOIN Buku B ON P.buku_id = B.id
@@ -699,6 +708,8 @@ app.get('/api/books', async (req, res) => {
   }
 });
 
+
+
 app.post('/api/loans', async (req, res) => {
   const { bookCode, memberId } = req.body;
 
@@ -741,14 +752,112 @@ app.post('/api/loans', async (req, res) => {
       return res.json({ success: false, message: 'Anggota tidak ditemukan' });
     }
 
+    const member = memberResult.recordset[0];
+    const memberType = String(member.jenis || '').toLowerCase();
+    const rule = LOAN_RULES[memberType];
+
+    if (!rule) {
+      await transaction.rollback();
+      return res.json({
+        success: false,
+        message: `${member.name} (${member.jenis}) tidak memiliki hak peminjaman`
+      });
+    }
+
+    const blockedResult = await new sql.Request(transaction)
+  .input('memberId', sql.Int, memberId)
+  .query(`
+    SELECT TOP 1 id, status, denda, denda_bayar
+    FROM Peminjaman
+    WHERE anggota_id = @memberId
+      AND (
+        (
+          status IN ('dipinjam', 'diperpanjang', 'terlambat')
+          AND tgl_jatuh_tempo < CAST(GETDATE() AS DATE)
+        )
+        OR (
+          status = 'dikembalikan'
+          AND ISNULL(denda, 0) > 0
+          AND ISNULL(denda_bayar, 0) = 0
+        )
+      )
+  `);
+
+    if (blockedResult.recordset.length > 0) {
+      await transaction.rollback();
+      return res.json({
+        success: false,
+        message: 'Anggota masih memiliki keterlambatan atau denda yang belum dibayar'
+      });
+    }
+
+    const activeCountResult = await new sql.Request(transaction)
+      .input('memberId', sql.Int, memberId)
+      .query(`
+        SELECT COUNT(*) AS total
+        FROM Peminjaman
+        WHERE anggota_id = @memberId
+          AND status IN ('dipinjam', 'terlambat', 'diperpanjang')
+      `);
+
+    const activeCount = activeCountResult.recordset[0].total;
+
+    if (activeCount >= rule.maxBuku) {
+      await transaction.rollback();
+      return res.json({
+        success: false,
+        message: `${member.name} sudah meminjam ${activeCount} buku. Maksimal untuk ${memberType} adalah ${rule.maxBuku} buku`
+      });
+    }
+
+    const sameBookResult = await new sql.Request(transaction)
+      .input('memberId', sql.Int, memberId)
+      .input('bookId', sql.Int, book.id)
+      .query(`
+        SELECT TOP 1 id
+        FROM Peminjaman
+        WHERE anggota_id = @memberId
+          AND buku_id = @bookId
+          AND status IN ('dipinjam', 'terlambat', 'diperpanjang')
+      `);
+
+    if (sameBookResult.recordset.length > 0) {
+      await transaction.rollback();
+      return res.json({
+        success: false,
+        message: `${member.name} sudah meminjam buku ini dan belum mengembalikannya`
+      });
+    }
+
     await new sql.Request(transaction)
       .input('buku_id', sql.Int, book.id)
       .input('anggota_id', sql.Int, memberId)
+      .input('hariPinjam', sql.Int, rule.hariPinjam)
       .query(`
         INSERT INTO Peminjaman
-        (buku_id, anggota_id, tgl_pinjam, tgl_jatuh_tempo, tgl_kembali, denda, status)
+        (
+          buku_id,
+          anggota_id,
+          tgl_pinjam,
+          tgl_jatuh_tempo,
+          tgl_kembali,
+          denda,
+          denda_bayar,
+          jumlah_perpanjangan,
+          status
+        )
         VALUES
-        (@buku_id, @anggota_id, CAST(GETDATE() AS DATE), DATEADD(DAY, 1, CAST(GETDATE() AS DATE)), NULL, 0, 'dipinjam')
+        (
+          @buku_id,
+          @anggota_id,
+          CAST(GETDATE() AS DATE),
+          DATEADD(DAY, @hariPinjam, CAST(GETDATE() AS DATE)),
+          NULL,
+          0,
+          0,
+          0,
+          'dipinjam'
+        )
       `);
 
     await new sql.Request(transaction)
@@ -775,8 +884,17 @@ app.post('/api/loans', async (req, res) => {
   }
 });
 
-app.put('/api/loans/return/:bookCode', async (req, res) => {
-  const { bookCode } = req.params;
+
+app.put('/api/loans/:id/extend', async (req, res) => {
+  const { id } = req.params;
+  const tambahHari = Number(req.body.tambahHari || req.body.days || req.body.hari || 0);
+
+  if (!tambahHari || tambahHari <= 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'tambahHari wajib diisi dan harus lebih dari 0'
+    });
+  }
 
   try {
     const pool = await sql.connect(dbConfig);
@@ -785,57 +903,194 @@ app.put('/api/loans/return/:bookCode', async (req, res) => {
     await transaction.begin();
 
     const loanResult = await new sql.Request(transaction)
-      .input('bookCode', sql.VarChar, bookCode)
+      .input('id', sql.Int, id)
       .query(`
-        SELECT TOP 1
+        SELECT
+          P.id,
+          P.anggota_id,
+          P.tgl_jatuh_tempo,
+          P.status,
+          P.jumlah_perpanjangan,
+          A.jenis AS memberType,
+          A.name AS memberName,
+          B.title AS bookTitle
+        FROM Peminjaman P
+        JOIN Anggota A ON P.anggota_id = A.id
+        JOIN Buku B ON P.buku_id = B.id
+        WHERE P.id = @id
+      `);
+
+    if (loanResult.recordset.length === 0) {
+      await transaction.rollback();
+      return res.status(404).json({
+        success: false,
+        message: 'Data peminjaman tidak ditemukan'
+      });
+    }
+
+    const loan = loanResult.recordset[0];
+    const memberType = String(loan.memberType || '').toLowerCase();
+    const rule = LOAN_RULES[memberType] || LOAN_RULES.mahasiswa;
+
+    if (!['dipinjam', 'diperpanjang'].includes(loan.status)) {
+      await transaction.rollback();
+      return res.json({
+        success: false,
+        message: 'Peminjaman ini tidak bisa diperpanjang karena statusnya bukan pinjaman aktif'
+      });
+    }
+
+    const overdueResult = await new sql.Request(transaction)
+      .input('dueDate', sql.Date, loan.tgl_jatuh_tempo)
+      .query(`
+        SELECT
+          CASE
+            WHEN @dueDate < CAST(GETDATE() AS DATE) THEN 1
+            ELSE 0
+          END AS isOverdue
+      `);
+
+    if (overdueResult.recordset[0].isOverdue === 1) {
+      await new sql.Request(transaction)
+        .input('id', sql.Int, id)
+        .query(`
+          UPDATE Peminjaman
+          SET status = 'terlambat'
+          WHERE id = @id
+        `);
+
+      await transaction.commit();
+
+      return res.json({
+        success: false,
+        message: 'Tidak bisa diperpanjang karena buku sudah terlambat'
+      });
+    }
+
+    const currentExt = Number(loan.jumlah_perpanjangan || 0);
+
+    if (currentExt >= rule.maxPerpanjangan) {
+      await transaction.rollback();
+      return res.json({
+        success: false,
+        message: `Sudah mencapai batas maksimal perpanjangan (${rule.maxPerpanjangan}x)`
+      });
+    }
+
+    await new sql.Request(transaction)
+      .input('id', sql.Int, id)
+      .input('tambahHari', sql.Int, tambahHari)
+      .query(`
+        UPDATE Peminjaman
+        SET
+          tgl_jatuh_tempo = DATEADD(DAY, @tambahHari, tgl_jatuh_tempo),
+          jumlah_perpanjangan = jumlah_perpanjangan + 1,
+          status = 'diperpanjang'
+        WHERE id = @id
+      `);
+
+    const updatedResult = await new sql.Request(transaction)
+      .input('id', sql.Int, id)
+      .query(`
+        SELECT
+          id,
+          CONVERT(varchar, tgl_jatuh_tempo, 23) AS dueDate,
+          jumlah_perpanjangan AS jumlahPerpanjangan,
+          status
+        FROM Peminjaman
+        WHERE id = @id
+      `);
+
+    await transaction.commit();
+
+    res.json({
+      success: true,
+      message: 'Peminjaman berhasil diperpanjang',
+      loan: updatedResult.recordset[0]
+    });
+
+  } catch (err) {
+    console.error('Extend Loan Error:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Gagal memperpanjang peminjaman'
+    });
+  }
+});
+
+app.put('/api/loans/:id/return', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const pool = await sql.connect(dbConfig);
+    const transaction = new sql.Transaction(pool);
+
+    await transaction.begin();
+
+    const loanResult = await new sql.Request(transaction)
+      .input('id', sql.Int, id)
+      .query(`
+        SELECT
           P.id,
           P.buku_id,
           P.tgl_jatuh_tempo,
+          P.status,
           B.title AS bookTitle,
           A.name AS memberName
         FROM Peminjaman P
         JOIN Buku B ON P.buku_id = B.id
         JOIN Anggota A ON P.anggota_id = A.id
-        WHERE B.no_induk = @bookCode
-          AND P.status IN ('dipinjam', 'terlambat')
-        ORDER BY P.id DESC
+        WHERE P.id = @id
+          AND P.status IN ('dipinjam', 'terlambat', 'diperpanjang')
       `);
 
     if (loanResult.recordset.length === 0) {
       await transaction.rollback();
       return res.json({
         success: false,
-        message: 'Tidak ada peminjaman aktif untuk kode buku ini'
+        message: 'Peminjaman aktif tidak ditemukan'
       });
     }
 
     const loan = loanResult.recordset[0];
 
-    // Potongan logika dalam transaksi return di server.js
-const dendaResult = await new sql.Request(transaction)
-  .input('dueDate', sql.Date, loan.tgl_jatuh_tempo)
-  .query(`
-    SELECT 
-      CASE 
-        WHEN DATEDIFF(DAY, @dueDate, CAST(GETDATE() AS DATE)) > 0
-        THEN DATEDIFF(DAY, @dueDate, CAST(GETDATE() AS DATE)) * 1000 -- Ubah jadi 1000
-        ELSE 0
-      END AS denda
-  `);
+    const dendaResult = await new sql.Request(transaction)
+      .input('dueDate', sql.Date, loan.tgl_jatuh_tempo)
+      .input('dendaPerHari', sql.Int, DENDA_PER_HARI)
+      .query(`
+        SELECT
+          CASE
+            WHEN DATEDIFF(DAY, @dueDate, CAST(GETDATE() AS DATE)) > 0
+            THEN DATEDIFF(DAY, @dueDate, CAST(GETDATE() AS DATE)) * @dendaPerHari
+            ELSE 0
+          END AS denda,
+          CASE
+            WHEN DATEDIFF(DAY, @dueDate, CAST(GETDATE() AS DATE)) > 0
+            THEN DATEDIFF(DAY, @dueDate, CAST(GETDATE() AS DATE))
+            ELSE 0
+          END AS lateDays
+      `);
 
     const denda = dendaResult.recordset[0].denda;
+    const lateDays = dendaResult.recordset[0].lateDays;
 
     await new sql.Request(transaction)
-      .input('id', sql.Int, loan.id)
-      .input('denda', sql.Int, denda)
-      .query(`
-        UPDATE Peminjaman
-        SET
-          tgl_kembali = CAST(GETDATE() AS DATE),
-          denda = @denda,
-          status = 'dikembalikan'
-        WHERE id = @id
-      `);
+  .input('id', sql.Int, loan.id)
+  .input('denda', sql.Int, denda)
+  .input('dendaBayar', sql.Bit, 1)
+  .query(`
+    UPDATE Peminjaman
+    SET
+      tgl_kembali = CAST(GETDATE() AS DATE),
+      denda = @denda,
+      denda_bayar = @dendaBayar,
+      tgl_bayar_denda = CASE
+        WHEN @denda > 0 THEN CAST(GETDATE() AS DATE)
+        ELSE NULL
+      END,
+      status = 'dikembalikan'
+    WHERE id = @id
+  `);
 
     await new sql.Request(transaction)
       .input('buku_id', sql.Int, loan.buku_id)
@@ -849,18 +1104,63 @@ const dendaResult = await new sql.Request(transaction)
 
     res.json({
       success: true,
-      message: 'Pengembalian berhasil',
-      denda
+      message: denda > 0
+        ? 'Pengembalian berhasil. Anggota memiliki denda yang harus dibayar'
+        : 'Pengembalian berhasil',
+      denda,
+      lateDays,
+      dendaBayar: denda === 0
     });
 
   } catch (err) {
-    console.error('Return Loan Error:', err);
+    console.error('Return Loan By ID Error:', err);
     res.status(500).json({
       success: false,
       message: 'Gagal memproses pengembalian'
     });
   }
 });
+
+app.put('/api/loans/:id/pay-fine', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const pool = await sql.connect(dbConfig);
+
+    const result = await pool.request()
+      .input('id', sql.Int, id)
+      .query(`
+        UPDATE Peminjaman
+        SET
+          denda_bayar = 1,
+          tgl_bayar_denda = CAST(GETDATE() AS DATE)
+        WHERE id = @id
+          AND status = 'dikembalikan'
+          AND ISNULL(denda, 0) > 0
+          AND ISNULL(denda_bayar, 0) = 0
+      `);
+
+    if (result.rowsAffected[0] === 0) {
+      return res.json({
+        success: false,
+        message: 'Data denda tidak ditemukan atau denda sudah lunas'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Denda berhasil ditandai lunas'
+    });
+
+  } catch (err) {
+    console.error('Pay Fine Error:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Gagal memproses pembayaran denda'
+    });
+  }
+});
+
 
 app.post('/api/members/:id/photo', uploadMember.single('photo'), async (req, res) => {
   const { id } = req.params;
@@ -907,7 +1207,8 @@ const updateOverdueStatus = async () => {
     const result = await pool.request().query(`
       UPDATE Peminjaman 
       SET status = 'terlambat'
-      WHERE status = 'dipinjam' AND tgl_jatuh_tempo < CAST(GETDATE() AS DATE)
+      WHERE status IN ('dipinjam', 'diperpanjang')
+  AND tgl_jatuh_tempo < CAST(GETDATE() AS DATE)
     `);
     if (result.rowsAffected[0] > 0) {
       console.log(`[System] ${result.rowsAffected[0]} buku terdeteksi terlambat.`);
