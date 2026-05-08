@@ -108,7 +108,11 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
       alert(`Stok buku "${book.title}" sedang kosong. Kami akan mencatat permintaan notifikasi Anda.`);
       return;
     }
-    const activeLoans = loans?.filter(l => l.user_id === user?.id && l.status === 'Dipinjam').length || 0;
+    const activeLoans = loans?.filter(
+  l =>
+    String(l.memberId) === String(user?.anggotaId || user?.memberId) &&
+    ['dipinjam', 'diperpanjang', 'terlambat'].includes(String(l.status).toLowerCase())
+).length || 0;
     const rules = {
       mahasiswa: { max: 3, duration: '1 Minggu', extend: '2x' },
       dosen: { max: 10, duration: '1 Bulan', extend: 'N/A' }
@@ -122,7 +126,7 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
       `Konfirmasi Peminjaman:\n\nJudul: ${book.title}\nDurasi: ${userRule.duration}\nBatas Maksimal: ${userRule.max} buku\n\nApakah Anda ingin melanjutkan?`
     );
     if (confirmBorrow) {
-      const result = await addLoan(book.no_induk, user?.id);
+      const result = await addLoan(book.no_induk, user?.anggotaId || user?.memberId);
       if (result.success) {
         alert('Permintaan berhasil! Silahkan ambil buku di meja petugas dengan menunjukkan kode buku.');
         onClose();

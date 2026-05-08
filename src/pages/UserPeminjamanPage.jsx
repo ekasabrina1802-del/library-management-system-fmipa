@@ -28,19 +28,36 @@ export default function UserPeminjamanPage() {
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState('aktif'); // 'aktif' | 'riwayat' | 'katalog'
 
-  // Filter loans milik user yang sedang login
-  // Sesuaikan field identifier sesuai AppContext kamu (nim / id / userId)
-  const myLoans = loans.filter(l => l.memberId === user?.id || l.memberNim === user?.nim);
-  const activeLoans = myLoans.filter(l => l.status === 'dipinjam' || l.status === 'terlambat');
-  const historyLoans = myLoans.filter(l => l.status === 'dikembalikan').sort((a, b) => (b.returnDate || '').localeCompare(a.returnDate || ''));
-  const totalDenda = myLoans.reduce((sum, l) => sum + (l.denda || 0), 0);
-  const lateCount = myLoans.filter(l => l.status === 'terlambat' || (l.status === 'dipinjam' && daysUntilDue(l.dueDate) < 0)).length;
+ const myMemberId = user?.anggotaId || user?.memberId;
+
+const myLoans = loans.filter(
+  l => String(l.memberId) === String(myMemberId)
+);
+
+const activeLoans = myLoans.filter(
+  l => ['dipinjam', 'diperpanjang', 'terlambat'].includes(String(l.status).toLowerCase())
+);
+
+const historyLoans = myLoans
+  .filter(l => String(l.status).toLowerCase() === 'dikembalikan')
+  .sort((a, b) => (b.returnDate || '').localeCompare(a.returnDate || ''));
+
+const totalDenda = myLoans.reduce((sum, l) => sum + Number(l.denda || 0), 0);
+
+const lateCount = myLoans.filter(
+  l =>
+    String(l.status).toLowerCase() === 'terlambat' ||
+    (
+      ['dipinjam', 'diperpanjang'].includes(String(l.status).toLowerCase()) &&
+      daysUntilDue(l.dueDate) < 0
+    )
+).length;
 
   // Katalog buku
   const filteredBooks = books.filter(b =>
     !search ||
     b.title?.toLowerCase().includes(search.toLowerCase()) ||
-    b.code?.toLowerCase().includes(search.toLowerCase()) ||
+    b.no_induk?.toLowerCase().includes(search.toLowerCase()) ||
     b.author?.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -75,7 +92,7 @@ export default function UserPeminjamanPage() {
         <Info size={15} style={{ color: 'var(--primary)', flexShrink: 0, marginTop: 2 }} />
         <div style={{ fontSize: 12.5, color: 'var(--gray-text)', lineHeight: 1.6 }}>
           <strong style={{ color: 'var(--primary)' }}>Cara meminjam buku:</strong> Datang ke meja petugas perpustakaan dan sebutkan kode buku yang ingin dipinjam.
-          Batas peminjaman <strong>7 hari</strong>. Keterlambatan dikenakan denda <strong>Rp 1.000/hari</strong>.
+          Batas peminjaman <strong>7 hari</strong>. Keterlambatan dikenakan denda <strong>Rp 500/hari</strong>.
         </div>
       </div>
 
@@ -215,7 +232,7 @@ export default function UserPeminjamanPage() {
                           {isLate && (
                             <div style={{ marginTop: 10, fontSize: 12, color: 'var(--danger)', fontWeight: 600, display: 'flex', gap: 6, alignItems: 'center' }}>
                               <AlertCircle size={13} />
-                              Estimasi denda: Rp {(Math.abs(days) * 1000).toLocaleString('id-ID')} ({Math.abs(days)} hari × Rp 1.000)
+                              Estimasi denda: Rp {(Math.abs(days) * 500).toLocaleString('id-ID')} ({Math.abs(days)} hari × Rp 500)
                             </div>
                           )}
                         </div>
@@ -310,9 +327,9 @@ export default function UserPeminjamanPage() {
                     Buku tidak ditemukan
                   </div>
                 ) : filteredBooks.map(b => {
-                  const prefix = b.code?.split('-')[0] || 'BK';
+                 const prefix = b.no_induk?.split('/')[0] || 'BK';
                   return (
-                    <div key={b.code} style={{
+                    <div key={b.id} style={{
                       background: 'var(--bg-secondary, #f9fafb)',
                       border: '1px solid var(--gray-light)',
                       borderRadius: 10,
@@ -340,7 +357,7 @@ export default function UserPeminjamanPage() {
                         <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 2, lineHeight: 1.4 }}>{b.title}</div>
                         {b.author && <div style={{ fontSize: 11, color: 'var(--gray-text)', marginBottom: 8 }}>{b.author}</div>}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <code style={{ fontSize: 11, background: 'var(--gray-light)', padding: '2px 7px', borderRadius: 4 }}>{b.code}</code>
+                          <code style={{ fontSize: 11, background: 'var(--gray-light)', padding: '2px 7px', borderRadius: 4 }}>{b.no_induk}</code>
                           <span className={`badge ${b.available > 0 ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: 10 }}>
                             {b.available > 0 ? `${b.available} tersedia` : 'Habis'}
                           </span>

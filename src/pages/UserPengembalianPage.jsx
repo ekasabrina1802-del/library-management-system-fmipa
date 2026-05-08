@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Search, CheckCircle, AlertCircle, Clock, BookOpen, Info, ChevronRight } from 'lucide-react';
 import { useApp } from '../components/AppContext';
+import { useAuth } from '../components/AuthContext';
 
 function daysUntilDue(dueDate) {
   const today = new Date();
@@ -10,20 +11,28 @@ function daysUntilDue(dueDate) {
 
 export default function UserPengembalianPage() {
   const { loans } = useApp();
-  const { user } = useApp();
+  const { user } = useAuth();
   const [search, setSearch] = useState('');
 
   // Filter hanya milik user login
-  const myLoans = loans.filter(l => l.memberId === user?.id || l.memberNim === user?.nim);
-  const completedLoans = myLoans
-    .filter(l => l.status === 'dikembalikan')
-    .sort((a, b) => (b.returnDate || '').localeCompare(a.returnDate || ''));
-  const activeLoans = myLoans.filter(l => l.status === 'dipinjam' || l.status === 'terlambat');
+ const myMemberId = user?.anggotaId || user?.memberId;
+
+const myLoans = loans.filter(
+  l => String(l.memberId) === String(myMemberId)
+);
+
+const completedLoans = myLoans
+  .filter(l => String(l.status).toLowerCase() === 'dikembalikan')
+  .sort((a, b) => (b.returnDate || '').localeCompare(a.returnDate || ''));
+
+const activeLoans = myLoans.filter(
+  l => ['dipinjam', 'diperpanjang', 'terlambat'].includes(String(l.status).toLowerCase())
+);
 
   const totalDenda = completedLoans.reduce((sum, l) => sum + (l.denda || 0), 0);
   const dendaAktif = activeLoans
     .filter(l => daysUntilDue(l.dueDate) < 0)
-    .reduce((sum, l) => sum + Math.abs(daysUntilDue(l.dueDate)) * 1000, 0);
+    .reduce((sum, l) => sum + Math.abs(daysUntilDue(l.dueDate)) * 500, 0);
   const terlambatCount = completedLoans.filter(l => (l.denda || 0) > 0).length;
 
   const filteredCompleted = completedLoans.filter(l =>
@@ -57,7 +66,7 @@ export default function UserPengembalianPage() {
         <Info size={15} style={{ color: 'var(--primary)', flexShrink: 0, marginTop: 2 }} />
         <div style={{ fontSize: 12.5, color: 'var(--gray-text)', lineHeight: 1.6 }}>
           <strong style={{ color: 'var(--primary)' }}>Cara mengembalikan buku:</strong> Serahkan buku langsung ke petugas perpustakaan dan sebutkan kode buku.
-          Denda keterlambatan dihitung <strong>Rp 1.000 per hari</strong> sejak batas waktu.
+          Denda keterlambatan dihitung <strong>Rp 500 per hari</strong> sejak batas waktu.
         </div>
       </div>
 

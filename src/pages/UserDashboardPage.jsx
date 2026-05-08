@@ -146,11 +146,8 @@ const profilePhoto = currentMember?.photo_url || user?.photo_url;
     : { max: 3, durasi: '1 Minggu', perpanjang: '2 Kali' };
 
   const myLoans = loans.filter(
-    l =>
-      l.user_id === user?.id ||
-      l.memberId === user?.id ||
-      l.memberNim === user?.nim
-  );
+  l => String(l.memberId) === String(user?.anggotaId || user?.memberId)
+);
 
   const activeLoans = myLoans.filter(l =>
     ['dipinjam', 'Dipinjam'].includes(l.status)
@@ -160,7 +157,7 @@ const profilePhoto = currentMember?.photo_url || user?.photo_url;
   );
 
   // ✅ FIX: kirim user.id agar denda hanya milik user yang login
-  const dendaSaya = getDendaTotal(user?.id);
+  const dendaSaya = getDendaTotal(user?.anggotaId || user?.memberId);
 
   // Slideshow state
   const [slide, setSlide] = useState(0);

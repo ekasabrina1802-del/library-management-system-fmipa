@@ -12,7 +12,7 @@ import { useAuth } from '../components/AuthContext';
 /* ─────────────────────────────────────────────
    CONSTANTS
 ───────────────────────────────────────────── */
-const DENDA_PER_HARI = 2000;
+const DENDA_PER_HARI = 500;
 
 /* ─────────────────────────────────────────────
    HELPERS
@@ -56,6 +56,10 @@ function LoanRow({ l }) {
   const [open, setOpen] = useState(false);
   const denda = Number(l.denda || 0);
   const today = new Date().toISOString().slice(0, 10);
+  const isDendaPaid =
+  l.dendaBayar === true ||
+  l.dendaBayar === 1 ||
+  String(l.dendaBayar) === '1';
 
   // Hitung keterlambatan
   let daysLate = 0;
@@ -116,17 +120,14 @@ function LoanRow({ l }) {
               : '-'}
         </td>
         <td>
-          {denda > 0 && (
-            <span className={`badge ${
-              l.dendaPaid === 'dibayar'      ? 'badge-success' :
-              l.dendaPaid === 'diverifikasi' ? 'badge-info' :
-              'badge-danger'
-            }`} style={{ fontSize: 10, marginRight: 4 }}>
-              {l.dendaPaid === 'dibayar'      ? 'Dibayar' :
-               l.dendaPaid === 'diverifikasi' ? 'Diverifikasi' :
-               'Belum Bayar'}
-            </span>
-          )}
+         {denda > 0 && (
+  <span
+    className={`badge ${isDendaPaid ? 'badge-success' : 'badge-danger'}`}
+    style={{ fontSize: 10, marginRight: 4 }}
+  >
+    {isDendaPaid ? 'Lunas' : 'Belum Bayar'}
+  </span>
+)}
         </td>
         <td>
           <StatusBadge status={effectiveStatus} />
@@ -159,16 +160,19 @@ function LoanRow({ l }) {
                   <div style={{ fontFamily: 'monospace', fontSize: 11, color: '#555', marginBottom: 4 }}>
                     {daysLate} hari × {formatRp(DENDA_PER_HARI)}/hari = <b style={{ color: 'var(--danger)' }}>{formatRp(denda)}</b>
                   </div>
-                  <div style={{
-                    marginTop: 6, padding: '4px 8px', borderRadius: 5,
-                    background: l.dendaPaid ? '#e8f5e9' : '#fff3e0',
-                    color: l.dendaPaid ? '#2E7D32' : '#E65100',
-                    fontSize: 11, fontWeight: 600
-                  }}>
-                    {l.dendaPaid === 'diverifikasi' ? '✓ Denda sudah diverifikasi petugas' :
-                     l.dendaPaid === 'dibayar'      ? '✓ Sudah dibayar, menunggu verifikasi' :
-                     '⚠ Denda belum dibayar'}
-                  </div>
+                 <div style={{
+  marginTop: 6,
+  padding: '4px 8px',
+  borderRadius: 5,
+  background: isDendaPaid ? '#e8f5e9' : '#fff3e0',
+  color: isDendaPaid ? '#2E7D32' : '#E65100',
+  fontSize: 11,
+  fontWeight: 600
+}}>
+  {isDendaPaid
+    ? '✓ Denda sudah dibayar di perpustakaan'
+    : '⚠ Denda belum dibayar'}
+</div>
                 </div>
               )}
 
@@ -234,21 +238,27 @@ export default function UserDendaPage() {
 
   // ── Scope ke user yang sedang login ──
   // Cek dengan id, memberId, user_id, maupun name sebagai fallback
-  const myLoans = useMemo(() => {
-    if (!currentUser) return [];
-    return loans.filter(l =>
-      l.user_id    === currentUser.id   ||
-      l.memberId   === currentUser.id   ||
-      l.member_id  === currentUser.id   ||
-      l.memberName === currentUser.name ||
-      l.userName   === currentUser.name
-    );
-  }, [loans, currentUser]);
+ const myLoans = useMemo(() => {
+  if (!currentUser) return [];
+
+  const myMemberId = currentUser.anggotaId || currentUser.memberId;
+
+  return loans.filter(
+    l => String(l.memberId) === String(myMemberId)
+  );
+}, [loans, currentUser]);
 
   // ── Summary stats (dihitung dari myLoans) ──
-  const totalDendaBelumBayar = myLoans
-    .filter(l => Number(l.denda) > 0 && l.dendaPaid !== 'diverifikasi')
-    .reduce((s, l) => s + Number(l.denda || 0), 0);
+ const totalDendaBelumBayar = myLoans
+  .filter(l => {
+    const isPaid =
+      l.dendaBayar === true ||
+      l.dendaBayar === 1 ||
+      String(l.dendaBayar) === '1';
+
+    return Number(l.denda) > 0 && !isPaid;
+  })
+  .reduce((s, l) => s + Number(l.denda || 0), 0);
 
   // Hitung denda berjalan dari pinjaman aktif yang melewati batas
   const dendaBerjalan = myLoans

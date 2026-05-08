@@ -4,6 +4,7 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const bcrypt = require('bcrypt');
+const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
@@ -17,9 +18,13 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'ngrok-skip-browser-warning']
 }));
 
-const storage = multer.diskStorage({
+const bookUploadDir = path.join(__dirname, 'uploads', 'books');
+
+fs.mkdirSync(bookUploadDir, { recursive: true });
+
+const bookStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/');
+    cb(null, bookUploadDir);
   },
   filename: (req, file, cb) => {
     const uniqueName = Date.now() + '-' + file.originalname.replace(/\s+/g, '-');
@@ -27,9 +32,8 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({ storage });
+const upload = multer({ storage: bookStorage });
 
-const fs = require('fs');
 
 const memberUploadDir = path.join(__dirname, 'uploads', 'members');
 
@@ -209,7 +213,7 @@ app.post('/api/books', upload.single('image'), async (req, res) => {
     description
   } = req.body;
 
-  const image_url = req.file ? `/uploads/${req.file.filename}` : null;
+  const image_url = req.file ? `/uploads/books/${req.file.filename}` : null;
 
   try {
     const pool = await sql.connect(dbConfig);
@@ -271,15 +275,15 @@ app.put('/api/books/:id', upload.single('image'), async (req, res) => {
       .input('id', sql.Int, id)
       .query(`SELECT image_url, stock, available FROM Buku WHERE id = @id`);
 
-    const image_url = req.file
-      ? `/uploads/${req.file.filename}`
-      : oldBook.recordset[0]?.image_url || null;
+   const image_url = req.file
+  ? `/uploads/books/${req.file.filename}`
+  : oldBook.recordset[0]?.image_url || null;
 
     const oldStock = Number(oldBook.recordset[0]?.stock ?? 0);
     const oldAvailable = Number(oldBook.recordset[0]?.available ?? 0);
     const borrowed = oldStock - oldAvailable;
     const newStock = Number(stock);
-    const available = Math.max(0, newStock - borrowed);
+    const available = Math.max(0, Math.min(newStock, newStock - borrowed));
 
     console.log({ oldStock, oldAvailable, borrowed, newStock, available });
 
@@ -325,6 +329,92 @@ app.put('/api/books/:id', upload.single('image'), async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Gagal mengupdate buku'
+    });
+  }
+});
+
+app.delete('/api/books/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const pool = await sql.connect(dbConfig);
+
+    // Cek buku ada atau tidak
+    const bookResult = await pool.request()
+      .input('id', sql.Int, id)
+      .query(`
+        SELECT image_url
+        FROM Buku
+        WHERE id = @id
+      `);
+
+    if (bookResult.recordset.length === 0) {
+      return res.json({
+        success: false,
+        message: 'Buku tidak ditemukan'
+      });
+    }
+
+    // Cek apakah buku sedang dipinjam
+    const activeLoan = await pool.request()
+      .input('id', sql.Int, id)
+      .query(`
+        SELECT TOP 1 id
+        FROM Peminjaman
+        WHERE buku_id = @id
+          AND status IN ('dipinjam', 'terlambat', 'diperpanjang')
+      `);
+
+    if (activeLoan.recordset.length > 0) {
+      return res.json({
+        success: false,
+        message: 'Buku tidak bisa dihapus karena masih sedang dipinjam'
+      });
+    }
+
+    // Cek apakah buku punya riwayat peminjaman
+    const loanHistory = await pool.request()
+      .input('id', sql.Int, id)
+      .query(`
+        SELECT TOP 1 id
+        FROM Peminjaman
+        WHERE buku_id = @id
+      `);
+
+    if (loanHistory.recordset.length > 0) {
+      return res.json({
+        success: false,
+        message: 'Buku tidak bisa dihapus karena sudah memiliki riwayat peminjaman'
+      });
+    }
+
+    const imageUrl = bookResult.recordset[0].image_url;
+
+    await pool.request()
+      .input('id', sql.Int, id)
+      .query(`
+        DELETE FROM Buku
+        WHERE id = @id
+      `);
+
+    if (imageUrl) {
+      const imagePath = path.join(__dirname, imageUrl.replace('/uploads/', 'uploads/'));
+
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'Buku berhasil dihapus'
+    });
+
+  } catch (err) {
+    console.error('Delete Book Error:', err);
+    res.status(500).json({
+      success: false,
+      message: err.message || 'Gagal menghapus buku'
     });
   }
 });
@@ -1106,21 +1196,25 @@ app.put('/api/loans/:id/return', async (req, res) => {
       .input('buku_id', sql.Int, loan.buku_id)
       .query(`
         UPDATE Buku
-        SET available = available + 1
-        WHERE id = @buku_id
+SET available =
+  CASE
+    WHEN available + 1 > stock THEN stock
+    ELSE available + 1
+  END
+WHERE id = @buku_id
       `);
 
     await transaction.commit();
 
-    res.json({
-      success: true,
-      message: denda > 0
-        ? 'Pengembalian berhasil. Anggota memiliki denda yang harus dibayar'
-        : 'Pengembalian berhasil',
-      denda,
-      lateDays,
-      dendaBayar: denda === 0
-    });
+   res.json({
+  success: true,
+  message: denda > 0
+    ? 'Pengembalian berhasil. Denda telah dibayar di tempat'
+    : 'Pengembalian berhasil',
+  denda,
+  lateDays,
+  dendaBayar: true
+});
 
   } catch (err) {
     console.error('Return Loan By ID Error:', err);

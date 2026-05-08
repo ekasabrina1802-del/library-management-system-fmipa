@@ -3,7 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { BookOpen, Users, Banknote, TrendingUp, Clock, RotateCcw, UserPlus, BookMarked, Database, AlertCircle, FileDown } from 'lucide-react';
 import { useApp } from '../components/AppContext';
 import { useAuth } from '../components/AuthContext';
-import { MONTHLY_LOANS, DAILY_LOANS } from '../data/db';
+
 
 function LiveClock() {
   const [now, setNow] = useState(new Date());
@@ -33,18 +33,116 @@ const activityIcons = {
   delete: <AlertCircle size={14} />,
 };
 
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+function normalizeStatus(status) {
+  return String(status || '').toLowerCase();
+}
+
+function getLoanDateValue(loan) {
+  return loan.loanDate || loan.tgl_pinjam || loan.created_at || null;
+}
+
+function getReturnDateValue(loan) {
+  return loan.returnDate || loan.tgl_kembali || null;
+}
+
+function buildMonthlyChartData(loans) {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+
+  const initial = MONTH_NAMES.map(month => ({
+    month,
+    pinjam: 0,
+    kembali: 0,
+  }));
+
+  loans.forEach(loan => {
+    const loanDate = getLoanDateValue(loan);
+    if (loanDate) {
+      const d = new Date(loanDate);
+      if (!isNaN(d) && d.getFullYear() === currentYear) {
+        initial[d.getMonth()].pinjam += 1;
+      }
+    }
+
+    const returnDate = getReturnDateValue(loan);
+    if (returnDate) {
+      const d = new Date(returnDate);
+      if (!isNaN(d) && d.getFullYear() === currentYear) {
+        initial[d.getMonth()].kembali += 1;
+      }
+    }
+  });
+
+  return initial;
+}
+
+function buildDailyChartData(loans) {
+  const today = new Date();
+  const days = [];
+
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+
+    const key = d.toISOString().slice(0, 10);
+    const label = d.toLocaleDateString('id-ID', { weekday: 'short' });
+
+    days.push({
+      key,
+      day: label,
+      pinjam: 0,
+      kembali: 0,
+    });
+  }
+
+  loans.forEach(loan => {
+    const loanDate = getLoanDateValue(loan);
+    if (loanDate) {
+      const key = new Date(loanDate).toISOString().slice(0, 10);
+      const row = days.find(d => d.key === key);
+      if (row) row.pinjam += 1;
+    }
+
+    const returnDate = getReturnDateValue(loan);
+    if (returnDate) {
+      const key = new Date(returnDate).toISOString().slice(0, 10);
+      const row = days.find(d => d.key === key);
+      if (row) row.kembali += 1;
+    }
+  });
+
+  return days;
+}
+
 export default function DashboardPage() {
   const { books, members, loans, activityLog, getDendaTotal } = useApp();
   const { user } = useAuth();
   const [chartType, setChartType] = useState('bulanan');
 
-  const totalBooks = books.reduce((s, b) => s + b.stock, 0);
-  const totalAvail = books.reduce((s, b) => s + b.available, 0);
-  const activeMembers = members.filter(m => m.status === 'aktif').length;
-  const activeLoanCount = loans.filter(l => l.status === 'dipinjam' || l.status === 'terlambat').length;
-  const dendaTotal = getDendaTotal();
-  const chartData = chartType === 'bulanan' ? MONTHLY_LOANS : DAILY_LOANS;
-  const chartKey = chartType === 'bulanan' ? 'month' : 'day';
+ const totalBooks = books.length;
+const totalAvail = books.reduce((s, b) => s + Number(b.available || 0), 0);
+
+const activeMembers = members.filter(m => m.status === 'aktif').length;
+
+const activeLoanCount = loans.filter(l =>
+  ['dipinjam', 'diperpanjang', 'terlambat'].includes(normalizeStatus(l.status))
+).length;
+
+const overdueLoanCount = loans.filter(l =>
+  normalizeStatus(l.status) === 'terlambat'
+).length;
+
+const dendaTotal = getDendaTotal();
+
+const monthlyChartData = buildMonthlyChartData(loans);
+const dailyChartData = buildDailyChartData(loans);
+
+const chartData = chartType === 'bulanan' ? monthlyChartData : dailyChartData;
+const chartKey = chartType === 'bulanan' ? 'month' : 'day';
+
+
   const todayStr = new Date().toLocaleDateString('id-ID');
   const todayLog = activityLog.filter(a => a.time && a.time.includes(todayStr));
 
@@ -87,7 +185,7 @@ export default function DashboardPage() {
             <div className="stat-value">{activeLoanCount}</div>
             <div className="stat-label">Sedang Dipinjam</div>
             <div className="stat-change" style={{ color: 'var(--warning)' }}>
-              {loans.filter(l => l.status === 'terlambat').length} terlambat
+              {overdueLoanCount} terlambat
             </div>
           </div>
         </div>
