@@ -45,6 +45,8 @@ export default function DashboardPage() {
   const dendaTotal = getDendaTotal();
   const chartData = chartType === 'bulanan' ? MONTHLY_LOANS : DAILY_LOANS;
   const chartKey = chartType === 'bulanan' ? 'month' : 'day';
+  const todayStr = new Date().toLocaleDateString('id-ID');
+  const todayLog = activityLog.filter(a => a.time && a.time.includes(todayStr));
 
   return (
     <div>
@@ -138,11 +140,15 @@ export default function DashboardPage() {
           Log semua aktivitas sistem
         </div>
       </div>
-      <span className="badge badge-info">{activityLog.length} entri</span>
+      <span className="badge badge-info">{todayLog.length} entri hari ini</span>
     </div>
 
     <div style={{ maxHeight: 300, overflowY: 'auto' }}>
-      {activityLog.slice(0, 15).map(a => (
+      {todayLog.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: 32, color: 'var(--gray-text)', fontSize: 13 }}>
+          Belum ada aktivitas hari ini.
+        </div>
+      ) : todayLog.slice(0, 15).map(a => (
         <div key={a.id} className="activity-item">
           <div className="activity-dot" />
           <div style={{ flex: 1 }}>

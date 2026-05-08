@@ -101,38 +101,25 @@ const arrowBtn = (side) => ({
 });
 
 // ── Stat Card ────────────────────────────────────────────────────────────────
-function StatCard({ icon, value, label, accent, delay = 0, visible }) {
+function StatCard({ icon, value, label, bg, border, textColor, labelColor, delay = 0, visible }) {
   return (
     <div style={{
-      background: 'white',
-      borderRadius: 20,
-      padding: '32px 28px',
-      display: 'flex', flexDirection: 'column', gap: 12,
-      boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
-      border: '1px solid rgba(0,0,0,0.04)',
+      background: bg,
+      border: `1px solid ${border}`,
+      borderRadius: 14,
+      padding: '20px 22px',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
       transform: visible ? 'translateY(0)' : 'translateY(32px)',
       opacity: visible ? 1 : 0,
       transition: `transform 0.6s cubic-bezier(.22,1,.36,1) ${delay}ms, opacity 0.6s ease ${delay}ms`,
-      position: 'relative', overflow: 'hidden',
     }}>
-      <div style={{
-        position: 'absolute', top: -20, right: -20,
-        width: 80, height: 80, borderRadius: '50%',
-        background: accent, opacity: 0.12, filter: 'blur(20px)',
-      }} />
-      <div style={{
-        width: 44, height: 44, borderRadius: 12,
-        background: `${accent}18`,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
-        {icon}
-      </div>
-      <div style={{ fontSize: 32, fontWeight: 800, color: '#0D1B2A', letterSpacing: '-0.5px', fontFamily: "'DM Mono', monospace" }}>
-        {value}
-      </div>
-      <div style={{ fontSize: 13, color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+      <div style={{ fontSize: 11, color: labelColor, textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>
         {label}
       </div>
+      <div style={{ fontSize: 28, fontWeight: 800, color: textColor, lineHeight: 1, fontFamily: "'DM Mono', monospace" }}>
+        {value}
+      </div>
+      {icon && <div style={{ marginTop: 6, opacity: 0.5 }}>{icon}</div>}
     </div>
   );
 }
@@ -512,35 +499,48 @@ const profilePhoto = currentMember?.photo_url || user?.photo_url;
 
         {/* Stat cards grid */}
         <div style={{
-          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: 20,
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: 16,
         }}>
           <StatCard
-            icon={<BookOpen size={22} color="#7B1C1C" />}
+            icon={<BookOpen size={16} color="#7B1C1C" />}
             value={`${activeLoans.length} / ${rules.max}`}
             label="Kuota Pinjam"
-            accent="#7B1C1C"
+            bg="linear-gradient(135deg, #7B1C1C, #a83232)"
+            border="transparent"
+            textColor="white"
+            labelColor="rgba(255,255,255,0.75)"
             delay={0} visible={visible}
           />
           <StatCard
-            icon={<Clock size={22} color="#D97706" />}
+            icon={<Clock size={16} color="#D97706" />}
             value={activeLoans.length}
             label="Buku Aktif"
-            accent="#D97706"
+            bg="linear-gradient(135deg, #fffaf0, #fff)"
+            border="#feebc8"
+            textColor="#d69e2e"
+            labelColor="#d69e2e"
             delay={100} visible={visible}
           />
           <StatCard
-            icon={<AlertCircle size={22} color="#DC2626" />}
+            icon={<AlertCircle size={16} color="#e53e3e" />}
             value={overdueLoans.length}
             label="Terlambat"
-            accent="#DC2626"
+            bg="linear-gradient(135deg, #fff5f5, #fff)"
+            border="#fed7d7"
+            textColor="#e53e3e"
+            labelColor="#e53e3e"
             delay={200} visible={visible}
           />
           <StatCard
-            icon={<DollarSign size={22} color="#059669" />}
-            value={`Rp ${(dendaSaya ?? 0).toLocaleString('id-ID')}`}
+            icon={<DollarSign size={16} color="#38a169" />}
+            value={`Rp ${((dendaSaya ?? 0) / 1000).toFixed(0)}K`}
             label="Total Denda Saya"
-            accent="#059669"
+            bg="linear-gradient(135deg, #f0fff4, #fff)"
+            border="#c6f6d5"
+            textColor="#38a169"
+            labelColor="#38a169"
             delay={300} visible={visible}
           />
         </div>

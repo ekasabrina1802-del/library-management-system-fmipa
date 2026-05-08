@@ -430,7 +430,17 @@ export default function BukuPage() {
         <BookModal
           book={modal.book}
           user={user}
-          onSave={(f) => { modal.mode === 'edit' ? updateBook(modal.book.id, f) : addBook(f); setModal(null); }}
+          onSave={(f) => {
+            if (modal.mode === 'edit') {
+              const oldBook = modal.book;
+              const borrowed = Number(oldBook.stock ?? 0) - Number(oldBook.available ?? 0);
+              const newAvailable = Math.min(Number(f.stock), Math.max(0, Number(f.stock) - borrowed));
+              updateBook(modal.book.id, { ...f, available: newAvailable });
+            } else {
+              addBook(f);
+            }
+            setModal(null);
+          }}
           onClose={() => setModal(null)}
           isReadOnly={modal.mode === 'view'}
         />

@@ -269,11 +269,19 @@ app.put('/api/books/:id', upload.single('image'), async (req, res) => {
 
     const oldBook = await pool.request()
       .input('id', sql.Int, id)
-      .query(`SELECT image_url FROM Buku WHERE id = @id`);
+      .query(`SELECT image_url, stock, available FROM Buku WHERE id = @id`);
 
     const image_url = req.file
       ? `/uploads/${req.file.filename}`
       : oldBook.recordset[0]?.image_url || null;
+
+    const oldStock = Number(oldBook.recordset[0]?.stock ?? 0);
+    const oldAvailable = Number(oldBook.recordset[0]?.available ?? 0);
+    const borrowed = oldStock - oldAvailable;
+    const newStock = Number(stock);
+    const available = Math.max(0, newStock - borrowed);
+
+    console.log({ oldStock, oldAvailable, borrowed, newStock, available });
 
     await pool.request()
       .input('id', sql.Int, id)
@@ -286,6 +294,7 @@ app.put('/api/books/:id', upload.single('image'), async (req, res) => {
       .input('isbn', sql.VarChar, isbn || null)
       .input('category', sql.VarChar, category)
       .input('stock', sql.Int, Number(stock))
+      .input('available', sql.Int, available)
       .input('description', sql.VarChar, description || null)
       .input('image_url', sql.VarChar, image_url)
       .query(`
@@ -300,6 +309,7 @@ app.put('/api/books/:id', upload.single('image'), async (req, res) => {
           isbn = @isbn,
           category = @category,
           stock = @stock,
+          available = @available,
           description = @description,
           image_url = @image_url
         WHERE id = @id
