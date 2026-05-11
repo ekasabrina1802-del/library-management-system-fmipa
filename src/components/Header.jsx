@@ -1,7 +1,7 @@
 import { useAuth } from './AuthContext';
 import { useApp } from './AppContext';
+import ApiImage from './ApiImage';
 
-const API_URL = import.meta.env.VITE_API_URL;
 
 export default function Header() {
   const { user } = useAuth();
@@ -40,16 +40,17 @@ export default function Header() {
 
           <div className="avatar" style={{ overflow: 'hidden', padding: 0 }}>
             {profilePhoto ? (
-              <img
-                src={`${API_URL}${profilePhoto}`}
-                alt={user?.name || 'User'}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  borderRadius: '50%'
-                }}
-              />
+             <ApiImage
+  src={profilePhoto}
+  alt={user?.name || 'User'}
+  style={{
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    borderRadius: '50%'
+  }}
+  fallback={initials}
+/>
             ) : (
               initials
             )}

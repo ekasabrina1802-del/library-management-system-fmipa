@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { BookOpen, Clock, AlertCircle, CheckCircle, ChevronRight, BookMarked, Info } from 'lucide-react';
 import { useApp } from '../components/AppContext';
 import { useAuth } from '../components/AuthContext';
+import ApiImage from '../components/ApiImage';
 
-const API_BASE_URL = "http://localhost:5000";
 
 const COVER_COLORS = { MTK: '#7B1C1C', FIS: '#0D1B2A', KIM: '#1B5E20', BIO: '#1A237E' };
 const COVER_LABELS = { MTK: 'Matematika', FIS: 'Fisika', KIM: 'Kimia', BIO: 'Biologi' };
@@ -346,12 +346,30 @@ const lateCount = myLoans.filter(
                         {/* Cover mini BARU dengan logika gambar */}
 <div style={{ width: 48, height: 64, borderRadius: 5, overflow: 'hidden', flexShrink: 0, background: '#eee' }}>
   {l.image_url ? (
-    <img 
-      src={`${API_BASE_URL}${l.image_url}`} 
-      alt="cover"
-      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-      onError={(e) => { e.target.src = 'https://via.placeholder.com/48x64?text=Book'; }}
-    />
+   <ApiImage
+  src={l.image_url}
+  alt="cover"
+  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+  fallback={
+    <div style={{
+      width: '100%',
+      height: '100%',
+      background: COVER_COLORS[prefix] || '#555',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: 'white',
+      fontSize: 9,
+      fontWeight: 700,
+      flexDirection: 'column',
+      textAlign: 'center',
+      padding: 4
+    }}>
+      <BookOpen size={14} />
+      <span>{prefix}</span>
+    </div>
+  }
+/>
   ) : (
     <div style={{ width: '100%', height: '100%', background: COVER_COLORS[prefix] || '#555', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 9, fontWeight: 700, flexDirection: 'column', textAlign: 'center', padding: 4 }}>
       <BookOpen size={14} />

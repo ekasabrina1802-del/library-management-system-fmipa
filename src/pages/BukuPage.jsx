@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { Plus, Pencil, Trash2, X, Check, Search, Eye, BookOpen, CheckCircle, Clock, XCircle, LayoutGrid, LayoutList, Bell } from 'lucide-react';
 import { useApp } from '../components/AppContext';
 import { useAuth } from '../components/AuthContext';
+import ApiImage from '../components/ApiImage';
 
-const API_URL = import.meta.env.VITE_API_URL;
 const CATEGORIES = ['Semua Kategori', 'Matematika', 'Fisika', 'Kimia', 'Biologi'];
 const COVER_COLORS = { MTK: '#7B1C1C', FIS: '#0D1B2A', KIM: '#1B5E20', BIO: '#1A237E' };
 
@@ -100,7 +100,7 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
     stock: book?.stock || 1,
     description: book?.description || '',
     image: null,
-    imagePreview: book?.image_url ? `${API_URL}${book.image_url}` : null
+    imagePreview: book?.image_url || null
   });
 
   const handleBorrowAction = async () => {
@@ -223,8 +223,18 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
             )}
             {form.imagePreview ? (
               <div style={{ position: 'relative', width: 100 }}>
-                <img src={form.imagePreview} alt="preview"
-                  style={{ width: 100, height: 130, objectFit: 'cover', borderRadius: 6, display: 'block', border: '1px solid #ddd' }} />
+                <ApiImage
+  src={form.imagePreview}
+  alt="preview"
+  style={{
+    width: 100,
+    height: 130,
+    objectFit: 'cover',
+    borderRadius: 6,
+    display: 'block',
+    border: '1px solid #ddd'
+  }}
+/>
               </div>
             ) : (
               <div style={{ width: 100, height: 130, border: '2px dashed #ddd', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999', fontSize: 12 }}>
@@ -295,11 +305,11 @@ function BookCard({ book, onSelect, onDetail, isPetugas }) {
         overflow: 'hidden',
       }}>
         {book.image_url ? (
-          <img
-            src={`${API_URL}${book.image_url}`}
-            alt={book.title}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          />
+          <ApiImage
+  src={book.image_url}
+  alt={book.title}
+  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+/>
         ) : (
           <BookCover no_klasifikasi={book.no_klasifikasi} size="lg" />
         )}
@@ -741,9 +751,21 @@ export default function BukuPage() {
                     style={{ background: selected.includes(b.id) ? 'rgba(123,28,28,0.06)' : '', cursor: 'pointer' }}>
                     {deleteMode && <td onClick={(e) => e.stopPropagation()}><input type="checkbox" checked={selected.includes(b.id)} readOnly /></td>}
                     <td>
-                      {b.image_url
-                        ? <img src={`${API_URL}${b.image_url}`} style={{ width: 44, height: 58, objectFit: 'cover', borderRadius: 4 }} />
-                        : <BookCover no_klasifikasi={b.no_klasifikasi} />}
+                      {b.image_url ? (
+  <ApiImage
+    src={b.image_url}
+    alt={b.title}
+    style={{
+      width: 44,
+      height: 58,
+      objectFit: 'cover',
+      borderRadius: 4
+    }}
+    fallback={<BookCover no_klasifikasi={b.no_klasifikasi} />}
+  />
+) : (
+  <BookCover no_klasifikasi={b.no_klasifikasi} />
+)}
                     </td>
                     <td><code style={{ background: '#eee', padding: '2px 6px', borderRadius: 4, fontSize: '11px' }}>{b.no_induk}</code></td>
                     <td>

@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { BookOpen, Clock, AlertCircle, DollarSign, Info, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useApp } from '../components/AppContext';
 import { useAuth } from '../components/AuthContext';
+import ApiImage from '../components/ApiImage';
 
-const API_URL = import.meta.env.VITE_API_URL;
 
 // ── Foto slideshow (Unsplash – perpustakaan/buku) ────────────────────────────
 const SLIDES = [
@@ -225,11 +225,17 @@ const profilePhoto = currentMember?.photo_url || user?.photo_url;
             overflow: 'hidden', padding: 0, flexShrink: 0,
           }}>
            {profilePhoto ? (
-  <img
-    src={`${API_URL}${profilePhoto}`}
-    alt={user.name}
-    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
-  />
+  <ApiImage
+  src={profilePhoto}
+  alt={user.name}
+  style={{
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    borderRadius: '50%'
+  }}
+  fallback={initials}
+/>
 ) : initials}
           </div>
 

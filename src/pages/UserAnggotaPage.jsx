@@ -3,9 +3,8 @@ import { useState, useRef, useEffect } from 'react';
 import { Pencil } from 'lucide-react';
 import { useApp } from '../components/AppContext';
 import { useAuth } from '../components/AuthContext';
+import ApiImage from '../components/ApiImage';
 
-
-const API_URL = import.meta.env.VITE_API_URL;
 
 function InfoRow({ icon, label, value, mono }) {
   return (
@@ -47,10 +46,11 @@ export default function AnggotaUserPage() {
   }, []);
 
   const member = members.find(
-    m => m.id === user?.memberId ||
-         m.nim === user?.nim ||
-         m.email === user?.email
-  );
+  m =>
+    String(m.id) === String(user?.anggotaId || user?.memberId) ||
+    String(m.nim) === String(user?.nim) ||
+    m.email === user?.email
+);
 
   if (!member) {
     return (
@@ -124,26 +124,52 @@ export default function AnggotaUserPage() {
 
             {/* Avatar */}
             <div style={{ position: 'relative', display: 'inline-block', marginBottom: 14 }} ref={menuRef}>
-              {preview || member.photo_url ? (
-                <img
-                  src={preview ? preview : `${API_URL}${member.photo_url}`}
-                  alt={member.name}
-                  style={{
-                    width: 130, height: 130, borderRadius: '50%',
-                    objectFit: 'cover', border: '3px solid rgba(255,255,255,0.3)',
-                    display: 'block'
-                  }}
-                />
-              ) : (
-                <div style={{
-                  width: 90, height: 90, borderRadius: '50%',
-                  background: 'rgba(255,255,255,0.15)',
-                  border: '3px solid rgba(255,255,255,0.3)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 38, fontWeight: 700, color: 'white'
-                }}>
-                  {initials}
-                </div>
+             {preview || member.photo_url ? (
+  <ApiImage
+    src={preview || member.photo_url}
+    alt={member.name}
+    style={{
+      width: 130,
+      height: 130,
+      borderRadius: '50%',
+      objectFit: 'cover',
+      border: '3px solid rgba(255,255,255,0.3)',
+      display: 'block'
+    }}
+    fallback={
+      <div style={{
+        width: 130,
+        height: 130,
+        borderRadius: '50%',
+        background: 'rgba(255,255,255,0.15)',
+        border: '3px solid rgba(255,255,255,0.3)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: 38,
+        fontWeight: 700,
+        color: 'white'
+      }}>
+        {initials}
+      </div>
+    }
+  />
+) : (
+  <div style={{
+    width: 130,
+    height: 130,
+    borderRadius: '50%',
+    background: 'rgba(255,255,255,0.15)',
+    border: '3px solid rgba(255,255,255,0.3)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: 38,
+    fontWeight: 700,
+    color: 'white'
+  }}>
+    {initials}
+  </div>
               )}
               <div
                 onClick={() => document.getElementById('upload-photo').click()}

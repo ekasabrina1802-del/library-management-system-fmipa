@@ -2,9 +2,7 @@ import { useState } from 'react';
 import { Plus, X, Check, Search, Printer, BookOpen, History, Trash2 } from 'lucide-react';
 import { useApp } from '../components/AppContext';
 import { useAuth } from '../components/AuthContext';
-
-
-const API_URL = import.meta.env.VITE_API_URL;
+import ApiImage from '../components/ApiImage';
 
 
 function MemberModal({ member = null, onSave, onClose }) {
@@ -158,19 +156,48 @@ function MemberDetailModal({ member, loans, onClose, onEdit }) {
             alignItems: 'start'
           }}
         >
-          {member.photo_url ? (
-  <img
-    src={`${API_URL}${member.photo_url}`}
+         {member.photo_url ? (
+  <ApiImage
+    src={member.photo_url}
     alt={member.name}
-    style={{ width: 120, height: 120, borderRadius: '50%', objectFit: 'cover' }}
+    style={{
+      width: 120,
+      height: 120,
+      borderRadius: '50%',
+      objectFit: 'cover'
+    }}
+    fallback={
+      <div
+        style={{
+          width: 120,
+          height: 120,
+          borderRadius: '50%',
+          background: 'var(--maroon)',
+          color: 'white',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 42,
+          fontWeight: 700
+        }}
+      >
+        {initials}
+      </div>
+    }
   />
 ) : (
   <div
     style={{
-      width: 120, height: 120, borderRadius: '50%',
-      background: 'var(--maroon)', color: 'white',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: 42, fontWeight: 700
+      width: 120,
+      height: 120,
+      borderRadius: '50%',
+      background: 'var(--maroon)',
+      color: 'white',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: 42,
+      fontWeight: 700
     }}
   >
     {initials}
@@ -413,17 +440,52 @@ const filtered = members.filter(m =>
   <td>
 
     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-      {m.photo_url ? (
-        <img
-          src={`${API_URL}${m.photo_url}`}
-          alt={m.name}
-          style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
-        />
-      ) : (
-        <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--maroon)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, flexShrink: 0 }}>
-          {m.name.split(' ').map(w => w[0]).slice(0, 2).join('')}
-        </div>
-      )}
+     {m.photo_url ? (
+  <ApiImage
+    src={m.photo_url}
+    alt={m.name}
+    style={{
+      width: 32,
+      height: 32,
+      borderRadius: '50%',
+      objectFit: 'cover',
+      flexShrink: 0
+    }}
+    fallback={
+      <div style={{
+        width: 32,
+        height: 32,
+        borderRadius: '50%',
+        background: 'var(--maroon)',
+        color: 'white',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: 11,
+        fontWeight: 700,
+        flexShrink: 0
+      }}>
+        {m.name.split(' ').map(w => w[0]).slice(0, 2).join('')}
+      </div>
+    }
+  />
+) : (
+  <div style={{
+    width: 32,
+    height: 32,
+    borderRadius: '50%',
+    background: 'var(--maroon)',
+    color: 'white',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: 11,
+    fontWeight: 700,
+    flexShrink: 0
+  }}>
+    {m.name.split(' ').map(w => w[0]).slice(0, 2).join('')}
+  </div>
+)}
                       <div>
                         <div style={{ fontWeight: 600, fontSize: 13 }}>{m.name}</div>
                         <div style={{ fontSize: 11, color: 'var(--gray-text)' }}>{m.email}</div>

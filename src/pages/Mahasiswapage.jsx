@@ -5,8 +5,8 @@ import {
 } from 'lucide-react';
 import { useApp } from '../components/AppContext';
 import { useAuth } from '../components/AuthContext';
+import ApiImage from '../components/ApiImage';
 
-const API_URL = import.meta.env.VITE_API_URL;
 
 const DISCIPLINES = ['Semua Disiplin', 'Matematika', 'Fisika', 'Kimia', 'Biologi'];
 
@@ -115,11 +115,11 @@ function BookCard({ book, onClick }) {
         justifyContent: 'center',
       }}>
         {book.image_url && (
-          <img
-            src={`${API_URL}${book.image_url}`}
-            alt={book.title}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          />
+          <ApiImage
+  src={book.image_url}
+  alt={book.title}
+  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+/>
         )}
 
         {!book.image_url && (
@@ -235,16 +235,16 @@ function BookRow({ book, onClick }) {
     <tr style={{ cursor: 'pointer' }} onClick={onClick}>
       <td>
         {book.image_url ? (
-          <img
-            src={`${API_URL}${book.image_url}`}
-            alt={book.title}
-            style={{
-              width: 44,
-              height: 58,
-              objectFit: 'cover',
-              borderRadius: 5,
-            }}
-          />
+          <ApiImage
+  src={book.image_url}
+  alt={book.title}
+  style={{
+    width: 44,
+    height: 58,
+    objectFit: 'cover',
+    borderRadius: 5,
+  }}
+/>
         ) : (
           <div style={{
             width: 44,
@@ -322,18 +322,18 @@ function BookDetailModal({ book, onClose }) {
           overflow: 'hidden',
         }}>
           {book.image_url && (
-            <img
-              src={`${API_URL}${book.image_url}`}
-              alt={book.title}
-              style={{
-                position: 'absolute',
-                inset: 0,
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                opacity: 0.35
-              }}
-            />
+            <ApiImage
+  src={book.image_url}
+  alt={book.title}
+  style={{
+    position: 'absolute',
+    inset: 0,
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    opacity: 0.35
+  }}
+/>
           )}
 
           <div style={{

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Search, Plus, Clock, AlertCircle, Filter, Calendar, BookOpen, RefreshCw, ChevronRight, User, Hash } from 'lucide-react';
 import { useApp } from '../components/AppContext';
+import ApiImage from '../components/ApiImage';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
 const COVER_COLORS = { MTK: '#7B1C1C', FIS: '#0D1B2A', KIM: '#1B5E20', BIO: '#1A237E' };
 
 const PERIOD_OPTIONS = [
@@ -428,12 +428,45 @@ export default function PetugasPeminjamanPage() {
                     {/* Cover */}
                     <div style={{ width: 42, height: 56, borderRadius: 5, overflow: 'hidden', flexShrink: 0, background: '#e5e7eb' }}>
                       {book?.image_url ? (
-                        <img src={`${API_BASE_URL}${book.image_url}`} alt={l.bookTitle} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      ) : (
-                        <div style={{ width: '100%', height: '100%', background: COVER_COLORS[prefix] || '#555', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 9, fontWeight: 700 }}>
-                          {prefix}
-                        </div>
-                      )}
+  <ApiImage
+    src={book.image_url}
+    alt={l.bookTitle}
+    style={{
+      width: '100%',
+      height: '100%',
+      objectFit: 'cover'
+    }}
+    fallback={
+      <div style={{
+        width: '100%',
+        height: '100%',
+        background: COVER_COLORS[prefix] || '#555',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: 'white',
+        fontSize: 9,
+        fontWeight: 700
+      }}>
+        {prefix}
+      </div>
+    }
+  />
+) : (
+  <div style={{
+    width: '100%',
+    height: '100%',
+    background: COVER_COLORS[prefix] || '#555',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: 'white',
+    fontSize: 9,
+    fontWeight: 700
+  }}>
+    {prefix}
+  </div>
+)}
                     </div>
 
                     {/* Info */}
