@@ -383,29 +383,94 @@ export function AppProvider({ children }) {
   // ─── Reminders ───────────────────────────────────────────────────────────────
 
   const addReminder = (book, userId) => {
-    const key = `reminders_${userId}`;
-    const existing = JSON.parse(localStorage.getItem(key) || '[]');
-    const alreadyExists = existing.find(r => r.bookId === book.id || r.bookId === book.no_induk);
-    if (alreadyExists) return;
-    const newReminder = {
-      id: Date.now(),
-      bookId: book.id || book.no_induk,
-      title: book.title,
-      userId,
-      available: false,
-    };
-    const updated = [...existing, newReminder];
-    localStorage.setItem(key, JSON.stringify(updated));
-    setReminders(updated);
-  };
+  const key = `reminders_${userId}`;
+  const existing =
+    JSON.parse(localStorage.getItem(key) || '[]');
+
+  // cek duplicate reminder
+  const alreadyExists = existing.find(
+    r =>
+      String(r.bookId) ===
+      String(book.id || book.no_induk)
+  );
+
+  if (alreadyExists) return;
+  const newReminder = {
+  id: Date.now(),
+  bookId: book.id, // internal id
+  bookCode: book.no_induk, // kode buku asli
+  title: book.title, // nama buku
+  userId,
+  createdAt: new Date().toISOString(),
+};
+
+  const updated = [
+    ...existing,
+    newReminder
+  ];
+
+  localStorage.setItem(
+    key,
+    JSON.stringify(updated)
+  );
+
+  setReminders(updated);
+};
 
   useEffect(() => {
-    if (user?.id) {
-      const key = `reminders_${user.id}`;
-      const saved = JSON.parse(localStorage.getItem(key) || '[]');
-      setReminders(saved);
-    }
-  }, [user?.id, books]);
+  if (!user?.id) return;
+  const key = `reminders_${user.id}`;
+  const saved =
+    JSON.parse(localStorage.getItem(key) || '[]');
+
+  // update realtime status buku
+  const updated = saved
+
+    .map(reminder => {
+
+      const relatedBook = books.find(
+        b =>
+          String(b.id) === String(reminder.bookId) ||
+          String(b.no_induk) === String(reminder.bookId)
+      );
+
+      const isAvailable =
+        (relatedBook?.available ?? 0) > 0;
+
+      return {
+        ...reminder,
+        available: isAvailable,
+      };
+    })
+
+    // notif tersedia hanya tampil 2 hari
+    .filter(reminder => {
+
+      // kalau belum tersedia → tetap tampil
+      if (!reminder.available) {
+        return true;
+      }
+
+      // cek umur notif
+      const created =
+        new Date(reminder.createdAt).getTime();
+      const now = Date.now();
+      const diffDays =
+        (now - created) /
+        (1000 * 60 * 60 * 24);
+
+      // maksimal 2 hari
+      return diffDays <= 2;
+    });
+
+  // save ulang hasil bersih
+  localStorage.setItem(
+    key,
+    JSON.stringify(updated)
+  );
+
+  setReminders(updated);
+}, [user?.id, books]);
 
   const getUserNotifications = () => {
     return reminders.map(r => {

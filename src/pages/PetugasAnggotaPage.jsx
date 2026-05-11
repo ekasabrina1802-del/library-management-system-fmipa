@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, X, Check, Search, Printer, BookOpen, History } from 'lucide-react';
+import { Plus, X, Check, Search, Printer, BookOpen, History, Trash2 } from 'lucide-react';
 import { useApp } from '../components/AppContext';
 import { useAuth } from '../components/AuthContext';
 
@@ -72,7 +72,6 @@ function MemberModal({ member = null, onSave, onClose }) {
   onSave(form);
 };
  
-
   return (
     <div className="modal-overlay">
       <div className="modal">
@@ -262,13 +261,14 @@ function MemberDetailModal({ member, loans, onClose, onEdit }) {
 }
 
 export default function AnggotaPage() {
-  const { members, loans, addMember, updateMember } = useApp();
+  const { members, loans, addMember, updateMember, deleteMember } = useApp();
   const { user } = useAuth();
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('semua');
   const [addModal, setAddModal] = useState(false);
   const [detailMember, setDetailMember] = useState(null);
   const [editMember, setEditMember] = useState(null);
+  const [deleteMemberData, setDeleteMemberData] = useState(null);
 
   const filtered = members.filter(m =>
 
@@ -319,6 +319,68 @@ export default function AnggotaPage() {
     }}
     onClose={() => setEditMember(null)}
   />
+)}
+
+{deleteMemberData && (
+  <div className="modal-overlay">
+    <div
+      className="modal"
+      style={{
+        maxWidth: 420,
+        textAlign: 'center'
+      }}
+    >
+
+      <div
+        style={{
+          fontSize: 18,
+          fontWeight: 700,
+          marginBottom: 10
+        }}
+      >
+        Hapus Anggota?
+      </div>
+
+      <div
+        style={{
+          color: 'var(--gray-text)',
+          marginBottom: 24
+        }}
+      >
+        Yakin ingin menghapus
+        <b> {deleteMemberData.name}</b> ?
+      </div>
+
+      <div
+        style={{
+          display: 'flex',
+          gap: 10,
+          justifyContent: 'center'
+        }}
+      >
+        <button
+          className="btn btn-ghost"
+          onClick={() => setDeleteMemberData(null)}
+        >
+          Batal
+        </button>
+
+        <button
+          className="btn btn-danger"
+          onClick={async () => {
+            const success =
+              await deleteMember(deleteMemberData.id);
+            if (success) {
+              setDeleteMemberData(null);
+            }
+
+          }}
+        >
+          Hapus
+        </button>
+      </div>
+    </div>
+  </div>
 )}
 
       <div className="page-header">
@@ -429,6 +491,7 @@ export default function AnggotaPage() {
                 <th>Departemen</th>
                 <th>Tipe</th>
                 <th>Tgl Bergabung</th>
+                <th>Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -458,6 +521,18 @@ export default function AnggotaPage() {
                   <td>{m.departemen}</td>
                   <td>{typeBadge(m.type)}</td>
                   <td style={{ color: 'var(--gray-text)' }}>{m.joinDate}</td>
+                  <td>
+                  <button
+                    className="btn btn-danger btn-sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                        setDeleteMemberData(m);
+                      
+                    }}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </td>
                 </tr>
               ))}
             </tbody>

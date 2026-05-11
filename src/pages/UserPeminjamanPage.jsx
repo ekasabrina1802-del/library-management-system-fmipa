@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BookOpen, Clock, AlertCircle, CheckCircle, Search, ChevronRight, BookMarked, Info } from 'lucide-react';
+import { BookOpen, Clock, AlertCircle, CheckCircle, ChevronRight, BookMarked, Info } from 'lucide-react';
 import { useApp } from '../components/AppContext';
 import { useAuth } from '../components/AuthContext';
 
@@ -53,18 +53,9 @@ const lateCount = myLoans.filter(
     )
 ).length;
 
-  // Katalog buku
-  const filteredBooks = books.filter(b =>
-    !search ||
-    b.title?.toLowerCase().includes(search.toLowerCase()) ||
-    b.no_induk?.toLowerCase().includes(search.toLowerCase()) ||
-    b.author?.toLowerCase().includes(search.toLowerCase())
-  );
-
   const tabList = [
     { key: 'aktif', label: 'Pinjaman Aktif', count: activeLoans.length },
     { key: 'riwayat', label: 'Riwayat', count: historyLoans.length },
-    { key: 'katalog', label: 'Katalog Buku', count: books.length },
   ];
 
   return (
@@ -97,20 +88,177 @@ const lateCount = myLoans.filter(
       </div>
 
       {/* Stats */}
-      <div className="grid-4" style={{ gap: 12, marginBottom: 24 }}>
-        {[
-          { label: 'Total Pinjaman', value: myLoans.length, color: 'var(--primary)', bg: 'rgba(74,85,226,0.08)', icon: <BookOpen size={16} /> },
-          { label: 'Sedang Dipinjam', value: activeLoans.length, color: 'var(--warning)', bg: 'rgba(245,158,11,0.08)', icon: <Clock size={16} /> },
-          { label: 'Terlambat', value: lateCount, color: 'var(--danger)', bg: 'rgba(183,28,28,0.08)', icon: <AlertCircle size={16} /> },
-          { label: 'Total Denda', value: `Rp ${totalDenda.toLocaleString('id-ID')}`, color: totalDenda > 0 ? 'var(--danger)' : 'var(--success)', bg: totalDenda > 0 ? 'rgba(183,28,28,0.08)' : 'rgba(46,125,50,0.08)', icon: <CheckCircle size={16} /> },
-        ].map((s, i) => (
-          <div key={i} className="card" style={{ background: s.bg, border: 'none', textAlign: 'center', padding: '14px 12px' }}>
-            <div style={{ display: 'flex', justifyContent: 'center', color: s.color, marginBottom: 4 }}>{s.icon}</div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: s.color }}>{s.value}</div>
-            <div style={{ fontSize: 11, color: 'var(--gray-text)', marginTop: 2 }}>{s.label}</div>
-          </div>
-        ))}
-      </div>
+<div className="grid-4" style={{ gap: 12, marginBottom: 24 }}>
+
+  {/* Total Pinjaman */}
+  <div
+    style={{
+      background: 'linear-gradient(135deg, #7B1C1C, #a83232)',
+      border: '1px solid transparent',
+      borderRadius: 14,
+      padding: '20px 22px',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+    }}
+  >
+    <div
+      style={{
+        fontSize: 11,
+        color: 'rgba(255,255,255,0.75)',
+        textTransform: 'uppercase',
+        letterSpacing: '0.5px',
+        fontWeight: 600,
+        marginBottom: 6,
+      }}
+    >
+      Total Pinjaman
+    </div>
+
+    <div
+      style={{
+        fontSize: 28,
+        fontWeight: 800,
+        color: 'white',
+        lineHeight: 1,
+        fontFamily: "'DM Mono', monospace",
+      }}
+    >
+      {myLoans.length}
+    </div>
+
+    <div style={{ marginTop: 6, opacity: 0.5 }}>
+      <BookOpen size={16} color="white" />
+    </div>
+  </div>
+
+  {/* Sedang Dipinjam */}
+  <div
+    style={{
+      background: 'linear-gradient(135deg, #fffaf0, #ffffff)',
+      border: '1px solid #FEEBC8',
+      borderRadius: 14,
+      padding: '20px 22px',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+    }}
+  >
+    <div
+      style={{
+        fontSize: 11,
+        color: '#D69E2E',
+        textTransform: 'uppercase',
+        letterSpacing: '0.5px',
+        fontWeight: 600,
+        marginBottom: 6,
+      }}
+    >
+      Sedang Dipinjam
+    </div>
+
+    <div
+      style={{
+        fontSize: 28,
+        fontWeight: 800,
+        color: '#D69E2E',
+        lineHeight: 1,
+        fontFamily: "'DM Mono', monospace",
+      }}
+    >
+      {activeLoans.length}
+    </div>
+
+    <div style={{ marginTop: 6, opacity: 0.5 }}>
+      <Clock size={16} color="#D69E2E" />
+    </div>
+  </div>
+
+  {/* Terlambat */}
+  <div
+    style={{
+      background: 'linear-gradient(135deg, #fff5f5, #ffffff)',
+      border: '1px solid #FED7D7',
+      borderRadius: 14,
+      padding: '20px 22px',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+    }}
+  >
+    <div
+      style={{
+        fontSize: 11,
+        color: '#E53E3E',
+        textTransform: 'uppercase',
+        letterSpacing: '0.5px',
+        fontWeight: 600,
+        marginBottom: 6,
+      }}
+    >
+      Terlambat
+    </div>
+
+    <div
+      style={{
+        fontSize: 28,
+        fontWeight: 800,
+        color: '#E53E3E',
+        lineHeight: 1,
+        fontFamily: "'DM Mono', monospace",
+      }}
+    >
+      {lateCount}
+    </div>
+
+    <div style={{ marginTop: 6, opacity: 0.5 }}>
+      <AlertCircle size={16} color="#E53E3E" />
+    </div>
+  </div>
+
+  {/* Total Denda */}
+  <div
+    style={{
+      background:
+        totalDenda > 0
+          ? 'linear-gradient(135deg, #fff5f5, #ffffff)'
+          : 'linear-gradient(135deg, #f0fff4, #ffffff)',
+      border:
+        totalDenda > 0
+          ? '1px solid #FED7D7'
+          : '1px solid #C6F6D5',
+      borderRadius: 14,
+      padding: '20px 22px',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+    }}
+  >
+    <div
+      style={{
+        fontSize: 11,
+        color: totalDenda > 0 ? '#E53E3E' : '#38A169',
+        textTransform: 'uppercase',
+        letterSpacing: '0.5px',
+        fontWeight: 600,
+        marginBottom: 6,
+      }}
+    >
+      Total Denda
+    </div>
+
+    <div
+      style={{
+        fontSize: 28,
+        fontWeight: 800,
+        color: totalDenda > 0 ? '#E53E3E' : '#38A169',
+        lineHeight: 1,
+        fontFamily: "'DM Mono', monospace",
+      }}
+    >
+      Rp {totalDenda.toLocaleString('id-ID')}
+    </div>
+
+    <div style={{ marginTop: 6, opacity: 0.5 }}>
+      <CheckCircle
+        size={16}
+        color={totalDenda > 0 ? '#E53E3E' : '#38A169'}
+      />
+    </div>
+  </div>
+</div>
 
       {/* Alert jika ada yang terlambat */}
       {lateCount > 0 && (
@@ -303,79 +451,6 @@ const lateCount = myLoans.filter(
                   </table>
                 </div>
               )}
-            </div>
-          )}
-
-          {/* ── TAB: KATALOG ── */}
-          {activeTab === 'katalog' && (
-            <div>
-              {/* Search bar */}
-              <div style={{ position: 'relative', marginBottom: 16 }}>
-                <Search size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--gray-text)' }} />
-                <input
-                  className="form-control"
-                  style={{ paddingLeft: 32 }}
-                  placeholder="Cari judul, kode, atau pengarang..."
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
-                {filteredBooks.length === 0 ? (
-                  <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px 0', color: 'var(--gray-text)' }}>
-                    Buku tidak ditemukan
-                  </div>
-                ) : filteredBooks.map(b => {
-                 const prefix = b.no_induk?.split('/')[0] || 'BK';
-                  return (
-                    <div key={b.id} style={{
-                      background: 'var(--bg-secondary, #f9fafb)',
-                      border: '1px solid var(--gray-light)',
-                      borderRadius: 10,
-                      overflow: 'hidden',
-                    }}>
-                      {/* Box Cover Katalog BARU */}
-<div style={{ height: 140, width: '100%', background: '#eee', overflow: 'hidden', borderBottom: '1px solid var(--gray-light)' }}>
-  {b.image_url ? (
-    <img 
-      src={`${API_BASE_URL}${b.image_url}`} 
-      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-      alt="book cover"
-      onError={(e) => { e.target.src = 'https://via.placeholder.com/220x140?text=No+Image'; }}
-    />
-  ) : (
-    <div style={{ width: '100%', height: '100%', background: COVER_COLORS[prefix] || '#555', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700 }}>
-      {prefix}
-    </div>
-  )}
-</div>
-                      <div style={{ padding: '12px 14px' }}>
-                        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--gray-text)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>
-                          {COVER_LABELS[prefix] || prefix}
-                        </div>
-                        <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 2, lineHeight: 1.4 }}>{b.title}</div>
-                        {b.author && <div style={{ fontSize: 11, color: 'var(--gray-text)', marginBottom: 8 }}>{b.author}</div>}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <code style={{ fontSize: 11, background: 'var(--gray-light)', padding: '2px 7px', borderRadius: 4 }}>{b.no_induk}</code>
-                          <span className={`badge ${b.available > 0 ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: 10 }}>
-                            {b.available > 0 ? `${b.available} tersedia` : 'Habis'}
-                          </span>
-                        </div>
-                        {b.available === 0 && (
-                          <div style={{ fontSize: 11, color: 'var(--gray-text)', marginTop: 8 }}>
-                            📋 Semua eksemplar sedang dipinjam. Hubungi petugas untuk informasi ketersediaan.
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div style={{ marginTop: 16, fontSize: 12, color: 'var(--gray-text)', textAlign: 'center' }}>
-                Untuk meminjam, datang ke meja petugas dan sebutkan kode buku yang diinginkan.
-              </div>
             </div>
           )}
 

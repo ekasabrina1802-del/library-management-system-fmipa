@@ -360,71 +360,181 @@ export default function UserDendaPage() {
       )}
 
       {/* ── Summary cards ── */}
-      <div className="grid-4 mb-24">
-        {/* Status akun */}
-        <div style={{
-          background: akunAman
-            ? 'linear-gradient(135deg,#2E7D32,#43A047)'
-            : 'linear-gradient(135deg,#7B1C1C,#c0392b)',
-          color: '#fff', borderRadius: 12, padding: '18px 20px',
-          display: 'flex', flexDirection: 'column', gap: 6
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, opacity: 0.85 }}>
-            {akunAman ? <CheckCircle size={14} /> : <AlertTriangle size={14} />}
+      <div className="grid-4 mb-24" style={{ gap: 16 }}>
+
+        {/* Status Akun */}
+        <div
+          style={{
+            background: akunAman
+              ? 'linear-gradient(135deg, #166534, #15803D)'
+              : 'linear-gradient(135deg, #7B1C1C, #a83232)',
+
+            border: '1px solid transparent',
+            borderRadius: 14,
+            padding: '20px 22px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+          }}
+        >
+          <div
+            style={{
+              fontSize: 11,
+              color: 'rgba(255,255,255,0.75)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              fontWeight: 600,
+              marginBottom: 6,
+            }}
+          >
             Status Akun
           </div>
-          <div style={{ fontSize: 20, fontWeight: 800 }}>
-            {akunAman ? 'Aman ✓' : 'Ada Tunggakan'}
+
+          <div
+            style={{
+              fontSize: 28,
+              fontWeight: 900,
+              color: '#FFFFFF',
+              lineHeight: 1,
+              fontFamily: "'DM Mono', monospace",
+            }}
+          >
+            {akunAman ? 'Aman ✓' : 'Warning'}
           </div>
-          <div style={{ fontSize: 11, opacity: 0.8 }}>
-            {akunAman
-              ? 'Tidak ada denda atau keterlambatan.'
-              : 'Segera selesaikan denda / kembalikan buku.'}
+
+          <div style={{ marginTop: 6 }}>
+            {akunAman ? (
+              <CheckCircle size={16} color="white" />
+            ) : (
+              <AlertTriangle size={16} color="white" />
+            )}
           </div>
         </div>
 
-        {/* Total denda */}
-        <div className="denda-highlight">
-          <div style={{ fontSize: 11, opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>
+        {/* Total Denda */}
+        <div
+          style={{
+            background:
+              totalDendaKeseluruhan > 0
+                ? 'linear-gradient(135deg, #1D4ED8, #2563EB)'
+                : 'linear-gradient(135deg, #0f2e96, #2563EB)',
+
+            border: '1px solid transparent',
+            borderRadius: 14,
+            padding: '20px 22px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+          }}
+        >
+          <div
+            style={{
+              fontSize: 11,
+              color: 'rgba(255,255,255,0.75)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              fontWeight: 600,
+              marginBottom: 6,
+            }}
+          >
             Total Denda Aktif
           </div>
-          <div className="amount">
+
+          <div
+            style={{
+              fontSize: 28,
+              fontWeight: 900,
+              color: '#FFFFFF',
+              lineHeight: 1,
+              fontFamily: "'DM Mono', monospace",
+            }}
+          >
             {totalDendaKeseluruhan > 0
               ? `Rp ${(totalDendaKeseluruhan / 1000).toFixed(0)}K`
               : 'Rp 0'}
           </div>
-          <div style={{ fontSize: 12, opacity: 0.8, marginTop: 4 }}>
-            {formatRp(totalDendaKeseluruhan)}
+
+          <div style={{ marginTop: 6 }}>
+            <Clock size={16} color="white" />
           </div>
-          {dendaBerjalan > 0 && (
-            <div style={{ fontSize: 10, opacity: 0.75, marginTop: 2 }}>
-              Termasuk estimasi berjalan {formatRp(dendaBerjalan)}
-            </div>
-          )}
         </div>
 
-        {/* Buku terlambat */}
-        <div className="stat-card">
-          <div>
-            <div className="stat-value" style={{ color: bukuTerlambat > 0 ? 'var(--danger)' : undefined }}>
-              {bukuTerlambat}
-            </div>
-            <div className="stat-label">Buku Terlambat</div>
+        {/* Buku Terlambat */}
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #fff5f5, #ffffff)',
+            border: '1px solid #FED7D7',
+            borderRadius: 14,
+            padding: '20px 22px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+          }}
+        >
+          <div
+            style={{
+              fontSize: 11,
+              color: '#E53E3E',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              fontWeight: 600,
+              marginBottom: 6,
+            }}
+          >
+            Buku Terlambat
           </div>
-          <AlertTriangle size={28} color={bukuTerlambat > 0 ? 'var(--danger)' : 'var(--gray-text)'} strokeWidth={1.5} />
+
+          <div
+            style={{
+              fontSize: 28,
+              fontWeight: 800,
+              color: '#E53E3E',
+              lineHeight: 1,
+              fontFamily: "'DM Mono', monospace",
+            }}
+          >
+            {bukuTerlambat}
+          </div>
+
+          <div style={{ marginTop: 6 }}>
+            <AlertTriangle size={16} color="#E53E3E" />
+          </div>
         </div>
 
-        {/* Sedang dipinjam */}
-        <div className="stat-card">
-          <div>
-            <div className="stat-value">{bukuSedangDipinjam}</div>
-            <div className="stat-label">Sedang Dipinjam</div>
-            <div style={{ fontSize: 11, color: 'var(--gray-text)', marginTop: 2 }}>
-              dari {totalTransaksi} total transaksi
-            </div>
+        {/* Sedang Dipinjam */}
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #fffaf0, #ffffff)',
+            border: '1px solid #FEEBC8',
+            borderRadius: 14,
+            padding: '20px 22px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+          }}
+        >
+          <div
+            style={{
+              fontSize: 11,
+              color: '#D69E2E',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              fontWeight: 600,
+              marginBottom: 6,
+            }}
+          >
+            Sedang Dipinjam
           </div>
-          <BookOpen size={28} color="var(--primary)" strokeWidth={1.5} />
+
+          <div
+            style={{
+              fontSize: 28,
+              fontWeight: 800,
+              color: '#D69E2E',
+              lineHeight: 1,
+              fontFamily: "'DM Mono', monospace",
+            }}
+          >
+            {bukuSedangDipinjam}
+          </div>
+
+          <div style={{ marginTop: 6 }}>
+            <BookOpen size={16} color="#D69E2E" />
+          </div>
         </div>
+
       </div>
 
       {/* ── Chart denda (hanya jika ada data) ── */}

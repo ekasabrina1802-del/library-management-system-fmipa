@@ -458,37 +458,168 @@ export default function BukuPage() {
         </p>
       </div>
 
-      {/* Statistik */}
+      {/* Stats */}
       <div className="grid-4 mb-24" style={{ gap: '16px' }}>
-        <div className="stat-card" style={{ background: '#FFF5F5', border: '1px solid #FED7D7' }}>
-          <div className="stat-icon" style={{ background: '#7B1C1C', color: 'white' }}><BookOpen size={20} /></div>
-          <div>
-            <div className="stat-value" style={{ color: '#7B1C1C' }}>{totalJudul}</div>
-            <div className="stat-label">Koleksi Buku (Judul)</div>
-          </div>
+      <div
+        style={{
+          background: 'linear-gradient(135deg, #7B1C1C, #a83232)',
+          border: '1px solid transparent',
+          borderRadius: 14,
+          padding: '20px 22px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+        }}
+      >
+        <div
+          style={{
+            fontSize: 11,
+            color: 'rgba(255,255,255,0.75)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            fontWeight: 600,
+            marginBottom: 6,
+          }}
+        >
+          Koleksi Buku
         </div>
-        <div className="stat-card" style={{ background: '#F0FFF4', border: '1px solid #C6F6D5' }}>
-          <div className="stat-icon" style={{ background: '#2D6A4F', color: 'white' }}><CheckCircle size={20} /></div>
-          <div>
-            <div className="stat-value" style={{ color: '#2D6A4F' }}>{totalUnitTersedia}</div>
-            <div className="stat-label">Buku Tersedia (Unit)</div>
-          </div>
+
+        <div
+          style={{
+            fontSize: 28,
+            fontWeight: 800,
+            color: 'white',
+            lineHeight: 1,
+            fontFamily: "'DM Mono', monospace",
+          }}
+        >
+          {totalJudul}
         </div>
-        <div className="stat-card" style={{ background: '#FFFAF0', border: '1px solid #FEEBC8' }}>
-          <div className="stat-icon" style={{ background: '#D69E2E', color: 'white' }}><Clock size={20} /></div>
-          <div>
-            <div className="stat-value" style={{ color: '#D69E2E' }}>{totalDipinjam}</div>
-            <div className="stat-label">Buku Dipinjam</div>
-          </div>
-        </div>
-        <div className="stat-card" style={{ background: '#F7FAFC', border: '1px solid #E2E8F0' }}>
-          <div className="stat-icon" style={{ background: '#4A5568', color: 'white' }}><XCircle size={20} /></div>
-          <div>
-            <div className="stat-value" style={{ color: '#4A5568' }}>{totalJudulHabis}</div>
-            <div className="stat-label">Buku Habis (Judul)</div>
-          </div>
+
+        <div style={{ marginTop: 6, opacity: 0.5 }}>
+          <BookOpen size={16} color="white" />
         </div>
       </div>
+
+      {/* Buku Tersedia */}
+      <div
+        style={{
+          background: 'linear-gradient(135deg, #fffaf0, #ffffff)',
+          border: '1px solid #FEEBC8',
+          borderRadius: 14,
+          padding: '20px 22px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+        }}
+      >
+        <div
+          style={{
+            fontSize: 11,
+            color: '#D69E2E',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            fontWeight: 600,
+            marginBottom: 6,
+          }}
+        >
+          Buku Tersedia
+        </div>
+
+        <div
+          style={{
+            fontSize: 28,
+            fontWeight: 800,
+            color: '#D69E2E',
+            lineHeight: 1,
+            fontFamily: "'DM Mono', monospace",
+          }}
+        >
+          {totalUnitTersedia}
+        </div>
+
+        <div style={{ marginTop: 6, opacity: 0.5 }}>
+          <CheckCircle size={16} color="#D69E2E" />
+        </div>
+      </div>
+
+      {/* Buku Dipinjam */}
+      <div
+        style={{
+          background: 'linear-gradient(135deg, #fff5f5, #ffffff)',
+          border: '1px solid #FED7D7',
+          borderRadius: 14,
+          padding: '20px 22px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+        }}
+      >
+        <div
+          style={{
+            fontSize: 11,
+            color: '#E53E3E',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            fontWeight: 600,
+            marginBottom: 6,
+          }}
+        >
+          Buku Dipinjam
+        </div>
+
+        <div
+          style={{
+            fontSize: 28,
+            fontWeight: 800,
+            color: '#E53E3E',
+            lineHeight: 1,
+            fontFamily: "'DM Mono', monospace",
+          }}
+        >
+          {totalDipinjam}
+        </div>
+
+        <div style={{ marginTop: 6, opacity: 0.5 }}>
+          <Clock size={16} color="#E53E3E" />
+        </div>
+      </div>
+
+      {/* Buku Habis */}
+      <div
+        style={{
+          background: 'linear-gradient(135deg, #f7fafc, #ffffff)',
+          border: '1px solid #E2E8F0',
+          borderRadius: 14,
+          padding: '20px 22px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+        }}
+      >
+        <div
+          style={{
+            fontSize: 11,
+            color: '#4A5568',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            fontWeight: 600,
+            marginBottom: 6,
+          }}
+        >
+          Buku Habis
+        </div>
+
+        <div
+          style={{
+            fontSize: 28,
+            fontWeight: 800,
+            color: '#4A5568',
+            lineHeight: 1,
+            fontFamily: "'DM Mono', monospace",
+          }}
+        >
+          {totalJudulHabis}
+        </div>
+
+        <div style={{ marginTop: 6, opacity: 0.5 }}>
+          <XCircle size={16} color="#4A5568" />
+        </div>
+      </div>
+    </div>
+     
 
       <div className="card">
         <div className="flex-between mb-16">

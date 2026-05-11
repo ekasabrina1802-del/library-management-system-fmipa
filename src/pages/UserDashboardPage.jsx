@@ -452,7 +452,8 @@ const profilePhoto = currentMember?.photo_url || user?.photo_url;
                       fontSize: 14, marginTop: 2,
                       color: isAvailable ? '#047857' : '#B45309',
                     }}>
-                      <strong>"{n.title}"</strong> (ID: {n.bookId})
+                      <strong>"{n.title}"</strong>
+                      (Kode Buku: {n.bookCode || '-'})
                       {isAvailable
                         ? ' kini dapat dipinjam. Segera kunjungi perpustakaan dan tunjukkan kode buku ke petugas.'
                         : ' masih sedang dipinjam oleh anggota lain. Kami akan terus memantaukan untuk Anda.'}
