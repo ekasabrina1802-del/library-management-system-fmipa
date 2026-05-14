@@ -84,6 +84,31 @@ function RemindMeButton({ book, user, addReminder }) {
   );
 }
 
+const getAvailableCopies = (book) => {
+  return book.copies?.filter(
+    c => c.status === 'available'
+  ) || [];
+};
+
+const getBorrowedCopies = (book) => {
+  return book.copies?.filter(
+    c => c.status === 'borrowed'
+  ) || [];
+};
+
+function generateCopies(bookCode, total) {
+  return Array.from(
+    { length: total },
+    (_, i) => ({
+      id: crypto.randomUUID(),
+
+      copy_code:
+        `${bookCode}-${String(i + 1).padStart(3, '0')}`,
+
+      status: 'available'
+    })
+  );
+}
 function BookModal({ book, onSave, onClose, isReadOnly, user }) {
   const { loans, addLoan, addReminder } = useApp();
   const isEdit = !!book?.id;
@@ -97,14 +122,14 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
     year: book?.year || new Date().getFullYear(),
     isbn: book?.isbn || '',
     category: book?.category || 'Matematika',
-    stock: book?.stock || 1,
+    stock: book?.copies?.length || book?.stock || 1,
     description: book?.description || '',
     image: null,
     imagePreview: book?.image_url || null
   });
 
   const handleBorrowAction = async () => {
-    if ((book.available ?? 0) <= 0) {
+    if (getAvailableCopies(book).length <= 0) {
       alert(`Stok buku "${book.title}" sedang kosong. Kami akan mencatat permintaan notifikasi Anda.`);
       return;
     }
@@ -126,14 +151,93 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
       `Konfirmasi Peminjaman:\n\nJudul: ${book.title}\nDurasi: ${userRule.duration}\nBatas Maksimal: ${userRule.max} buku\n\nApakah Anda ingin melanjutkan?`
     );
     if (confirmBorrow) {
-      const result = await addLoan(book.no_induk, user?.anggotaId || user?.memberId);
-      if (result.success) {
-        alert('Permintaan berhasil! Silahkan ambil buku di meja petugas dengan menunjukkan kode buku.');
-        onClose();
-      } else {
-        alert(`Gagal meminjam: ${result.message}`);
-      }
+
+  // =========================
+  // MODE BARU (copies)
+  // =========================
+
+  if (book.copies) {
+
+    const availableCopies =
+      getAvailableCopies(book);
+
+    if (availableCopies.length === 0) {
+
+      alert('Semua copy sedang dipinjam');
+
+      return;
     }
+
+    const selectedCopy =
+      availableCopies[0];
+
+    const result = await addLoan({
+
+      memberId:
+        user?.anggotaId ||
+        user?.memberId,
+
+      bookId: book.id,
+
+      copyId: selectedCopy.id,
+
+      copyCode:
+        selectedCopy.copy_code
+
+    });
+
+    if (result.success) {
+
+      alert(
+        `Permintaan berhasil!\n\n` +
+        `Silahkan ambil buku di meja petugas ` +
+        `dengan menunjukkan kode buku:\n\n` +
+        `${selectedCopy.copy_code}`
+      );
+
+      onClose();
+
+    } else {
+
+      alert(
+        `Gagal meminjam: ${result.message}`
+      );
+
+    }
+
+  }
+
+  // =========================
+  // MODE LAMA
+  // =========================
+
+  else {
+
+    const result = await addLoan(
+
+      book.no_induk,
+
+      user?.anggotaId ||
+      user?.memberId
+
+    );
+
+    if (result.success) {
+
+      alert(
+        'Permintaan berhasil! Silahkan ambil buku di meja petugas.'
+      );
+
+      onClose();
+
+    } else {
+
+      alert(
+        `Gagal meminjam: ${result.message}`
+      );
+
+    }
+  }}
   };
 
   const handleSubmit = (e) => {
@@ -161,7 +265,7 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
     }
   };
 
-  const isAvailable = (book?.available ?? book?.stock ?? 0) > 0;
+  const isAvailable = getAvailableCopies(book).length > 0;
 
   return (
     <div className="modal-overlay">
@@ -243,6 +347,47 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
             )}
           </div>
           <div className="form-group">
+
+            <label className="form-label">
+              Daftar Copy Buku
+            </label>
+
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 8
+              }}
+            >
+
+              {book?.copies?.map(copy => (
+
+                <div
+                  key={copy.id}
+                  style={{
+                    padding: 10,
+                    border: '1px solid #ddd',
+                    borderRadius: 8,
+                    display: 'flex',
+                    justifyContent: 'space-between'
+                  }}
+                >
+
+                  <strong>
+                    {copy.copy_code}
+                  </strong>
+
+                  <span>
+                    {copy.status === 'available'
+                      ? 'Tersedia'
+                      : 'Dipinjam'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="form-group">
             <label className="form-label">Deskripsi *</label>
             <textarea className="form-control" value={form.description} onChange={f('description')} rows={3} disabled={isReadOnly} />
           </div>
@@ -269,7 +414,7 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
 
 // ---- Kartu Buku untuk Grid View ----
 function BookCard({ book, onSelect, onDetail, isPetugas }) {
-  const isAvailable = (book.available ?? 0) > 0;
+  const isAvailable = getAvailableCopies(book).length > 0;
 
   return (
     <div
@@ -359,7 +504,8 @@ function BookCard({ book, onSelect, onDetail, isPetugas }) {
             fontSize: 11, fontWeight: 600,
             color: isAvailable ? '#2D6A4F' : '#c0392b'
           }}>
-            {book.available}/{book.stock} unit
+            {getAvailableCopies(book).length}/
+            {book.copies?.length || 0} unit
           </span>
         </div>
 
@@ -402,28 +548,57 @@ export default function BukuPage() {
 
   const [filter, setFilter] = useState('Semua Kategori');
   const [search, setSearch] = useState('');
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [viewMode, setViewMode] = useState('list'); // 'list' | 'grid'
+  const booksPerPage =
+    viewMode === 'grid'
+      ? 12
+      : 10;
   const [modal, setModal] = useState(null);
   const [deleteMode, setDeleteMode] = useState(false);
   const [selected, setSelected] = useState([]);
-  // ← NEW: tampilan grid atau list
-  const [viewMode, setViewMode] = useState('list'); // 'list' | 'grid'
-
   // --- LOGIKA STATISTIK ---
   const totalJudul = books.length;
-  const totalUnitTersedia = books.reduce((s, b) => s + Number(b.available ?? 0), 0);
-  const totalDipinjam = books.reduce((s, b) => {
-    const stock = Number(b.stock ?? 0);
-    const available = Number(b.available ?? 0);
-    return s + (stock - available);
-  }, 0);
-  const totalJudulHabis = books.filter(b => Number(b.available ?? 0) === 0).length;
+  const totalUnitTersedia = books.reduce((s, b) => s + getAvailableCopies(b).length, 0);
+  const totalDipinjam = books.reduce((s, b) =>
+    s + getBorrowedCopies(b).length,
+    0
+  );
+  const totalJudulHabis = books.filter(b => getAvailableCopies(b).length === 0).length;
 
-  const filtered = books.filter(b => {
-    const matchCat = filter === 'Semua Kategori' || b.category === filter;
-    const matchSearch = !search || b.title?.toLowerCase().includes(search.toLowerCase()) || b.no_induk?.toLowerCase().includes(search.toLowerCase());
-    return matchCat && matchSearch;
-  }).slice(0, rowsPerPage);
+  const filteredBooks = books.filter(b => {
+
+  const matchCat =
+    filter === 'Semua Kategori'
+    || b.category === filter;
+
+  const matchSearch =
+    !search
+    || b.title?.toLowerCase()
+      .includes(search.toLowerCase())
+
+    || b.no_induk?.toLowerCase()
+      .includes(search.toLowerCase());
+
+  return matchCat && matchSearch;
+
+});
+
+  const totalPages = Math.ceil(
+    filteredBooks.length / booksPerPage
+  );
+
+  const startIndex =
+    (currentPage - 1) * booksPerPage;
+
+  const endIndex =
+    startIndex + booksPerPage;
+
+  const filtered =
+    filteredBooks.slice(
+      startIndex,
+      endIndex
+    );
 
   const handleRowClick = (book) => {
   // ✅ khusus petugas = select saja
@@ -447,11 +622,36 @@ export default function BukuPage() {
           onSave={(f) => {
             if (modal.mode === 'edit') {
               const oldBook = modal.book;
-              const borrowed = Number(oldBook.stock ?? 0) - Number(oldBook.available ?? 0);
-              const newAvailable = Math.min(Number(f.stock), Math.max(0, Number(f.stock) - borrowed));
-              updateBook(modal.book.id, { ...f, available: newAvailable });
+              const borrowed =
+                getBorrowedCopies(oldBook).length;
+
+              const copies = generateCopies(
+                f.no_induk,
+                Number(f.stock)
+              );
+
+              copies.forEach((copy, index) => {
+
+                if (index < borrowed) {
+                  copy.status = 'borrowed';
+                }
+
+              });
+
+              updateBook(modal.book.id, {
+                ...f,
+                copies
+              });
             } else {
-              addBook(f);
+              const copies = generateCopies(
+                f.no_induk,
+                Number(f.stock)
+              );
+
+              addBook({
+                ...f,
+                copies
+              });
             }
             setModal(null);
           }}
@@ -630,7 +830,6 @@ export default function BukuPage() {
       </div>
     </div>
      
-
       <div className="card">
         <div className="flex-between mb-16">
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -689,9 +888,9 @@ export default function BukuPage() {
 
             <div style={{ position: 'relative' }}>
               <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#999' }} />
-              <input className="form-control" style={{ width: 220, paddingLeft: 32 }} placeholder="Cari judul atau penulis..." value={search} onChange={e => setSearch(e.target.value)} />
+              <input className="form-control" style={{ width: 220, paddingLeft: 32 }} placeholder="Cari judul atau penulis..." value={search} onChange={e => {setSearch(e.target.value); setCurrentPage(1);}} />
             </div>
-            <select className="form-control" style={{ width: 180 }} value={filter} onChange={e => setFilter(e.target.value)}>
+            <select className="form-control" style={{ width: 180 }} value={filter} onChange={e => {setFilter(e.target.value); setCurrentPage(1);}}>
               {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
@@ -773,11 +972,11 @@ export default function BukuPage() {
                       <div style={{ fontSize: 11, color: '#666' }}>{b.isbn}</div>
                     </td>
                     <td><span className="badge badge-info">{b.category}</span></td>
-                    <td style={{ fontWeight: 600 }}>{b.stock}</td>
-                    <td style={{ color: b.available === 0 ? '#e53e3e' : '#38a169', fontWeight: 700 }}>{b.available}</td>
+                    <td style={{ fontWeight: 600 }}>{b.copies?.length || 0}</td>
+                    <td style={{ color: getAvailableCopies(b).length === 0 ? '#e53e3e' : '#38a169', fontWeight: 700 }}>{getAvailableCopies(b).length}</td>
                     <td>
-                      <span className={`badge ${b.available > 0 ? 'badge-success' : 'badge-danger'}`}>
-                        {b.available > 0 ? 'Tersedia' : 'Habis'}
+                      <span className={`badge ${getAvailableCopies(b).length > 0 ? 'badge-success' : 'badge-danger'}`}>
+                        {getAvailableCopies(b).length > 0 ? 'Tersedia' : 'Habis'}
                       </span>
                     </td>
                   </tr>
@@ -787,6 +986,81 @@ export default function BukuPage() {
           </div>
         )}
       </div>
+      {/* Pagination */}
+      {totalPages > 1 && (
+
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginTop: 20,
+            paddingTop: 16,
+            borderTop: '1px solid #eee'
+          }}
+        >
+
+          {/* Info */}
+          <div
+            style={{
+              fontSize: 13,
+              color: '#666'
+            }}
+          >
+            Halaman {currentPage} dari {totalPages}
+          </div>
+
+          {/* Buttons */}
+          <div
+            style={{
+              display: 'flex',
+              gap: 8
+            }}
+          >
+
+            <button
+              className="btn btn-ghost btn-sm"
+
+              disabled={currentPage === 1}
+
+              onClick={() =>
+                setCurrentPage(p => p - 1)
+              }
+
+              style={{
+                opacity:
+                  currentPage === 1
+                    ? 0.5
+                    : 1
+              }}
+            >
+              ← Sebelumnya
+            </button>
+
+            <button
+              className="btn btn-primary btn-sm"
+
+              disabled={
+                currentPage === totalPages
+              }
+
+              onClick={() =>
+                setCurrentPage(p => p + 1)
+              }
+
+              style={{
+                opacity:
+                  currentPage === totalPages
+                    ? 0.5
+                    : 1
+              }}
+            >
+              Selanjutnya →
+            </button>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }

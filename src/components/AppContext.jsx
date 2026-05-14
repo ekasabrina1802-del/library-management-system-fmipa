@@ -114,7 +114,16 @@ export function AppProvider({ children }) {
   const addBook = async (book) => {
     try {
       const formData = new FormData();
-      Object.keys(book).forEach(key => formData.append(key, book[key]));
+      Object.keys(book).forEach((key) => {
+        if (key === 'copies') {
+          formData.append(
+            'copies',
+            JSON.stringify(book.copies)
+          );
+        } else {
+          formData.append(key, book[key]);
+        }
+      });
       const res = await fetch(`${API_URL}/api/books`, {
         method: 'POST',
         headers: { 'ngrok-skip-browser-warning': 'true' },
@@ -123,7 +132,7 @@ export function AppProvider({ children }) {
       const data = await res.json();
       if (data.success) {
         await fetchBooks();
-        addLog('book', `Menambahkan buku baru: "${book.title}" (${book.no_induk}) — Stok: ${book.stock}, Kategori: ${book.category}`, 'book');
+        addLog('book', `Menambahkan buku baru: "${book.title}" (${book.no_induk}) — Copy: ${book.copies?.length || 0}, Kategori: ${book.category}`, 'book');
         return true;
       }
       alert(data.message);
@@ -138,7 +147,16 @@ export function AppProvider({ children }) {
   const updateBook = async (id, updates) => {
     try {
       const formData = new FormData();
-      Object.keys(updates).forEach(key => formData.append(key, updates[key]));
+      Object.keys(updates).forEach((key) => {
+        if (key === 'copies') {
+          formData.append(
+            'copies',
+            JSON.stringify(updates.copies)
+          );
+        } else {
+          formData.append(key, updates[key]);
+        }
+      });
       const res = await fetch(`${API_URL}/api/books/${id}`, {
         method: 'PUT',
         headers: { 'ngrok-skip-browser-warning': 'true' },
@@ -147,7 +165,7 @@ export function AppProvider({ children }) {
       const data = await res.json();
       if (data.success) {
         await fetchBooks();
-        addLog('book', `Memperbarui data buku: "${updates.title}" (ID: ${id}) — Stok diubah ke ${updates.stock}, Kategori: ${updates.category}`, 'book');
+        addLog('book', `Memperbarui data buku: "${updates.title}" (ID: ${id}) — Jumlah copy: ${updates.copies?.length || 0}, Kategori: ${updates.category}`, 'book');
         return true;
       }
       alert(data.message);
@@ -270,7 +288,99 @@ export function AppProvider({ children }) {
    *   mahasiswa → +7 hari, dosen → +30 hari
    * Response: { success, loan: { id, dueDate, memberName, bookTitle, ... }, message }
    */
-  const addLoan = async (bookCode, memberId) => {
+  const addLoan = async ({
+      memberId,
+      bookId,
+      copyId,
+      copyCode
+    }) => {
+
+      try {
+
+        const res = await fetch(
+          `${API_URL}/api/loans`,
+          {
+            method: 'POST',
+
+            headers: jsonHeaders,
+
+            body: JSON.stringify({
+              memberId,
+              bookId,
+              copyId,
+              copyCode
+            })
+          }
+        );
+
+        const data = await res.json();
+
+        if (data.success) {
+
+          // UPDATE STATUS COPY
+          setBooks(prev =>
+            prev.map(book => {
+
+              if (book.id !== bookId)
+                return book;
+
+              return {
+                ...book,
+
+                copies: book.copies.map(copy => {
+
+                  if (copy.id === copyId) {
+
+                    return {
+                      ...copy,
+                      status: 'borrowed'
+                    };
+
+                  }
+
+                  return copy;
+                })
+              };
+            })
+          );
+
+          await fetchLoans();
+
+          addLog(
+            'loan',
+
+            `Copy buku "${copyCode}" dipinjam oleh anggota ID ${memberId}`,
+
+            'loan'
+          );
+
+          return {
+            success: true,
+            loan: data.loan || null
+          };
+        }
+
+        return {
+          success: false,
+          message:
+            data.message ||
+            'Gagal memproses peminjaman'
+        };
+
+      } catch (err) {
+
+        console.error(
+          'Gagal tambah peminjaman:',
+          err
+        );
+
+        return {
+          success: false,
+          message:
+            'Gagal menambahkan peminjaman'
+        };
+      }
+
     try {
       const res = await fetch(`${API_URL}/api/loans`, {
         method: 'POST',
@@ -346,6 +456,39 @@ export function AppProvider({ children }) {
       const data = await res.json();
 
       if (data.success) {
+        const returnedCopyId =
+          data.copyId;
+
+        const returnedBookId =
+          data.bookId;
+
+        setBooks(prev =>
+          prev.map(book => {
+
+            if (book.id !== returnedBookId)
+              return book;
+
+            return {
+
+              ...book,
+
+              copies: book.copies.map(copy => {
+
+                if (copy.id === returnedCopyId) {
+
+                  return {
+                    ...copy,
+                    status: 'available'
+                  };
+
+                }
+
+                return copy;
+              })
+            };
+          })
+        );
+
         await fetchBooks();
         await fetchLoans();
         addLog(
@@ -435,7 +578,9 @@ export function AppProvider({ children }) {
       );
 
       const isAvailable =
-        (relatedBook?.available ?? 0) > 0;
+        relatedBook?.copies?.some(
+          c => c.status === 'available'
+        );
 
       return {
         ...reminder,
@@ -474,9 +619,21 @@ export function AppProvider({ children }) {
 
   const getUserNotifications = () => {
     return reminders.map(r => {
-      const book = books.find(b => String(b.id || b.book_id) === String(r.bookId));
-      const stock = Number(book?.available ?? book?.stock ?? 0);
-      return { ...r, stock, available: stock > 0 };
+      const book = books.find(
+        b =>
+          String(b.id || b.book_id)
+          === String(r.bookId)
+      );
+      const availableCopies =
+        book?.copies?.filter(
+          c => c.status === 'available'
+        ) || [];
+      return {
+        ...r,
+        stock: availableCopies.length,
+        available:
+          availableCopies.length > 0
+      };
     });
   };
 
