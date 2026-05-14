@@ -1,185 +1,207 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, BookOpen, FlaskConical } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 import { useAuth } from '../components/AuthContext';
 
-
 export default function LoginPage() {
-  const [form, setForm] = useState({ email: '', password: '', remember: false });
+
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+
+  const { loginWithGoogle } = useAuth();
+
   const navigate = useNavigate();
 
+  const handleGoogleLogin = async () => {
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
     setLoading(true);
+
     setError('');
 
-    const result = await login(form.email, form.password);
+    // SIMULASI LOGIN GOOGLE
+    // nanti diganti OAuth asli
+
+    const googleUser = {
+
+      name: "Admin Perpustakaan",
+
+      email: "admin.perpus@unesa.ac.id"
+
+    };
+
+    const result =
+      await loginWithGoogle(googleUser);
 
     if (result.success) {
-      
+
       const redirectMap = {
+
         admin: '/dashboard',
+
         petugas: '/dashboard',
-        mahasiswa: '/user/dashboard', // Dashboard untuk user
-        dosen: '/user/dashboard',     // Dashboard untuk user (disamakan)
+
+        mahasiswa: '/user/dashboard',
+
+        dosen: '/user/dashboard'
+
       };
 
+      navigate(
+        redirectMap[result.role] || '/'
+      );
 
-      navigate(redirectMap[result.role] || '/');
     } else {
+
       setError(result.message);
+
     }
 
     setLoading(false);
+
   };
 
-
- const fillDemo = (role) => {
-  if (role === 'admin') {
-    setForm(f => ({
-      ...f,
-      email: 'admin@fmipa.ac.id',
-      password: 'admin123'
-    }));
-  } else if (role === 'petugas') {
-    setForm(f => ({
-      ...f,
-      email: 'siti@fmipa.ac.id', // 🔥 sesuai DB kamu
-      password: 'petugas123'
-    }));
-  } else if (role === 'mahasiswa') {
-    setForm(f => ({
-      ...f,
-      email: '24050974001@mhs.unesa.ac.id', // 🔥 sesuai DB kamu
-      password: 'mhs123'
-    }));
-  }
-};
-
-
   return (
+
     <div className="login-page">
-      {/* Left Panel */}
+
+      {/* LEFT PANEL */}
       <div className="login-left">
+
         <div>
-          <div className="login-tag">The Precise Curator</div>
+
+          <div className="login-tag">
+            The Precise Curator
+          </div>
+
           <h1 className="login-headline">
-            Menjelajahi<br />Ilmu<br />dengan<br />Presisi.
+            Menjelajahi
+            <br />
+            Ilmu
+            <br />
+            dengan
+            <br />
+            Presisi.
           </h1>
+
           <p className="login-desc">
-            Selamat datang di Sistem Informasi Perpustakaan FMIPA.
-            Akses koleksi literatur sains terlengkap dalam lingkungan
-            digital yang terstruktur.
+
+            Selamat datang di Sistem
+            Informasi Perpustakaan FMIPA.
+
+            Akses koleksi literatur
+            sains terlengkap dalam
+            lingkungan digital yang
+            terstruktur.
+
           </p>
+
           <div className="login-faculty">
-            Fakultas Matematika dan Ilmu Pengetahuan Alam
+
+            Fakultas Matematika
+            dan Ilmu Pengetahuan Alam
+
           </div>
+
         </div>
+
       </div>
 
-
-      {/* Right Panel */}
+      {/* RIGHT PANEL */}
       <div className="login-right">
+
         <div>
-          <h2>Masuk ke Sistem<br />Perpustakaan FMIPA</h2>
-          <p>Masuk menggunakan akun terdaftar untuk mengakses layanan dan koleksi digital Perpustakaan FMIPA.</p>
 
+          <h2>
+            Masuk ke Sistem
+            <br />
+            Perpustakaan FMIPA
+          </h2>
 
-          <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: 8 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', marginBottom: 6, textTransform: 'uppercase', color: 'var(--navy)' }}>Username / Email</div>
-              <div className="login-input-wrap">
-                <Mail size={15} />
-                <input
-                  type="email"
-                  className="login-input"
-                  placeholder="nama@fmipa.ac.id"
-                  value={form.email}
-                  onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                  required
-                />
-              </div>
+          <p>
+
+            Login menggunakan akun
+            resmi UNESA untuk
+            mengakses layanan
+            perpustakaan digital.
+
+          </p>
+
+          {error && (
+
+            <div
+              style={{
+                background:'rgba(183,28,28,0.1)',
+                color:'var(--danger)',
+                padding:'10px 12px',
+                borderRadius:6,
+                fontSize:13,
+                marginTop:16
+              }}
+            >
+              {error}
             </div>
 
+          )}
 
-            <div style={{ marginBottom: 12 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--navy)' }}>Kata Sandi</div>
-                <a href="#" style={{ fontSize: 12, color: 'var(--maroon)', textDecoration: 'none', fontWeight: 500 }}>Lupa Kata Sandi?</a>
-              </div>
-              <div className="login-input-wrap">
-                <Lock size={15} />
-                <input
-                  type="password"
-                  className="login-input"
-                  placeholder="••••••••"
-                  value={form.password}
-                  onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-                  required
-                />
-              </div>
-            </div>
+          <div style={{ marginTop:24 }}>
 
+            <button
+              onClick={handleGoogleLogin}
+              className="btn btn-primary btn-lg"
+              style={{
+                width:'100%',
+                justifyContent:'center'
+              }}
+            >
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
-              <input
-                type="checkbox"
-                id="remember"
-                checked={form.remember}
-                onChange={e => setForm(f => ({ ...f, remember: e.target.checked }))}
-                style={{ accentColor: 'var(--maroon)' }}
-              />
-              <label htmlFor="remember" style={{ fontSize: 13, color: 'var(--gray-text)', cursor: 'pointer' }}>Ingat info login</label>
-            </div>
+              {loading
+                ? 'Memproses...'
+                : 'Login dengan Akun UNESA'}
 
-
-            {error && (
-              <div style={{ background: 'rgba(183,28,28,0.1)', color: 'var(--danger)', padding: '10px 12px', borderRadius: 6, fontSize: 13, marginBottom: 16 }}>
-                {error}
-              </div>
-            )}
-
-
-            <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%', justifyContent: 'center' }} disabled={loading}>
-              {loading ? 'Memproses...' : 'Masuk ke Sistem'}
             </button>
-          </form>
 
-
-          {/* Demo shortcuts */}
-          <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
-            <button onClick={() => fillDemo('admin')} className="btn btn-ghost btn-sm" style={{ flex: 1, justifyContent: 'center', fontSize: 11 }}>Demo Admin</button>
-            <button onClick={() => fillDemo('petugas')} className="btn btn-ghost btn-sm" style={{ flex: 1, justifyContent: 'center', fontSize: 11 }}>Demo Petugas</button>
-            <button onClick={() => fillDemo('mahasiswa')} className="btn btn-ghost btn-sm" style={{ flex: 1 }}>Demo Mahasiswa</button>
           </div>
-        </div>
 
-
-        <div style={{ textAlign: 'center', marginTop: 20, fontSize: 13, color: 'var(--gray-text)' }}>
-          Belum punya akun?{' '}
-          <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              navigate('/register');
+          <div
+            style={{
+              textAlign:'center',
+              marginTop:24,
+              fontSize:12,
+              color:'var(--gray-text)'
             }}
-            style={{ color: 'var(--maroon)', fontWeight: 600, textDecoration: 'none' }}
           >
-            Daftar di sini
-          </a>
-        </div>
-        <div>
-         
-          <div style={{ textAlign: 'center', marginTop: 24, fontSize: 11, color: 'var(--gray-text)', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-            © 2026 FMIPA UNESA — Library Management System Developed by Team 10
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
+            Hanya email resmi UNESA
+            yang dapat mengakses sistem
+
+          </div>
+
+        </div>
+
+        <div>
+
+          <div
+            style={{
+              textAlign:'center',
+              marginTop:24,
+              fontSize:11,
+              color:'var(--gray-text)',
+              letterSpacing:'0.5px',
+              textTransform:'uppercase'
+            }}
+          >
+
+            © 2026 FMIPA UNESA —
+            Library Management System
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  );
+
+}

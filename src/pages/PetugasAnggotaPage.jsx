@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, X, Check, Search, Printer, BookOpen, History, Trash2 } from 'lucide-react';
+import { X, Check, Search, BookOpen, History } from 'lucide-react';
 import { useApp } from '../components/AppContext';
 import { useAuth } from '../components/AuthContext';
 import ApiImage from '../components/ApiImage';
@@ -67,15 +67,34 @@ function MemberModal({ member = null, onSave, onClose }) {
   const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
 
   const handleSubmit = (e) => {
-  e.preventDefault();
-  onSave(form);
-};
+
+    e.preventDefault();
+
+    const allowedEmail =
+
+      form.email.endsWith("@unesa.ac.id") ||
+
+      form.email.endsWith("@mhs.unesa.ac.id");
+
+    if (!allowedEmail) {
+
+      alert(
+        "Gunakan email resmi UNESA"
+      );
+
+      return;
+
+    }
+
+    onSave(form);
+
+  };
  
   return (
     <div className="modal-overlay">
       <div className="modal">
         <div className="modal-header">
-          <h3 className="modal-title">Tambah Anggota Baru</h3>
+          <h3 className="modal-title">Edit Data Anggota</h3>
           <button className="modal-close" onClick={onClose}><X size={20} /></button>
         </div>
         <form onSubmit={handleSubmit}>
@@ -267,18 +286,14 @@ function MemberDetailModal({ member, loans, onClose, onEdit }) {
 }
 
 export default function AnggotaPage() {
-  const { members, loans, addMember, updateMember, deleteMember } = useApp();
+  const { members, loans, updateMember } = useApp();
   const { user } = useAuth();
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('semua');
-  const [addModal, setAddModal] = useState(false);
   const [detailMember, setDetailMember] = useState(null);
   const [editMember, setEditMember] = useState(null);
-  const [deleteMemberData, setDeleteMemberData] = useState(null);
 
   const filtered = members.filter(m =>
-
-  m.type !== 'staff' &&
 
   (typeFilter === 'semua' || m.type === typeFilter) &&
 
@@ -293,17 +308,49 @@ export default function AnggotaPage() {
 
   const mahasiswa = members.filter(m => m.type === 'mahasiswa' && m.status === 'aktif').length;
   const dosen = members.filter(m => m.type === 'dosen' && m.status === 'aktif').length;
-  const staff = members.filter(m => m.type === 'staff' && m.status === 'aktif').length;
 
-  const typeBadge = (type) => {
-    if (type === 'mahasiswa') return <span className="badge badge-info">Mahasiswa</span>;
-    if (type === 'dosen') return <span className="badge badge-success">Dosen</span>;
-    return <span className="badge badge-neutral">Staff</span>;
-  };
+ const typeBadge = (member) => {
+
+  if (member.role === 'petugas') {
+
+    return (
+      <span className="badge badge-warning">
+        Petugas
+      </span>
+    );
+
+  }
+
+  if (member.role === 'admin') {
+
+    return (
+      <span className="badge badge-danger">
+        Admin
+      </span>
+    );
+
+  }
+
+  if (member.type === 'mahasiswa') {
+
+    return (
+      <span className="badge badge-info">
+        Mahasiswa
+      </span>
+    );
+
+  }
+
+  return (
+    <span className="badge badge-success">
+      Dosen
+    </span>
+  );
+
+};
 
   return (
     <div>
-      {addModal && <MemberModal onSave={(m) => { addMember(m); setAddModal(false); }} onClose={() => setAddModal(false)} />}
       {detailMember && (
     <MemberDetailModal
     member={detailMember}
@@ -327,67 +374,6 @@ export default function AnggotaPage() {
   />
 )}
 
-{deleteMemberData && (
-  <div className="modal-overlay">
-    <div
-      className="modal"
-      style={{
-        maxWidth: 420,
-        textAlign: 'center'
-      }}
-    >
-
-      <div
-        style={{
-          fontSize: 18,
-          fontWeight: 700,
-          marginBottom: 10
-        }}
-      >
-        Hapus Anggota?
-      </div>
-
-      <div
-        style={{
-          color: 'var(--gray-text)',
-          marginBottom: 24
-        }}
-      >
-        Yakin ingin menghapus
-        <b> {deleteMemberData.name}</b> ?
-      </div>
-
-      <div
-        style={{
-          display: 'flex',
-          gap: 10,
-          justifyContent: 'center'
-        }}
-      >
-        <button
-          className="btn btn-ghost"
-          onClick={() => setDeleteMemberData(null)}
-        >
-          Batal
-        </button>
-
-        <button
-          className="btn btn-danger"
-          onClick={async () => {
-            const success =
-              await deleteMember(deleteMemberData.id);
-            if (success) {
-              setDeleteMemberData(null);
-            }
-
-          }}
-        >
-          Hapus
-        </button>
-      </div>
-    </div>
-  </div>
-)}
 
       <div className="page-header">
         <div className="page-breadcrumb">Data Anggota</div>
@@ -416,13 +402,6 @@ export default function AnggotaPage() {
       <div className="flex-between mb-16" style={{ flexWrap:'wrap', gap:10 }}>
 
         <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-
-          <button
-            className="btn btn-primary btn-sm"
-            onClick={() => setAddModal(true)}
-          >
-            <Plus size={14} /> Tambah Anggota
-          </button>
 
 
           <div style={{ display:'flex', gap:8 }}>
@@ -560,19 +539,19 @@ export default function AnggotaPage() {
                   </td>
                   <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{m.nim}</td>
                   <td>{m.departemen}</td>
-                  <td>{typeBadge(m.type)}</td>
+                  <td>{typeBadge(m)}</td>
                   <td style={{ color: 'var(--gray-text)' }}>{m.joinDate}</td>
                   <td>
                   <button
-                    className="btn btn-danger btn-sm"
+                    className="btn btn-outline btn-sm"
                     onClick={(e) => {
                       e.stopPropagation();
-                        setDeleteMemberData(m);
-                      
+                      setEditMember(m);
                     }}
                   >
-                    <Trash2 size={14} />
+                    Edit
                   </button>
+
                 </td>
                 </tr>
               ))}

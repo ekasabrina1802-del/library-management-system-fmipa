@@ -2,84 +2,198 @@ import { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext(null);
 
-// 🔥 ambil dari .env (Vite)
 const API_URL = import.meta.env.VITE_API_URL;
 
 export function AuthProvider({ children }) {
 
-  // ✅ ambil dari localStorage
+  // USER LOGIN
   const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem('user');
-    return savedUser ? JSON.parse(savedUser) : null;
+
+    const savedUser =
+      localStorage.getItem('user');
+
+    return savedUser
+      ? JSON.parse(savedUser)
+      : null;
+
   });
 
-  // ✅ simpan ke localStorage setiap login
+  // SIMPAN LOGIN
   useEffect(() => {
+
     if (user) {
-      localStorage.setItem('user', JSON.stringify(user));
+
+      localStorage.setItem(
+        'user',
+        JSON.stringify(user)
+      );
+
     }
+
   }, [user]);
 
-// upload foto 
+  // UPDATE FOTO
   const updateUserPhoto = (photo_url) => {
-  setUser(prev => {
-    const updated = { ...prev, photo_url };
-    localStorage.setItem('user', JSON.stringify(updated));
-    return updated;
-  });
-};
 
-  // LOGIN
-  const login = async (email, password) => {
-    try {
-      const response = await fetch(`${API_URL}/api/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
+    setUser(prev => {
 
-      const data = await response.json();
+      const updated = {
+        ...prev,
+        photo_url
+      };
 
-      if (response.ok && data.success) {
-        setUser(data.user); // 🔥 ini sekarang persistent
-        return { success: true, role: data.user.role };
-      } else {
-        return { success: false, message: data.message || 'Email atau password salah' };
-      }
-    } catch (error) {
-      console.error("Auth Error:", error);
-      return { success: false, message: 'Gagal terhubung ke server backend!' };
-    }
+      localStorage.setItem(
+        'user',
+        JSON.stringify(updated)
+      );
+
+      return updated;
+
+    });
+
   };
 
-  // REGISTER (biarin dulu)
-  const register = async (email, password, name) => {
-    try {
-      const response = await fetch(`${API_URL}/api/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password })
-      });
+  // LOGIN GOOGLE
+  const loginWithGoogle = async (googleUser) => {
 
-      const data = await response.json();
+    try {
+
+      const email = googleUser.email;
+
+      // VALIDASI EMAIL
+      const allowed =
+
+        email.endsWith("@mhs.unesa.ac.id") ||
+
+        email.endsWith("@unesa.ac.id");
+
+      if (!allowed) {
+
+        return {
+          success: false,
+          message:
+            "Hanya email UNESA yang diperbolehkan"
+        };
+
+      }
+
+      // DEFAULT ROLE
+      let role = "dosen";
+
+      // MAHASISWA
+      if (
+        email.endsWith("@mhs.unesa.ac.id")
+      ) {
+
+        role = "mahasiswa";
+
+      }
+
+      // ADMIN TETAP
+      if (
+        email === "admin.perpus@unesa.ac.id"
+      ) {
+
+        role = "admin";
+
+      }
+
+      // LOGIN BACKEND
+      const response = await fetch(
+
+        `${API_URL}/api/login-google`,
+
+        {
+
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+
+          body: JSON.stringify({
+
+            email,
+
+            name: googleUser.name,
+
+            role
+
+          })
+
+        }
+      );
+
+      const data =
+        await response.json();
+
+      if (data.success) {
+
+        setUser(data.user);
+
+        return {
+
+          success: true,
+
+          role: data.user.role
+
+        };
+
+      }
+
       return data;
 
     } catch (error) {
+
       console.error(error);
-      return { success: false, message: 'Gagal koneksi ke server' };
+
+      return {
+
+        success: false,
+
+        message:
+          "Gagal login Google"
+
+      };
+
     }
+
   };
 
+  // LOGOUT
   const logout = () => {
+
     setUser(null);
-    localStorage.removeItem('user'); // optional aman
+
+    localStorage.removeItem('user');
+
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, register , updateUserPhoto }}>
+
+    <AuthContext.Provider
+
+      value={{
+
+        user,
+
+        logout,
+
+        updateUserPhoto,
+
+        loginWithGoogle
+
+      }}
+    >
+
       {children}
+
     </AuthContext.Provider>
+
   );
+
 }
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () =>
+  useContext(AuthContext);

@@ -2,22 +2,32 @@
 // In a real app, replace this with API calls to your backend (Node.js + MySQL/PostgreSQL)
 
 export const USERS = [
+
+  // ADMIN UTAMA (HANYA 1)
   {
-    email: 'admin@fmipa.ac.id',
-    password: 'admin123',
+    email: 'admin.perpus.fmipa@unesa.ac.id',
     role: 'admin',
   },
+
+  // PETUGAS PERPUSTAKAAN
   {
-    email: 'petugas@fmipa.ac.id',
-    password: 'petugas123',
+    email: 'petugas1.perpus@unesa.ac.id',
     role: 'petugas',
   },
+
+  // DOSEN
   {
-    email: 'mahasiswa@fmipa.ac.id',
-    password: 'mhs123',
+    email: 'rizky.basatha@unesa.ac.id',
+    role: 'dosen',
+  },
+
+  // MAHASISWA
+  {
+    email: '24050974001@mhs.unesa.ac.id',
     role: 'mahasiswa',
-    nama: 'Budi Mahasiswa' // opsional (kalau mau ditampilkan)
+    nama: 'Rico Mahasiswa'
   }
+
 ];
 
 export const BOOKS = [
@@ -34,16 +44,19 @@ export const BOOKS = [
 ];
 
 export const MEMBERS = [
-  { id: 'M001', name: 'Siti Rahayu', nim: '20010001', departemen: 'Matematika', prodi: 'S1 Matematika', type: 'mahasiswa', joinDate: '2023-08-01', status: 'aktif', email: 'siti@mahasiswa.unesa.ac.id', phone: '081234567890', address: 'Surabaya' },
-  { id: 'M002', name: 'Dr. Ahmad Fauzi', nim: '198502012010121001', departemen: 'Fisika', prodi: 'Dosen Fisika', type: 'dosen', joinDate: '2022-01-10', status: 'aktif', email: 'ahmad.fauzi@fmipa.ac.id', phone: '081298765432', address: 'Surabaya' },
-  { id: 'M003', name: 'Budi Prasetyo', nim: '21010002', departemen: 'Kimia', prodi: 'S1 Kimia', type: 'mahasiswa', joinDate: '2024-02-14', status: 'aktif', email: 'budi@mahasiswa.unesa.ac.id', phone: '082345678901', address: 'Sidoarjo' },
-  { id: 'M004', name: 'Dewi Anggraini', nim: '20010003', departemen: 'Biologi', prodi: 'S1 Biologi', type: 'mahasiswa', joinDate: '2023-08-01', status: 'aktif', email: 'dewi@mahasiswa.unesa.ac.id', phone: '083456789012', address: 'Gresik' },
-  { id: 'M005', name: 'Prof. Rina Susanti', nim: '197803152005012002', departemen: 'Kimia', prodi: 'Dosen Kimia', type: 'dosen', joinDate: '2021-09-05', status: 'aktif', email: 'rina.susanti@fmipa.ac.id', phone: '087654321098', address: 'Surabaya' },
-  { id: 'M006', name: 'Fajar Nugroho', nim: '22010004', departemen: 'Matematika', prodi: 'S1 Matematika', type: 'mahasiswa', joinDate: '2024-08-01', status: 'aktif', email: 'fajar@mahasiswa.unesa.ac.id', phone: '085678901234', address: 'Surabaya' },
-  { id: 'M007', name: 'Nur Azizah', nim: '21010005', departemen: 'Fisika', prodi: 'S1 Fisika', type: 'mahasiswa', joinDate: '2024-02-20', status: 'aktif', email: 'nur@mahasiswa.unesa.ac.id', phone: '089876543210', address: 'Mojokerto' },
-  { id: 'M008', name: 'Indra Wahyu', nim: '20010006', departemen: 'Biologi', prodi: 'S1 Biologi', type: 'mahasiswa', joinDate: '2023-08-10', status: 'tidak aktif', email: 'indra@mahasiswa.unesa.ac.id', phone: '081122334455', address: 'Surabaya' },
-  { id: 'M009', name: 'Dr. Hendra Kusuma', nim: '197601102001121001', departemen: 'Matematika', prodi: 'Dosen Matematika', type: 'dosen', joinDate: '2022-03-15', status: 'aktif', email: 'hendra@fmipa.ac.id', phone: '081554433221', address: 'Surabaya' },
-  { id: 'M010', name: 'Lina Kartika', nim: '23010007', departemen: 'Kimia', prodi: 'S1 Kimia', type: 'mahasiswa', joinDate: '2025-08-01', status: 'aktif', email: 'lina@mahasiswa.unesa.ac.id', phone: '082233445566', address: 'Lamongan' },
+
+  { id: 'M001', name: 'Rico Sanjaya', nim: '24050974001', departemen: 'Matematika', prodi: 'S1 Matematika', type: 'mahasiswa', role: 'mahasiswa', joinDate: '2025-08-01', status: 'aktif', email: '24050974001@mhs.unesa.ac.id', phone: '081234567890', address: 'Surabaya' },
+  { id: 'M002', name: 'Rizky Basatha', nim: '198502012010121001', departemen: 'Fisika', prodi: 'Dosen Fisika', type: 'dosen', role: 'dosen', joinDate: '2022-01-10', status: 'aktif', email: 'rizky.basatha@unesa.ac.id', phone: '081298765432', address: 'Surabaya' },
+  { id: 'M003', name: 'Budi Prasetyo', nim: '21010002', departemen: 'Kimia', prodi: 'S1 Kimia', type: 'mahasiswa', role: 'mahasiswa', joinDate: '2024-02-14', status: 'aktif', email: '21010002@mhs.unesa.ac.id', phone: '082345678901', address: 'Sidoarjo' },
+  { id: 'M004', name: 'Dewi Anggraini', nim: '20010003', departemen: 'Biologi', prodi: 'S1 Biologi', type: 'mahasiswa', role: 'mahasiswa', joinDate: '2023-08-01', status: 'aktif', email: '20010003@mhs.unesa.ac.id', phone: '083456789012', address: 'Gresik' },
+  { id: 'M005', name: 'Prof. Rina Susanti', nim: '197803152005012002', departemen: 'Kimia', prodi: 'Dosen Kimia', type: 'dosen', role: 'dosen', joinDate: '2021-09-05', status: 'aktif', email: 'rina.susanti@unesa.ac.id', phone: '087654321098', address: 'Surabaya' },
+  { id: 'M006', name: 'Fajar Nugroho', nim: '22010004', departemen: 'Matematika', prodi: 'S1 Matematika', type: 'mahasiswa', role: 'mahasiswa', joinDate: '2024-08-01', status: 'aktif', email: '22010004@mhs.unesa.ac.id', phone: '085678901234', address: 'Surabaya' },
+  { id: 'M007', name: 'Nur Azizah', nim: '21010005', departemen: 'Fisika', prodi: 'S1 Fisika', type: 'mahasiswa', role: 'mahasiswa', joinDate: '2024-02-20', status: 'aktif', email: '21010005@mhs.unesa.ac.id', phone: '089876543210', address: 'Mojokerto' },
+  { id: 'M008', name: 'Indra Wahyu', nim: '20010006', departemen: 'Biologi', prodi: 'S1 Biologi', type: 'mahasiswa', role: 'mahasiswa', joinDate: '2023-08-10', status: 'tidak aktif', email: '20010006@mhs.unesa.ac.id', phone: '081122334455', address: 'Surabaya' },
+  { id: 'M009', name: 'Dr. Hendra Kusuma', nim: '197601102001121001', departemen: 'Matematika', prodi: 'Dosen Matematika', type: 'dosen', role: 'dosen', joinDate: '2022-03-15', status: 'aktif', email: 'hendra@unesa.ac.id', phone: '081554433221', address: 'Surabaya' },
+  { id: 'M010', name: 'Lina Kartika', nim: '23010007', departemen: 'Kimia', prodi: 'S1 Kimia', type: 'mahasiswa', role: 'mahasiswa', joinDate: '2025-08-01', status: 'aktif', email: '23010007@mhs.unesa.ac.id', phone: '082233445566', address: 'Lamongan' },
+  { id: 'M011', name: 'Petugas Perpustakaan', nim: '198001012005011001', departemen: 'Perpustakaan', prodi: 'Staff Perpustakaan', type: 'dosen', role: 'petugas', joinDate: '2021-05-20', status: 'aktif', email: 'petugas1.perpus@unesa.ac.id', phone: '081355667788', address: 'Surabaya' },
+  { id: 'M012', name: 'Admin Perpustakaan', nim: '197901012003121001', departemen: 'Perpustakaan', prodi: 'Administrator', type: 'dosen', role: 'admin', joinDate: '2020-01-01', status: 'aktif', email: 'admin.perpus.fmipa@unesa.ac.id', phone: '081122334455', address: 'Surabaya' },
 ];
 
 export const LOANS = [

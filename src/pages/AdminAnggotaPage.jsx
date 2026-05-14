@@ -279,7 +279,7 @@ function MemberDetailModal({ member, loans, onClose, onEdit }) {
 
 
 export default function AnggotaPage() {
-  const { members, loans, addMember, updateMember, deleteMember } = useApp();
+  const { members, loans, updateMember } = useApp();
   const { user } = useAuth();
   const [search, setSearch] = useState('');
   const [addModal, setAddModal] = useState(false);
@@ -335,61 +335,7 @@ const filtered = members.filter(m =>
           onClose={() => setDetailMember(null)}
         />
       )}
-
-
-      {deleteMemberData && (
-        <div className="modal-overlay">
-          <div
-            className="modal"
-            style={{
-              maxWidth: 420,
-              textAlign: 'center'
-            }}
-          >
-            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 10 }}>
-              Hapus Petugas?
-            </div>
-
-            <div
-              style={{
-                color: 'var(--gray-text)',
-                marginBottom: 24
-              }}
-            >
-              Yakin ingin menghapus
-              <b> {deleteMemberData.name}</b> ?
-            </div>
-
-            <div
-              style={{
-                display: 'flex',
-                gap: 10,
-                justifyContent: 'center'
-              }}
-            >
-              <button
-                className="btn btn-ghost"
-                onClick={() => setDeleteMemberData(null)}
-              >
-                Batal
-              </button>
-
-              <button
-                className="btn btn-danger"
-                onClick={async () => {
-                const success = await deleteMember(deleteMemberData.id);
-
-                if (success) {
-                  setDeleteMemberData(null);
-                }
-                }}
-              >
-                Hapus
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      
 
       <div className="page-header">
         <div className="page-breadcrumb">Data Petugas</div>
@@ -411,9 +357,6 @@ const filtered = members.filter(m =>
 
       <div className="card">
         <div className="flex-between mb-16" style={{ flexWrap: 'wrap', gap: 10 }}>
-          <button className="btn btn-primary btn-sm" onClick={() => setAddModal(true)}>
-            <Plus size={14} /> Tambah Petugas
-          </button>
           <div style={{ position: 'relative' }}>
             <Search size={13} style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: 'var(--gray-text)' }} />
             <input className="form-control" style={{ paddingLeft: 30, width: 260 }} placeholder="Cari nama atau email..." value={search} onChange={e => setSearch(e.target.value)} />
@@ -507,18 +450,30 @@ const filtered = members.filter(m =>
                     {m.joinDate}
                   </td>
 
-                  <td>
                   <button
-                    className="btn btn-danger btn-sm"
+                    className="btn btn-primary btn-sm"
                     onClick={(e) => {
+
                       e.stopPropagation();
-                        setDeleteMemberData(m);
-                      
+
+                      // VALIDASI EMAIL
+                      if (!m.email.endsWith("@unesa.ac.id")) {
+
+                        alert(
+                          "Hanya email @unesa.ac.id yang bisa menjadi petugas"
+                        );
+
+                        return;
+                      }
+
+                      updateMember(m.id, {
+                        role: "petugas"
+                      });
+
                     }}
                   >
-                    <Trash2 size={14} />
+                    Jadikan Petugas
                   </button>
-                </td>
                 </tr>
               ))}
             </tbody>
