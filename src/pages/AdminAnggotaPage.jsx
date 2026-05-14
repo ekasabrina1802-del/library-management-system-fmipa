@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, X, Check, Search, Printer, BookOpen, History, Trash2 } from 'lucide-react';
+import { X, Check, Search, BookOpen } from 'lucide-react';
 import { useApp } from '../components/AppContext';
 import { useAuth } from '../components/AuthContext';
 import ApiImage from '../components/ApiImage';
@@ -279,26 +279,24 @@ function MemberDetailModal({ member, loans, onClose, onEdit }) {
 
 
 export default function AnggotaPage() {
-  const { members, loans, updateMember } = useApp();
-  const { user } = useAuth();
+const { members, loans, updateMember, promoteToPetugas, addMember } = useApp();
   const [search, setSearch] = useState('');
   const [addModal, setAddModal] = useState(false);
   const [detailMember, setDetailMember] = useState(null);
   const [editMember, setEditMember] = useState(null);
-  const [deleteMemberData, setDeleteMemberData] = useState(null);
 
 
 const filtered = members.filter(m =>
-  m.type === 'staff' &&
+  m.role !== 'admin' &&
+  m.email?.endsWith("@unesa.ac.id") &&
   (
     !search ||
-    m.name.toLowerCase().includes(search.toLowerCase()) ||
-    m.email.toLowerCase().includes(search.toLowerCase())
+    m.name?.toLowerCase().includes(search.toLowerCase()) ||
+    m.email?.toLowerCase().includes(search.toLowerCase())
   )
 );
 
-
-  const staff = members.filter(m => m.type === 'staff' && m.status === 'aktif').length;
+ const staff = members.filter(m => m.role === 'petugas' && m.status === 'aktif').length;
 
 
   return (
@@ -312,6 +310,7 @@ const filtered = members.filter(m =>
     onClose={() => setAddModal(false)}
   />
 )}
+
 
       {editMember && (
         <MemberModal
@@ -450,30 +449,27 @@ const filtered = members.filter(m =>
                     {m.joinDate}
                   </td>
 
-                  <button
-                    className="btn btn-primary btn-sm"
-                    onClick={(e) => {
+                  <td>
+  {m.role !== 'petugas' ? (
+    <button
+      className="btn btn-primary btn-sm"
+      onClick={async (e) => {
+        e.stopPropagation();
 
-                      e.stopPropagation();
+        if (!m.email?.endsWith("@unesa.ac.id")) {
+          alert("Hanya email @unesa.ac.id yang bisa menjadi petugas");
+          return;
+        }
 
-                      // VALIDASI EMAIL
-                      if (!m.email.endsWith("@unesa.ac.id")) {
-
-                        alert(
-                          "Hanya email @unesa.ac.id yang bisa menjadi petugas"
-                        );
-
-                        return;
-                      }
-
-                      updateMember(m.id, {
-                        role: "petugas"
-                      });
-
-                    }}
-                  >
-                    Jadikan Petugas
-                  </button>
+        await promoteToPetugas(m.id);
+      }}
+    >
+      Jadikan Petugas
+    </button>
+  ) : (
+    <span className="badge badge-warning">Petugas</span>
+  )}
+</td>
                 </tr>
               ))}
             </tbody>

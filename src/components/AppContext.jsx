@@ -288,118 +288,51 @@ export function AppProvider({ children }) {
    *   mahasiswa → +7 hari, dosen → +30 hari
    * Response: { success, loan: { id, dueDate, memberName, bookTitle, ... }, message }
    */
-  const addLoan = async ({
-      memberId,
-      bookId,
-      copyId,
-      copyCode
-    }) => {
+const addLoan = async ({ memberId, bookId, copyId, copyCode }) => {
+  try {
+    const res = await fetch(`${API_URL}/api/loans`, {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({
+        memberId,
+        bookId,
+        copyId,
+        copyCode
+      })
+    });
 
-      try {
+    const data = await res.json();
 
-        const res = await fetch(
-          `${API_URL}/api/loans`,
-          {
-            method: 'POST',
+    if (data.success) {
+      await fetchBooks();
+      await fetchLoans();
 
-            headers: jsonHeaders,
+      addLog(
+        'loan',
+        `Copy buku "${copyCode}" dipinjam oleh anggota ID ${memberId}`,
+        'loan'
+      );
 
-            body: JSON.stringify({
-              memberId,
-              bookId,
-              copyId,
-              copyCode
-            })
-          }
-        );
-
-        const data = await res.json();
-
-        if (data.success) {
-
-          // UPDATE STATUS COPY
-          setBooks(prev =>
-            prev.map(book => {
-
-              if (book.id !== bookId)
-                return book;
-
-              return {
-                ...book,
-
-                copies: book.copies.map(copy => {
-
-                  if (copy.id === copyId) {
-
-                    return {
-                      ...copy,
-                      status: 'borrowed'
-                    };
-
-                  }
-
-                  return copy;
-                })
-              };
-            })
-          );
-
-          await fetchLoans();
-
-          addLog(
-            'loan',
-
-            `Copy buku "${copyCode}" dipinjam oleh anggota ID ${memberId}`,
-
-            'loan'
-          );
-
-          return {
-            success: true,
-            loan: data.loan || null
-          };
-        }
-
-        return {
-          success: false,
-          message:
-            data.message ||
-            'Gagal memproses peminjaman'
-        };
-
-      } catch (err) {
-
-        console.error(
-          'Gagal tambah peminjaman:',
-          err
-        );
-
-        return {
-          success: false,
-          message:
-            'Gagal menambahkan peminjaman'
-        };
-      }
-
-    try {
-      const res = await fetch(`${API_URL}/api/loans`, {
-        method: 'POST',
-        headers: jsonHeaders,
-        body: JSON.stringify({ bookCode, memberId })
-      });
-      const data = await res.json();
-      if (data.success) {
-        await fetchBooks();
-        await fetchLoans();
-        addLog('loan', `Peminjaman dicatat oleh ${user?.name}: buku "${bookCode}" dipinjam oleh anggota ID ${memberId}`, 'loan');
-        return { success: true, loan: data.loan || null };
-      }
-      return { success: false, message: data.message || 'Gagal memproses peminjaman' };
-    } catch (err) {
-      console.error('Gagal tambah peminjaman:', err);
-      return { success: false, message: 'Gagal menambahkan peminjaman' };
+      return {
+        success: true,
+        loan: data.loan || null
+      };
     }
-  };
+
+    return {
+      success: false,
+      message: data.message || 'Gagal memproses peminjaman'
+    };
+
+  } catch (err) {
+    console.error('Gagal tambah peminjaman:', err);
+
+    return {
+      success: false,
+      message: 'Gagal menambahkan peminjaman'
+    };
+  }
+};
 
   /**
    * Perpanjang pinjaman berdasarkan loan ID.
@@ -643,6 +576,31 @@ export function AppProvider({ children }) {
     );
   };
 
+  const promoteToPetugas = async (memberId) => {
+  try {
+    const res = await fetch(`${API_URL}/api/members/${memberId}/promote-petugas`, {
+      method: 'PUT',
+      headers: jsonHeaders
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      await fetchMembers();
+      addLog('member', `Anggota ID ${memberId} dijadikan petugas`, 'member');
+      return true;
+    }
+
+    alert(data.message || 'Gagal menjadikan petugas');
+    return false;
+
+  } catch (err) {
+    console.error('Promote petugas error:', err);
+    alert('Backend promote petugas error');
+    return false;
+  }
+};
+
   // ─── Provider ────────────────────────────────────────────────────────────────
 
   return (
@@ -661,6 +619,7 @@ export function AppProvider({ children }) {
         addMember,
         updateMember,
         deleteMember,
+        promoteToPetugas,
         addLoan,
         extendLoan,
         returnBook,

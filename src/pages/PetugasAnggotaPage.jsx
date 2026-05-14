@@ -294,17 +294,14 @@ export default function AnggotaPage() {
   const [editMember, setEditMember] = useState(null);
 
   const filtered = members.filter(m =>
-
   (typeFilter === 'semua' || m.type === typeFilter) &&
-
   (
     !search ||
-    m.name.toLowerCase().includes(search.toLowerCase()) ||
-    m.nim.includes(search) ||
-    m.departemen.toLowerCase().includes(search.toLowerCase())
+    m.name?.toLowerCase().includes(search.toLowerCase()) ||
+    m.nim?.includes(search) ||
+    m.departemen?.toLowerCase().includes(search.toLowerCase())
   )
-
-  );
+);
 
   const mahasiswa = members.filter(m => m.type === 'mahasiswa' && m.status === 'aktif').length;
   const dosen = members.filter(m => m.type === 'dosen' && m.status === 'aktif').length;

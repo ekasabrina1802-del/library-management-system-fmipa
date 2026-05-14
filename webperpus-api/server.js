@@ -5,7 +5,10 @@ const multer = require('multer');
 const path = require('path');
 const bcrypt = require('bcrypt');
 const fs = require('fs');
+const { OAuth2Client } = require('google-auth-library');
 require('dotenv').config();
+
+
 
 const app = express();
 
@@ -65,6 +68,8 @@ const dbConfig = {
         instanceName: 'SQLEXPRESS'
     }
 };
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID); 
 
 // 🔹 Route LOGIN (VERSI BERSIH)
 app.post('/api/login', async (req, res) => {
@@ -200,26 +205,395 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
+app.post('/api/login-google', async (req, res) => {
+  const { credential } = req.body;
+
+if (!credential) {
+  return res.status(400).json({
+    success: false,
+    message: 'Credential Google wajib dikirim'
+  });
+}
+
+let payload;
+
+try {
+  const ticket = await googleClient.verifyIdToken({
+    idToken: credential,
+    audience: process.env.GOOGLE_CLIENT_ID
+  });
+
+  payload = ticket.getPayload();
+} catch (err) {
+  console.error('Google Token Verify Error:', err);
+
+  return res.status(401).json({
+    success: false,
+    message: 'Token Google tidak valid'
+  });
+}
+
+if (!payload.email_verified) {
+  return res.status(403).json({
+    success: false,
+    message: 'Email Google belum terverifikasi'
+  });
+}
+
+const email = normalizeEmail(payload.email);
+const name = payload.name?.trim() || email.split('@')[0];
+
+  if (!isAllowedUnesaEmail(email)) {
+    return res.status(403).json({
+      success: false,
+      message: 'Hanya email resmi UNESA yang diperbolehkan'
+    });
+  }
+
+  try {
+    const pool = await sql.connect(dbConfig);
+    const transaction = new sql.Transaction(pool);
+
+    await transaction.begin();
+
+    const defaultRole = getDefaultRole(email);
+    const jenis = getIdentityType(email);
+
+    const userCheck = await new sql.Request(transaction)
+      .input('email', sql.VarChar, email)
+      .query(`
+        SELECT id, role
+        FROM Users
+        WHERE email = @email
+      `);
+
+    let userId;
+    let finalRole = defaultRole;
+
+    if (userCheck.recordset.length > 0) {
+      userId = userCheck.recordset[0].id;
+
+      // Penting: role dari DB dipertahankan supaya petugas tidak turun jadi dosen.
+      finalRole =
+        email === ADMIN_EMAIL
+          ? 'admin'
+          : userCheck.recordset[0].role || defaultRole;
+
+      await new sql.Request(transaction)
+        .input('id', sql.Int, userId)
+        .input('username', sql.VarChar, name)
+        .input('role', sql.VarChar, finalRole)
+        .query(`
+          UPDATE Users
+          SET username = @username, role = @role
+          WHERE id = @id
+        `);
+    } else {
+      const insertedUser = await new sql.Request(transaction)
+        .input('username', sql.VarChar, name)
+        .input('email', sql.VarChar, email)
+        .input('password', sql.VarChar, null)
+        .input('role', sql.VarChar, defaultRole)
+        .query(`
+          INSERT INTO Users (username, email, password, role)
+          VALUES (@username, @email, @password, @role);
+
+          SELECT CAST(SCOPE_IDENTITY() AS int) AS id;
+        `);
+
+      userId = insertedUser.recordset[0].id;
+      finalRole = defaultRole;
+    }
+
+    const anggotaCheck = await new sql.Request(transaction)
+      .input('email', sql.VarChar, email)
+      .query(`
+        SELECT id
+        FROM Anggota
+        WHERE email = @email
+      `);
+
+    let anggotaId;
+
+    if (anggotaCheck.recordset.length > 0) {
+      anggotaId = anggotaCheck.recordset[0].id;
+
+      await new sql.Request(transaction)
+        .input('id', sql.Int, anggotaId)
+        .input('name', sql.VarChar, name)
+        .input('jenis', sql.VarChar, jenis)
+        .query(`
+          UPDATE Anggota
+          SET
+            name = @name,
+            jenis = CASE
+              WHEN jenis IS NULL OR jenis = 'staff' THEN @jenis
+              ELSE jenis
+            END
+          WHERE id = @id
+        `);
+    } else {
+      const customId = await generateCustomId(pool, jenis, finalRole);
+
+      const localPart = email.split('@')[0];
+      const autoNim = jenis === 'mahasiswa' ? localPart : null;
+
+      const insertedAnggota = await new sql.Request(transaction)
+        .input('custom_id', sql.VarChar, customId)
+        .input('name', sql.VarChar, name)
+        .input('email', sql.VarChar, email)
+        .input('jenis', sql.VarChar, jenis)
+        .input('nim', sql.VarChar, autoNim)
+        .input('jurusan', sql.VarChar, null)
+        .input('departemen', sql.VarChar, null)
+        .input('prodi', sql.VarChar, null)
+        .query(`
+          INSERT INTO Anggota
+            (custom_id, name, email, jenis, nim, jurusan, departemen, prodi)
+          VALUES
+            (@custom_id, @name, @email, @jenis, @nim, @jurusan, @departemen, @prodi);
+
+          SELECT CAST(SCOPE_IDENTITY() AS int) AS id;
+        `);
+
+      anggotaId = insertedAnggota.recordset[0].id;
+    }
+
+    const userResult = await new sql.Request(transaction)
+      .input('email', sql.VarChar, email)
+      .query(`
+        SELECT
+          U.id AS userId,
+          U.username,
+          U.email,
+          U.role,
+          A.id AS anggotaId,
+          A.custom_id,
+          A.nim,
+          A.jenis AS type,
+          A.departemen,
+          A.prodi,
+          A.phone,
+          A.address,
+          A.photo_url,
+          A.profile_completed
+        FROM Users U
+        LEFT JOIN Anggota A ON U.email = A.email
+        WHERE U.email = @email
+      `);
+
+    await transaction.commit();
+
+    const user = userResult.recordset[0];
+
+    return res.json({
+      success: true,
+      user: {
+        id: user.userId,
+        anggotaId: user.anggotaId,
+        memberId: user.anggotaId,
+        customId: user.custom_id,
+        name: user.username,
+        email: user.email,
+        role: user.role,
+        type: user.type,
+        nim: user.nim,
+        departemen: user.departemen,
+        prodi: user.prodi,
+        phone: user.phone,
+        address: user.address,
+        photo_url: user.photo_url,
+        profileCompleted: Boolean(user.profile_completed),
+        avatar: user.username?.charAt(0)?.toUpperCase() || 'U'
+      }
+    });
+
+  } catch (err) {
+    console.error('Google Login Error:', err);
+    return res.status(500).json({
+      success: false,
+      message: 'Gagal login Google'
+    });
+  }
+});
+
+app.post('/api/dev-login', async (req, res) => {
+  const { role } = req.body;
+
+  const allowedRoles = ['admin', 'petugas', 'dosen'];
+
+  if (!allowedRoles.includes(role)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Role dev tidak valid'
+    });
+  }
+
+  const devUsers = {
+    admin: {
+      email: 'dev.admin@unesa.ac.id',
+      name: 'Dev Admin Perpustakaan',
+      role: 'admin',
+      type: 'dosen',
+      nim: 'ADMDEV001',
+      customId: 'ADMDEV001'
+    },
+    petugas: {
+      email: 'dev.petugas@unesa.ac.id',
+      name: 'Dev Petugas Perpustakaan',
+      role: 'petugas',
+      type: 'dosen',
+      nim: 'PTGDEV001',
+      customId: 'PSDEV001'
+    },
+    dosen: {
+      email: 'dev.dosen@unesa.ac.id',
+      name: 'Dev Dosen',
+      role: 'dosen',
+      type: 'dosen',
+      nim: 'DSDEV001',
+      customId: 'DSDEV001'
+    }
+  };
+
+  const selected = devUsers[role];
+
+  try {
+    const pool = await sql.connect(dbConfig);
+
+    const userCheck = await pool.request()
+      .input('email', sql.VarChar, selected.email)
+      .query(`
+        SELECT id
+        FROM Users
+        WHERE email = @email
+      `);
+
+    if (userCheck.recordset.length === 0) {
+      await pool.request()
+        .input('username', sql.VarChar, selected.name)
+        .input('email', sql.VarChar, selected.email)
+        .input('password', sql.VarChar, null)
+        .input('role', sql.VarChar, selected.role)
+        .query(`
+          INSERT INTO Users (username, email, password, role)
+          VALUES (@username, @email, @password, @role)
+        `);
+    } else {
+      await pool.request()
+        .input('email', sql.VarChar, selected.email)
+        .input('username', sql.VarChar, selected.name)
+        .input('role', sql.VarChar, selected.role)
+        .query(`
+          UPDATE Users
+          SET username = @username, role = @role
+          WHERE email = @email
+        `);
+    }
+
+    const anggotaCheck = await pool.request()
+      .input('email', sql.VarChar, selected.email)
+      .query(`
+        SELECT id
+        FROM Anggota
+        WHERE email = @email
+      `);
+
+    if (anggotaCheck.recordset.length === 0) {
+      await pool.request()
+        .input('custom_id', sql.VarChar, selected.customId)
+        .input('name', sql.VarChar, selected.name)
+        .input('email', sql.VarChar, selected.email)
+        .input('jenis', sql.VarChar, selected.type)
+        .input('nim', sql.VarChar, selected.nim)
+        .input('jurusan', sql.VarChar, 'Perpustakaan FMIPA')
+        .input('departemen', sql.VarChar, 'Perpustakaan FMIPA')
+        .input('prodi', sql.VarChar, null)
+        .query(`
+          INSERT INTO Anggota
+            (custom_id, name, email, jenis, nim, jurusan, departemen, prodi)
+          VALUES
+            (@custom_id, @name, @email, @jenis, @nim, @jurusan, @departemen, @prodi)
+        `);
+    }
+
+    const result = await pool.request()
+      .input('email', sql.VarChar, selected.email)
+      .query(`
+        SELECT
+          U.id AS userId,
+          U.username,
+          U.email,
+          U.role,
+          A.id AS anggotaId,
+          A.custom_id,
+          A.nim,
+          A.jenis AS type,
+          A.departemen,
+          A.prodi,
+          A.phone,
+          A.address,
+          A.photo_url,
+          A.profile_completed
+        FROM Users U
+        LEFT JOIN Anggota A ON U.email = A.email
+        WHERE U.email = @email
+      `);
+
+    const user = result.recordset[0];
+
+    res.json({
+      success: true,
+      user: {
+        id: user.userId,
+        anggotaId: user.anggotaId,
+        memberId: user.anggotaId,
+        customId: user.custom_id,
+        name: user.username,
+        email: user.email,
+        role: user.role,
+        type: user.type,
+        nim: user.nim,
+        departemen: user.departemen,
+        prodi: user.prodi,
+        phone: user.phone,
+        address: user.address,
+        photo_url: user.photo_url,
+        profileCompleted: Boolean(user.profile_completed),
+        avatar: user.username?.charAt(0)?.toUpperCase() || 'U'
+      }
+    });
+
+  } catch (err) {
+    console.error('Dev Login Error:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Gagal dev login'
+    });
+  }
+});
+
 app.post('/api/books', upload.single('image'), async (req, res) => {
   const {
-    no_induk,
-    no_klasifikasi,
-    title,
-    author,
-    publisher,
-    year,
-    isbn,
-    category,
-    stock,
-    description
-  } = req.body;
+  no_induk,
+  no_klasifikasi,
+  title,
+  author,
+  publisher,
+  year,
+  isbn,
+  category,
+  stock,
+  description,
+  copies
+} = req.body;
 
   const image_url = req.file ? `/uploads/books/${req.file.filename}` : null;
 
   try {
     const pool = await sql.connect(dbConfig);
 
-   await pool.request()
+   const insertedBook = await pool.request()
   .input('no_induk', sql.VarChar, no_induk)
   .input('no_klasifikasi', sql.VarChar, no_klasifikasi)
   .input('title', sql.VarChar, title)
@@ -236,8 +610,38 @@ app.post('/api/books', upload.single('image'), async (req, res) => {
     INSERT INTO Buku
     (no_induk, no_klasifikasi, title, author, publisher, year, isbn, category, stock, available, description, image_url)
     VALUES
-    (@no_induk, @no_klasifikasi, @title, @author, @publisher, @year, @isbn, @category, @stock, @available, @description, @image_url)
+    (@no_induk, @no_klasifikasi, @title, @author, @publisher, @year, @isbn, @category, @stock, @available, @description, @image_url);
+
+    SELECT CAST(SCOPE_IDENTITY() AS int) AS id;
   `);
+
+const bookId = insertedBook.recordset[0].id;
+
+let parsedCopies = [];
+
+try {
+  parsedCopies = copies ? JSON.parse(copies) : [];
+} catch {
+  parsedCopies = [];
+}
+
+if (parsedCopies.length === 0) {
+  parsedCopies = Array.from({ length: Number(stock) || 1 }, (_, i) => ({
+    copy_code: `${no_induk}-${String(i + 1).padStart(3, '0')}`,
+    status: 'available'
+  }));
+}
+
+for (const copy of parsedCopies) {
+  await pool.request()
+    .input('buku_id', sql.Int, bookId)
+    .input('copy_code', sql.VarChar, copy.copy_code)
+    .input('status', sql.VarChar, copy.status || 'available')
+    .query(`
+      INSERT INTO BukuCopy (buku_id, copy_code, status)
+      VALUES (@buku_id, @copy_code, @status)
+    `);
+}
 
     res.json({
       success: true,
@@ -392,6 +796,13 @@ app.delete('/api/books/:id', async (req, res) => {
     const imageUrl = bookResult.recordset[0].image_url;
 
     await pool.request()
+  .input('id', sql.Int, id)
+  .query(`
+    DELETE FROM BukuCopy
+    WHERE buku_id = @id
+  `);
+
+    await pool.request()
       .input('id', sql.Int, id)
       .query(`
         DELETE FROM Buku
@@ -481,24 +892,27 @@ app.get('/api/members', async (req, res) => {
   try {
     const pool = await sql.connect(dbConfig);
 
- const result = await pool.request().query(`
-  SELECT
-    id,
-    custom_id,
-    name AS name,
-    nim,
-    jurusan AS departemen,
-    jurusan AS prodi,
-    jenis AS type,
-    email,
-    'aktif' AS status,
-    phone,
-    address,
-    photo_url,
-    CONVERT(varchar, created_at, 23) AS joinDate
-  FROM Anggota
-  ORDER BY id DESC
-`);
+    const result = await pool.request().query(`
+      SELECT
+        A.id,
+        A.custom_id,
+        A.name,
+        A.nim,
+        COALESCE(A.departemen, A.jurusan) AS departemen,
+        A.prodi,
+        A.jenis AS type,
+        A.email,
+        COALESCE(U.role, A.jenis) AS role,
+        'aktif' AS status,
+        A.phone,
+        A.address,
+        A.photo_url,
+        A.profile_completed,
+        CONVERT(varchar, A.created_at, 23) AS joinDate
+      FROM Anggota A
+      LEFT JOIN Users U ON A.email = U.email
+      ORDER BY A.id DESC
+    `);
 
     res.json({
       success: true,
@@ -513,6 +927,7 @@ app.get('/api/members', async (req, res) => {
     });
   }
 });
+
 // test contribution
 app.post('/api/members', uploadMember.single('photo'), async (req, res) => {
   const { name, nim, departemen, prodi, type, email, phone, address, password } = req.body;
@@ -717,26 +1132,29 @@ app.get('/api/loans', async (req, res) => {
     const pool = await sql.connect(dbConfig);
 
     const result = await pool.request().query(`
-      SELECT
-        P.id,
-        B.no_induk AS bookCode,
-        B.title AS bookTitle,
-        B.image_url,
-        A.id AS memberId,
-        A.name AS memberName,
-        A.jenis AS memberType,
-        CONVERT(varchar, P.tgl_pinjam, 23) AS loanDate,
-        CONVERT(varchar, P.tgl_jatuh_tempo, 23) AS dueDate,
-        CONVERT(varchar, P.tgl_kembali, 23) AS returnDate,
-        P.denda,
-        P.denda_bayar AS dendaBayar,
-        P.jumlah_perpanjangan AS jumlahPerpanjangan,
-        P.status
-      FROM Peminjaman P
-      JOIN Buku B ON P.buku_id = B.id
-      JOIN Anggota A ON P.anggota_id = A.id
-      ORDER BY P.id DESC
-    `);
+  SELECT
+    P.id,
+    P.buku_id AS bookId,
+    P.copy_id AS copyId,
+    P.copy_code AS copyCode,
+    B.no_induk AS bookCode,
+    B.title AS bookTitle,
+    B.image_url,
+    A.id AS memberId,
+    A.name AS memberName,
+    A.jenis AS memberType,
+    CONVERT(varchar, P.tgl_pinjam, 23) AS loanDate,
+    CONVERT(varchar, P.tgl_jatuh_tempo, 23) AS dueDate,
+    CONVERT(varchar, P.tgl_kembali, 23) AS returnDate,
+    P.denda,
+    P.denda_bayar AS dendaBayar,
+    P.jumlah_perpanjangan AS jumlahPerpanjangan,
+    P.status
+  FROM Peminjaman P
+  JOIN Buku B ON P.buku_id = B.id
+  JOIN Anggota A ON P.anggota_id = A.id
+  ORDER BY P.id DESC
+`);
 
     res.json({
       success: true,
@@ -776,7 +1194,7 @@ app.get('/api/books', async (req, res) => {
   try {
     const pool = await sql.connect(dbConfig);
 
-    const result = await pool.request().query(`
+    const booksResult = await pool.request().query(`
       SELECT 
         id,
         no_induk,
@@ -795,9 +1213,31 @@ app.get('/api/books', async (req, res) => {
       ORDER BY id DESC
     `);
 
+    const copiesResult = await pool.request().query(`
+      SELECT
+        id,
+        buku_id AS bookId,
+        copy_code,
+        status
+      FROM BukuCopy
+      ORDER BY buku_id, id
+    `);
+
+    const copiesByBook = {};
+
+    copiesResult.recordset.forEach(copy => {
+      if (!copiesByBook[copy.bookId]) copiesByBook[copy.bookId] = [];
+      copiesByBook[copy.bookId].push(copy);
+    });
+
+    const books = booksResult.recordset.map(book => ({
+      ...book,
+      copies: copiesByBook[book.id] || []
+    }));
+
     res.json({
       success: true,
-      books: result.recordset
+      books
     });
 
   } catch (err) {
@@ -810,9 +1250,15 @@ app.get('/api/books', async (req, res) => {
 });
 
 
-
 app.post('/api/loans', async (req, res) => {
-  const { bookCode, memberId } = req.body;
+  const { memberId, bookId, copyId, copyCode } = req.body;
+
+  if (!memberId || !bookId || !copyId) {
+    return res.status(400).json({
+      success: false,
+      message: 'memberId, bookId, dan copyId wajib dikirim'
+    });
+  }
 
   try {
     const pool = await sql.connect(dbConfig);
@@ -820,24 +1266,39 @@ app.post('/api/loans', async (req, res) => {
 
     await transaction.begin();
 
-    const bookResult = await new sql.Request(transaction)
-      .input('bookCode', sql.VarChar, bookCode)
+    const copyResult = await new sql.Request(transaction)
+      .input('bookId', sql.Int, bookId)
+      .input('copyId', sql.Int, copyId)
       .query(`
-        SELECT id, title, available
-        FROM Buku
-        WHERE no_induk = @bookCode
+        SELECT
+          C.id AS copyId,
+          C.copy_code,
+          C.status AS copyStatus,
+          B.id AS bookId,
+          B.title,
+          B.available
+        FROM BukuCopy C
+        JOIN Buku B ON C.buku_id = B.id
+        WHERE C.id = @copyId
+          AND C.buku_id = @bookId
       `);
 
-    if (bookResult.recordset.length === 0) {
+    if (copyResult.recordset.length === 0) {
       await transaction.rollback();
-      return res.json({ success: false, message: 'Buku tidak ditemukan' });
+      return res.json({
+        success: false,
+        message: 'Copy buku tidak ditemukan'
+      });
     }
 
-    const book = bookResult.recordset[0];
+    const copy = copyResult.recordset[0];
 
-    if (book.available <= 0) {
+    if (copy.copyStatus !== 'available') {
       await transaction.rollback();
-      return res.json({ success: false, message: 'Buku tidak tersedia' });
+      return res.json({
+        success: false,
+        message: 'Copy buku sedang tidak tersedia'
+      });
     }
 
     const memberResult = await new sql.Request(transaction)
@@ -850,7 +1311,10 @@ app.post('/api/loans', async (req, res) => {
 
     if (memberResult.recordset.length === 0) {
       await transaction.rollback();
-      return res.json({ success: false, message: 'Anggota tidak ditemukan' });
+      return res.json({
+        success: false,
+        message: 'Anggota tidak ditemukan'
+      });
     }
 
     const member = memberResult.recordset[0];
@@ -861,34 +1325,7 @@ app.post('/api/loans', async (req, res) => {
       await transaction.rollback();
       return res.json({
         success: false,
-        message: `${member.name} (${member.jenis}) tidak memiliki hak peminjaman`
-      });
-    }
-
-    const blockedResult = await new sql.Request(transaction)
-  .input('memberId', sql.Int, memberId)
-  .query(`
-    SELECT TOP 1 id, status, denda, denda_bayar
-    FROM Peminjaman
-    WHERE anggota_id = @memberId
-      AND (
-        (
-          status IN ('dipinjam', 'diperpanjang', 'terlambat')
-          AND tgl_jatuh_tempo < CAST(GETDATE() AS DATE)
-        )
-        OR (
-          status = 'dikembalikan'
-          AND ISNULL(denda, 0) > 0
-          AND ISNULL(denda_bayar, 0) = 0
-        )
-      )
-  `);
-
-    if (blockedResult.recordset.length > 0) {
-      await transaction.rollback();
-      return res.json({
-        success: false,
-        message: 'Anggota masih memiliki keterlambatan atau denda yang belum dibayar'
+        message: `${member.name} tidak memiliki hak peminjaman`
       });
     }
 
@@ -907,13 +1344,13 @@ app.post('/api/loans', async (req, res) => {
       await transaction.rollback();
       return res.json({
         success: false,
-        message: `${member.name} sudah meminjam ${activeCount} buku. Maksimal untuk ${memberType} adalah ${rule.maxBuku} buku`
+        message: `${member.name} sudah mencapai batas maksimal peminjaman`
       });
     }
 
     const sameBookResult = await new sql.Request(transaction)
       .input('memberId', sql.Int, memberId)
-      .input('bookId', sql.Int, book.id)
+      .input('bookId', sql.Int, bookId)
       .query(`
         SELECT TOP 1 id
         FROM Peminjaman
@@ -926,19 +1363,23 @@ app.post('/api/loans', async (req, res) => {
       await transaction.rollback();
       return res.json({
         success: false,
-        message: `${member.name} sudah meminjam buku ini dan belum mengembalikannya`
+        message: 'Anggota sudah meminjam buku ini dan belum mengembalikannya'
       });
     }
 
-    await new sql.Request(transaction)
-      .input('buku_id', sql.Int, book.id)
+    const insertedLoan = await new sql.Request(transaction)
+      .input('buku_id', sql.Int, bookId)
       .input('anggota_id', sql.Int, memberId)
+      .input('copy_id', sql.Int, copy.copyId)
+      .input('copy_code', sql.VarChar, copy.copy_code)
       .input('hariPinjam', sql.Int, rule.hariPinjam)
       .query(`
         INSERT INTO Peminjaman
         (
           buku_id,
           anggota_id,
+          copy_id,
+          copy_code,
           tgl_pinjam,
           tgl_jatuh_tempo,
           tgl_kembali,
@@ -951,6 +1392,8 @@ app.post('/api/loans', async (req, res) => {
         (
           @buku_id,
           @anggota_id,
+          @copy_id,
+          @copy_code,
           CAST(GETDATE() AS DATE),
           DATEADD(DAY, @hariPinjam, CAST(GETDATE() AS DATE)),
           NULL,
@@ -958,22 +1401,53 @@ app.post('/api/loans', async (req, res) => {
           0,
           0,
           'dipinjam'
-        )
+        );
+
+        SELECT CAST(SCOPE_IDENTITY() AS int) AS id;
+      `);
+
+    const loanId = insertedLoan.recordset[0].id;
+
+    await new sql.Request(transaction)
+      .input('copyId', sql.Int, copy.copyId)
+      .query(`
+        UPDATE BukuCopy
+        SET status = 'borrowed'
+        WHERE id = @copyId
       `);
 
     await new sql.Request(transaction)
-      .input('buku_id', sql.Int, book.id)
+      .input('bookId', sql.Int, bookId)
       .query(`
         UPDATE Buku
-        SET available = available - 1
-        WHERE id = @buku_id
+        SET available = CASE
+          WHEN available > 0 THEN available - 1
+          ELSE 0
+        END
+        WHERE id = @bookId
+      `);
+
+    const loanResult = await new sql.Request(transaction)
+      .input('loanId', sql.Int, loanId)
+      .query(`
+        SELECT
+          P.id,
+          P.buku_id AS bookId,
+          P.copy_id AS copyId,
+          P.copy_code AS copyCode,
+          CONVERT(varchar, P.tgl_pinjam, 23) AS loanDate,
+          CONVERT(varchar, P.tgl_jatuh_tempo, 23) AS dueDate,
+          P.status
+        FROM Peminjaman P
+        WHERE P.id = @loanId
       `);
 
     await transaction.commit();
 
     res.json({
       success: true,
-      message: 'Peminjaman berhasil'
+      message: 'Peminjaman berhasil',
+      loan: loanResult.recordset[0]
     });
 
   } catch (err) {
@@ -1040,6 +1514,7 @@ app.put('/api/loans/:id/extend', async (req, res) => {
         message: 'Peminjaman ini tidak bisa diperpanjang karena statusnya bukan pinjaman aktif'
       });
     }
+
 
     const overdueResult = await new sql.Request(transaction)
       .input('dueDate', sql.Date, loan.tgl_jatuh_tempo)
@@ -1136,6 +1611,8 @@ app.put('/api/loans/:id/return', async (req, res) => {
           P.buku_id,
           P.tgl_jatuh_tempo,
           P.status,
+          P.copy_id,
+          P.copy_code,
           B.title AS bookTitle,
           A.name AS memberName
         FROM Peminjaman P
@@ -1193,6 +1670,16 @@ app.put('/api/loans/:id/return', async (req, res) => {
     WHERE id = @id
   `);
 
+  if (loan.copy_id) {
+  await new sql.Request(transaction)
+    .input('copyId', sql.Int, loan.copy_id)
+    .query(`
+      UPDATE BukuCopy
+      SET status = 'available'
+      WHERE id = @copyId
+    `);
+}
+
     await new sql.Request(transaction)
       .input('buku_id', sql.Int, loan.buku_id)
       .query(`
@@ -1207,14 +1694,17 @@ WHERE id = @buku_id
 
     await transaction.commit();
 
-   res.json({
+  res.json({
   success: true,
   message: denda > 0
     ? 'Pengembalian berhasil. Denda telah dibayar di tempat'
     : 'Pengembalian berhasil',
   denda,
   lateDays,
-  dendaBayar: true
+  dendaBayar: true,
+  bookId: loan.buku_id,
+  copyId: loan.copy_id,
+  copyCode: loan.copy_code
 });
 
   } catch (err) {
@@ -1300,6 +1790,134 @@ app.post('/api/members/:id/photo', uploadMember.single('photo'), async (req, res
     res.status(500).json({
       success: false,
       message: 'Gagal upload foto'
+    });
+  }
+});
+
+const ADMIN_EMAIL = 'admin.perpus@unesa.ac.id';
+
+const normalizeEmail = (email = '') => String(email).trim().toLowerCase();
+
+const isMahasiswaEmail = (email) =>
+  normalizeEmail(email).endsWith('@mhs.unesa.ac.id');
+
+const isDosenOrStaffEmail = (email) =>
+  normalizeEmail(email).endsWith('@unesa.ac.id') &&
+  !normalizeEmail(email).endsWith('@mhs.unesa.ac.id');
+
+const isAllowedUnesaEmail = (email) =>
+  isMahasiswaEmail(email) || isDosenOrStaffEmail(email);
+
+const getIdentityType = (email) =>
+  isMahasiswaEmail(email) ? 'mahasiswa' : 'dosen';
+
+const getDefaultRole = (email) => {
+  const clean = normalizeEmail(email);
+
+  if (clean === ADMIN_EMAIL) return 'admin';
+  if (isMahasiswaEmail(clean)) return 'mahasiswa';
+
+  return 'dosen';
+};
+
+async function generateCustomId(pool, jenis, role = '') {
+  const prefix =
+    role === 'petugas'
+      ? 'PS'
+      : jenis === 'mahasiswa'
+        ? 'MH'
+        : 'DS';
+
+  const result = await pool.request()
+    .input('prefixLike', sql.VarChar, `${prefix}%`)
+    .query(`
+      SELECT
+        ISNULL(MAX(TRY_CAST(SUBSTRING(custom_id, 3, 10) AS INT)), 0) + 1 AS nextNo
+      FROM Anggota
+      WHERE custom_id LIKE @prefixLike
+    `);
+
+  return `${prefix}${String(result.recordset[0].nextNo).padStart(3, '0')}`;
+}
+
+app.put('/api/members/:id/promote-petugas', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const pool = await sql.connect(dbConfig);
+
+    const anggotaResult = await pool.request()
+      .input('id', sql.Int, id)
+      .query(`
+        SELECT id, name, email, jenis
+        FROM Anggota
+        WHERE id = @id
+      `);
+
+    if (anggotaResult.recordset.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Anggota tidak ditemukan'
+      });
+    }
+
+    const anggota = anggotaResult.recordset[0];
+    const email = normalizeEmail(anggota.email);
+
+    if (!isDosenOrStaffEmail(email)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Hanya email @unesa.ac.id yang bisa dijadikan petugas'
+      });
+    }
+
+    const userCheck = await pool.request()
+      .input('email', sql.VarChar, email)
+      .query(`
+        SELECT id
+        FROM Users
+        WHERE email = @email
+      `);
+
+    if (userCheck.recordset.length > 0) {
+      await pool.request()
+        .input('email', sql.VarChar, email)
+        .query(`
+          UPDATE Users
+          SET role = 'petugas'
+          WHERE email = @email
+        `);
+    } else {
+      await pool.request()
+        .input('username', sql.VarChar, anggota.name)
+        .input('email', sql.VarChar, email)
+        .input('password', sql.VarChar, null)
+        .input('role', sql.VarChar, 'petugas')
+        .query(`
+          INSERT INTO Users (username, email, password, role)
+          VALUES (@username, @email, @password, @role)
+        `);
+    }
+
+    // type tetap dosen, karena petugas adalah role, bukan type
+    await pool.request()
+      .input('id', sql.Int, id)
+      .query(`
+        UPDATE Anggota
+        SET jenis = 'dosen'
+        WHERE id = @id
+      `);
+
+    res.json({
+      success: true,
+      message: 'Anggota berhasil dijadikan petugas'
+    });
+
+  } catch (err) {
+    console.error('Promote Petugas Error:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Gagal menjadikan petugas'
     });
   }
 });
