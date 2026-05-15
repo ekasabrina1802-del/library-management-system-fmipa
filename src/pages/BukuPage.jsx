@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Plus, Pencil, Trash2, X, Check, Search, Eye, BookOpen, CheckCircle, Clock, XCircle, LayoutGrid, LayoutList, Bell } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Plus, Pencil, X, Check, Search, Eye, BookOpen, CheckCircle, Clock, XCircle, LayoutGrid, LayoutList, Bell } from 'lucide-react';
 import { useApp } from '../components/AppContext';
 import { useAuth } from '../components/AuthContext';
 import ApiImage from '../components/ApiImage';
@@ -85,15 +85,32 @@ function RemindMeButton({ book, user, addReminder }) {
 }
 
 const getAvailableCopies = (book) => {
-  return book.copies?.filter(
-    c => c.status === 'available'
-  ) || [];
+  // FORMAT BARU
+  if (book?.copies?.length) {
+    return book.copies.filter(
+      c => c.status === 'available'
+    );
+  }
+
+  // FORMAT LAMA
+  return Array.from({
+    length: Number(book?.stock) || 0
+  }).map((_, i) => ({
+    id: `legacy-${i}`,
+    status: 'available'
+  }));
 };
 
 const getBorrowedCopies = (book) => {
-  return book.copies?.filter(
-    c => c.status === 'borrowed'
-  ) || [];
+  // FORMAT BARU
+  if (book?.copies?.length) {
+    return book.copies.filter(
+      c => c.status === 'borrowed'
+    );
+  }
+
+  // FORMAT LAMA
+  return [];
 };
 
 function generateCopies(bookCode, total) {
@@ -296,6 +313,14 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
   };
 
   const isAvailable = getAvailableCopies(book).length > 0;
+  const descriptionRef = useRef(null);
+  useEffect(() => {
+    if (descriptionRef.current) {
+      descriptionRef.current.style.height = '0px';
+      descriptionRef.current.style.height =
+        descriptionRef.current.scrollHeight + 'px';
+    }
+  }, [form.description]);
 
   return (
     <div className="modal-overlay">
@@ -307,7 +332,17 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label className="form-label">Deskripsi *</label>
-            <textarea className="form-control" value={form.description} onChange={f('description')} rows={3} disabled={isReadOnly} />
+            <textarea
+              ref={descriptionRef}
+              className="form-control"
+              value={form.description}
+              onChange={f('description')}
+              disabled={isReadOnly}
+              style={{
+                overflow: 'hidden',
+                resize: 'none'
+              }}
+            />
           </div>
           <div className="grid-2">
             <div className="form-group">
@@ -394,7 +429,14 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
               }}
             >
 
-              {book?.copies?.map(copy => (
+              {(
+                book?.copies?.length > 0
+                  ? book.copies
+                  : generateCopies(
+                      form.no_induk || 'BOOK',
+                      Number(form.stock) || 0
+                    )
+              ).map(copy => (
 
                 <div
                   key={copy.id}
@@ -416,6 +458,7 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
                       ? 'Tersedia'
                       : 'Dipinjam'}
                   </span>
+
                 </div>
               ))}
             </div>
@@ -443,7 +486,7 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
 }
 
 // ---- Kartu Buku untuk Grid View ----
-function BookCard({ book, onSelect, onDetail, isPetugas }) {
+function BookCard({ book, onSelect, onDetail, isPetugas, selected }) {
   const isAvailable = getAvailableCopies(book).length > 0;
 
   return (
@@ -453,12 +496,16 @@ function BookCard({ book, onSelect, onDetail, isPetugas }) {
         background: '#fff',
         borderRadius: 12,
         overflow: 'hidden',
-        border: '1px solid #eee',
+        border: selected?.includes(book.id)
+          ? '2px solid #7B1C1C'
+          : '1px solid #eee',
         cursor: 'pointer',
         transition: 'transform 0.18s, box-shadow 0.18s',
         display: 'flex',
         flexDirection: 'column',
-        boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+        boxShadow: selected?.includes(book.id)
+          ? '0 10px 25px rgba(123,28,28,0.28)'
+          : '0 1px 4px rgba(0,0,0,0.06)',
       }}
       onMouseEnter={e => {
         e.currentTarget.style.transform = 'translateY(-3px)';
@@ -535,7 +582,7 @@ function BookCard({ book, onSelect, onDetail, isPetugas }) {
             color: isAvailable ? '#2D6A4F' : '#c0392b'
           }}>
             {getAvailableCopies(book).length}/
-            {book.copies?.length || 0} unit
+            {book.copies?.length || book.stock || 0} unit
           </span>
         </div>
 
@@ -570,7 +617,7 @@ function BookCard({ book, onSelect, onDetail, isPetugas }) {
 // --- Komponen Utama Halaman Buku ---
 
 export default function BukuPage() {
-  const { books, addBook, updateBook, deleteBook } = useApp();
+  const { books, addBook, updateBook } = useApp();
   const { user } = useAuth();
   const isPetugas = user?.role === 'petugas';
   const isAdmin = user?.role === 'admin';
@@ -585,7 +632,6 @@ export default function BukuPage() {
       ? 12
       : 10;
   const [modal, setModal] = useState(null);
-  const [deleteMode, setDeleteMode] = useState(false);
   const [selected, setSelected] = useState([]);
   // --- LOGIKA STATISTIK ---
   const totalJudul = books.length;
@@ -641,7 +687,13 @@ export default function BukuPage() {
   setModal({ mode: 'view', book });
 };
 
-  const toggleSelect = (id) => setSelected(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
+  const toggleSelect = (id) => {
+    setSelected((prev) =>
+      prev.includes(id)
+        ? []
+        : [id]
+    );
+  };
 
   return (
     <div>
@@ -871,9 +923,6 @@ export default function BukuPage() {
                 <button className="btn btn-outline btn-sm" onClick={() => selected.length === 1 ? setModal({ mode: 'edit', book: books.find(b => b.id === selected[0]) }) : alert('Pilih 1 buku')}>
                   <Pencil size={14} /> Edit
                 </button>
-                <button className={`btn btn-sm ${deleteMode ? 'btn-danger' : 'btn-ghost'}`} onClick={() => deleteMode ? (deleteBook(selected), setSelected([]), setDeleteMode(false)) : setDeleteMode(true)}>
-                  <Trash2 size={14} /> {deleteMode ? `Hapus (${selected.length})` : 'Hapus'}
-                </button>
               </>
             ) : (
               <div className="info-text" style={{ color: '#666', fontSize: '13px', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -926,6 +975,21 @@ export default function BukuPage() {
           </div>
         </div>
 
+        <div
+          style={{
+            marginBottom: 16,
+            padding: '10px 14px',
+            borderRadius: 10,
+            background: 'rgba(123,28,28,0.06)',
+            border: '1px solid rgba(123,28,28,0.12)',
+            color: '#7B1C1C',
+            fontSize: 13,
+            fontWeight: 500
+          }}
+        >
+          📌 Silakan pilih salah satu buku terlebih dahulu untuk mengedit data buku.
+        </div>
+
         {/* ---- GRID VIEW ---- */}
         {viewMode === 'grid' ? (
           <div style={{
@@ -939,6 +1003,7 @@ export default function BukuPage() {
                 key={b.id}
                 book={b}
                 isPetugas={isPetugas}
+                selected={selected}
                 onSelect={(book) => {
                   if (isPetugas) {
                     toggleSelect(book.id); // hanya petugas yang select
@@ -964,7 +1029,7 @@ export default function BukuPage() {
             <table>
               <thead>
                 <tr>
-                  {deleteMode && <th style={{ width: 40 }}></th>}
+                  <th style={{ width: 40 }}></th>
                   <th>Cover</th>
                   <th>No. Induk</th>
                   <th>Judul Buku</th>
@@ -976,11 +1041,52 @@ export default function BukuPage() {
               </thead>
               <tbody>
                 {filtered.map(b => (
-                  <tr key={b.id} onClick={() => handleRowClick(b)}
-                    style={{ background: selected.includes(b.id) ? 'rgba(123,28,28,0.06)' : '', cursor: 'pointer' }}>
-                    {deleteMode && <td onClick={(e) => e.stopPropagation()}><input type="checkbox" checked={selected.includes(b.id)} readOnly /></td>}
+                  <tr
+                    key={b.id}
+                    onClick={() => handleRowClick(b)}
+                    style={{
+                      background: selected.includes(b.id)
+                        ? 'rgba(123,28,28,0.10)'
+                        : '#fff',
+
+                      borderLeft: selected.includes(b.id)
+                        ? '5px solid #7B1C1C'
+                        : '5px solid transparent',
+
+                      boxShadow: selected.includes(b.id)
+                        ? '0 2px 10px rgba(123,28,28,0.12)'
+                        : 'none',
+
+                      transition: 'all 0.18s ease',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {/* KOLOM CENTANG */}
+                    <td style={{ width: 40 }}>
+                      {selected.includes(b.id) && (
+                        <div
+                          style={{
+                            width: 22,
+                            height: 22,
+                            borderRadius: '50%',
+                            background: '#7B1C1C',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: 12,
+                            fontWeight: 700
+                          }}
+                        >
+                          ✓
+                        </div>
+                      )}
+                    </td>
+
+                    {/* COVER */}
                     <td>
                       {b.image_url ? (
+
   <ApiImage
     src={b.image_url}
     alt={b.title}
@@ -1002,7 +1108,7 @@ export default function BukuPage() {
                       <div style={{ fontSize: 11, color: '#666' }}>{b.isbn}</div>
                     </td>
                     <td><span className="badge badge-info">{b.category}</span></td>
-                    <td style={{ fontWeight: 600 }}>{b.copies?.length || 0}</td>
+                    <td style={{ fontWeight: 600 }}>{b.copies?.length || b.stock || 0}</td>
                     <td style={{ color: getAvailableCopies(b).length === 0 ? '#e53e3e' : '#38a169', fontWeight: 700 }}>{getAvailableCopies(b).length}</td>
                     <td>
                       <span className={`badge ${getAvailableCopies(b).length > 0 ? 'badge-success' : 'badge-danger'}`}>
