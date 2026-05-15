@@ -110,7 +110,7 @@ function generateCopies(bookCode, total) {
   );
 }
 function BookModal({ book, onSave, onClose, isReadOnly, user }) {
-  const { loans, addLoan, addReminder } = useApp();
+  const { loans, addLoan, addReminder, members } = useApp();
   const isEdit = !!book?.id;
 
   const [form, setForm] = useState({
@@ -128,7 +128,37 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
     imagePreview: book?.image_url || null
   });
 
+  const currentMember = members.find(
+    m =>
+      String(m.id) === String(user?.anggotaId || user?.memberId) ||
+      m.email === user?.email
+  );
+
+  const profileIncomplete =
+    !currentMember?.name ||
+    !currentMember?.nim ||
+    !currentMember?.departemen ||
+    !currentMember?.prodi ||
+    !currentMember?.phone ||
+    !currentMember?.address;
   const handleBorrowAction = async () => {
+  // VALIDASI PROFIL WAJIB LENGKAP
+  const profileIncomplete =
+    !user?.name ||
+    !user?.nim ||
+    !user?.departemen ||
+    !user?.prodi ||
+    !user?.phone ||
+    !user?.address;
+
+  if (profileIncomplete) {
+
+    alert(
+      'Lengkapi profil anda terlebih dahulu sebelum meminjam buku.'
+    );
+
+    return;
+  }
     if (getAvailableCopies(book).length <= 0) {
       alert(`Stok buku "${book.title}" sedang kosong. Kami akan mencatat permintaan notifikasi Anda.`);
       return;
@@ -275,6 +305,10 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
           <button className="modal-close" onClick={onClose}><X size={20} /></button>
         </div>
         <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label className="form-label">Deskripsi *</label>
+            <textarea className="form-control" value={form.description} onChange={f('description')} rows={3} disabled={isReadOnly} />
+          </div>
           <div className="grid-2">
             <div className="form-group">
               <label className="form-label">No. Induk *</label>
@@ -387,10 +421,6 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
             </div>
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Deskripsi *</label>
-            <textarea className="form-control" value={form.description} onChange={f('description')} rows={3} disabled={isReadOnly} />
-          </div>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16, borderTop: '1px solid #eee', paddingTop: '16px' }}>
             <button type="button" className="btn btn-ghost" onClick={onClose}>{isReadOnly ? 'Tutup' : 'Batal'}</button>
 

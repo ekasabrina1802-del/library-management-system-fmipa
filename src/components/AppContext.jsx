@@ -45,6 +45,7 @@ export function AppProvider({ children }) {
     try {
       const res = await fetch(`${API_URL}/api/members`, { headers: ngrokHeaders });
       const data = await res.json();
+      console.log('SAMPLE MEMBER:', JSON.stringify(data.members[0], null, 2));
       if (data.success) {
         const mapped = data.members.map(m => ({
           ...m,

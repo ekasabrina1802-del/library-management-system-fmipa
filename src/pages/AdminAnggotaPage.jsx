@@ -287,13 +287,7 @@ const { members, loans, updateMember, promoteToPetugas, addMember } = useApp();
 
 
 const filtered = members.filter(m =>
-  m.role !== 'admin' &&
-  m.email?.endsWith("@unesa.ac.id") &&
-  (
-    !search ||
-    m.name?.toLowerCase().includes(search.toLowerCase()) ||
-    m.email?.toLowerCase().includes(search.toLowerCase())
-  )
+  m.role !== 'admin'
 );
 
  const staff = members.filter(m => m.role === 'petugas' && m.status === 'aktif').length;
@@ -448,28 +442,61 @@ const filtered = members.filter(m =>
                   <td style={{ color: 'var(--gray-text)' }}>
                     {m.joinDate}
                   </td>
-
                   <td>
-  {m.role !== 'petugas' ? (
-    <button
-      className="btn btn-primary btn-sm"
-      onClick={async (e) => {
-        e.stopPropagation();
+  
+                  {m.role === 'dosen' ? (
 
-        if (!m.email?.endsWith("@unesa.ac.id")) {
-          alert("Hanya email @unesa.ac.id yang bisa menjadi petugas");
-          return;
-        }
+                    <button
+                      className="btn btn-primary btn-sm"
+                      onClick={async (e) => {
+                        e.stopPropagation();
 
-        await promoteToPetugas(m.id);
-      }}
-    >
-      Jadikan Petugas
-    </button>
-  ) : (
-    <span className="badge badge-warning">Petugas</span>
-  )}
-</td>
+                        if (!m.email?.endsWith("@unesa.ac.id")) {
+                          alert("Hanya akun dosen UNESA yang dapat dijadikan petugas");
+                          return;
+                        }
+
+                        const confirmPromote = confirm(
+                          `Jadikan ${m.name} sebagai petugas perpustakaan?`
+                        );
+
+                        if (!confirmPromote) return;
+
+                        await promoteToPetugas(m.id);
+                      }}
+                    >
+                      Jadikan Petugas
+                    </button>
+
+                  ) : m.role === 'petugas' ? (
+
+                    <button
+                      className="btn btn-outline btn-sm"
+                      onClick={async (e) => {
+                        e.stopPropagation();
+
+                        const confirmReset = confirm(
+                          `Kembalikan role ${m.name} menjadi dosen?`
+                        );
+
+                        if (!confirmReset) return;
+
+                        await updateMember(m.id, {
+                          role: 'dosen'
+                        });
+                      }}
+                    >
+                      Petugas
+                    </button>
+
+                  ) : (
+
+                    <span className="badge badge-secondary">
+                      Mahasiswa
+                    </span>
+
+                  )}
+                </td>
                 </tr>
               ))}
             </tbody>

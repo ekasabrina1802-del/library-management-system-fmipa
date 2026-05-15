@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../components/AuthContext';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const IS_DEV = import.meta.env.DEV;
 
 export default function LoginPage() {
   const [error, setError] = useState('');
@@ -167,7 +168,9 @@ export default function LoginPage() {
             )}
           </div>
 
+          {IS_DEV && (
           <div style={{ marginTop: 18 }}>
+
             <div
               style={{
                 fontSize: 12,
@@ -214,6 +217,7 @@ export default function LoginPage() {
               </button>
             </div>
           </div>
+        )}
 
           <div
             style={{

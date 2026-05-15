@@ -1045,7 +1045,8 @@ app.post('/api/members', uploadMember.single('photo'), async (req, res) => {
 app.put('/api/members/:id', uploadMember.single('photo'), async (req, res) => {
   const { id } = req.params;
   const { name, nim, departemen, prodi, type, email, phone, address } = req.body;
-const photo_url = req.file ? `/uploads/members/${req.file.filename}` : null;
+  console.log('UPDATE MEMBER body:', { name, nim, departemen, prodi, type });
+  const photo_url = req.file ? `/uploads/members/${req.file.filename}` : null;
 
   try {
     const pool = await sql.connect(dbConfig);
@@ -1066,6 +1067,8 @@ await pool.request()
   .input('name', sql.VarChar, name)
   .input('nim', sql.VarChar, nim)
   .input('jurusan', sql.VarChar, departemen || prodi || null)
+  .input('departemen', sql.VarChar, departemen || null)
+  .input('prodi', sql.VarChar, prodi || null)
   .input('jenis', sql.VarChar, type)
   .input('email', sql.VarChar, email || null)
   .input('phone', sql.VarChar, phone || null)
@@ -1077,6 +1080,8 @@ await pool.request()
       name = @name,
       nim = @nim,
       jurusan = @jurusan,
+      departemen = @departemen,
+      prodi = @prodi,
       jenis = @jenis,
       email = @email,
       phone = @phone,
@@ -1100,17 +1105,18 @@ if (anggotaEmail) {
 }
 
     const updated = await pool.request()
-  .input('id', sql.Int, id)
-  .query(`
-    SELECT id, custom_id,
-      name AS name, nim,
-      jurusan AS departemen, jurusan AS prodi,
-      jenis AS type, email, phone, address,
-      photo_url,
-      'aktif' AS status,
-      CONVERT(varchar, created_at, 23) AS joinDate
-    FROM Anggota WHERE id = @id
-  `);
+      .input('id', sql.Int, id)
+      .query(`
+        SELECT id, custom_id,
+          name, nim,
+          COALESCE(departemen, jurusan) AS departemen,
+          prodi,
+          jenis AS type, email, phone, address,
+          photo_url,
+          'aktif' AS status,
+          CONVERT(varchar, created_at, 23) AS joinDate
+        FROM Anggota WHERE id = @id
+      `);
 
     res.json({ success: true, message: 'Anggota berhasil diupdate', member: updated.recordset[0] });
 

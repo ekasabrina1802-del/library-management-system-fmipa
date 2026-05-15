@@ -53,7 +53,7 @@ export function AuthProvider({ children }) {
 
   };
 
-  // LOGIN GOOGLE SSO ASLI
+  // LOGIN GOOGLE SSO
 const loginWithGoogle = async (credential) => {
   try {
     const response = await fetch(`${API_URL}/api/login-google`, {
@@ -62,23 +62,61 @@ const loginWithGoogle = async (credential) => {
         "Content-Type": "application/json",
         "ngrok-skip-browser-warning": "true"
       },
-      body: JSON.stringify({
-        credential
-      })
+      body: JSON.stringify({ credential })
     });
 
     const data = await response.json();
 
-    if (data.success) {
-      setUser(data.user);
+    if (!data.success) {
+      return data;
+    }
 
+    const email = data.user.email;
+
+    // VALIDASI EMAIL UNESA
+    const allowed =
+      email.endsWith("@unesa.ac.id") ||
+      email.endsWith("@mhs.unesa.ac.id");
+
+    if (!allowed) {
       return {
-        success: true,
-        role: data.user.role
+        success: false,
+        message: "Hanya email resmi UNESA yang dapat mengakses sistem"
       };
     }
 
-    return data;
+    // ROLE OTOMATIS
+    let role = "dosen";
+    let type = "dosen";
+
+    if (email.endsWith("@mhs.unesa.ac.id")) {
+      role = "mahasiswa";
+      type = "mahasiswa";
+    }
+
+    const finalUser = {
+      id: data.user.id || crypto.randomUUID(),
+
+      name: data.user.name,
+      email: data.user.email,
+      photo_url: data.user.photo_url,
+
+      nim: '',
+      departemen: '',
+      prodi: '',
+      phone: '',
+      address: '',
+
+      role,
+      type
+    };
+
+    setUser(finalUser);
+
+    return {
+      success: true,
+      role
+    };
 
   } catch (error) {
     console.error(error);
@@ -90,38 +128,54 @@ const loginWithGoogle = async (credential) => {
   }
 };
 
+
+
+  //Dev Login
   const devLogin = async (role) => {
-  try {
-    const response = await fetch(`${API_URL}/api/dev-login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "ngrok-skip-browser-warning": "true"
-      },
-      body: JSON.stringify({ role })
-    });
 
-    const data = await response.json();
+  const dummyUsers = {
 
-    if (data.success) {
-      setUser(data.user);
+    admin: {
+      id: 'A001',
+      name: 'Admin Perpustakaan',
+      email: 'admin.perpus.fmipa@unesa.ac.id',
+      role: 'admin'
+    },
 
-      return {
-        success: true,
-        role: data.user.role
-      };
+    petugas: {
+      id: 'P001',
+      name: 'Petugas Perpustakaan',
+      email: 'petugas1.perpus@unesa.ac.id',
+      role: 'petugas'
+    },
+
+    dosen: {
+      id: 'D001',
+      name: 'Dosen FMIPA',
+      email: 'dosen.fmipa@unesa.ac.id',
+      role: 'dosen'
     }
 
-    return data;
+  };
 
-  } catch (error) {
-    console.error(error);
+  const selectedUser = dummyUsers[role];
+
+  if (!selectedUser) {
 
     return {
       success: false,
-      message: "Gagal dev login"
+      message: 'Role tidak ditemukan'
     };
+
   }
+
+  setUser(selectedUser);
+
+  return {
+    success: true,
+    role: selectedUser.role
+  };
+
 };
 
   // LOGOUT
