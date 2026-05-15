@@ -326,10 +326,10 @@ const name = payload.name?.trim() || email.split('@')[0];
           UPDATE Anggota
           SET
             name = @name,
-            jenis = CASE
-              WHEN jenis IS NULL OR jenis = 'staff' THEN @jenis
-              ELSE jenis
-            END
+           jenis = CASE
+  WHEN jenis IS NULL THEN @jenis
+  ELSE jenis
+END
           WHERE id = @id
         `);
     } else {
@@ -1044,85 +1044,141 @@ app.post('/api/members', uploadMember.single('photo'), async (req, res) => {
 
 app.put('/api/members/:id', uploadMember.single('photo'), async (req, res) => {
   const { id } = req.params;
-  const { name, nim, departemen, prodi, type, email, phone, address } = req.body;
-  console.log('UPDATE MEMBER body:', { name, nim, departemen, prodi, type });
-  const photo_url = req.file ? `/uploads/members/${req.file.filename}` : null;
+
+  const {
+    name,
+    nim,
+    departemen,
+    prodi,
+    type,
+    email,
+    phone,
+    address
+  } = req.body;
+
+  const photo_url = req.file
+    ? `/uploads/members/${req.file.filename}`
+    : null;
+
+  const jenis = type || 'mahasiswa';
+
+  const profileCompleted =
+    name?.trim() &&
+    nim?.trim() &&
+    email?.trim() &&
+    phone?.trim() &&
+    address?.trim() &&
+    (
+      jenis === 'staff' ||
+      (
+        departemen?.trim() &&
+        prodi?.trim()
+      )
+    );
 
   try {
     const pool = await sql.connect(dbConfig);
 
-    // SESUDAH — cukup cek keberadaan anggota, update Users pakai email:
-const anggotaCheck = await pool.request()
-  .input('id', sql.Int, id)
-  .query(`SELECT id, email FROM Anggota WHERE id = @id`);
+    const anggotaCheck = await pool.request()
+      .input('id', sql.Int, id)
+      .query(`
+        SELECT id, email
+        FROM Anggota
+        WHERE id = @id
+      `);
 
-if (anggotaCheck.recordset.length === 0) {
-  return res.json({ success: false, message: 'Anggota tidak ditemukan' });
-}
+    if (anggotaCheck.recordset.length === 0) {
+      return res.json({
+        success: false,
+        message: 'Anggota tidak ditemukan'
+      });
+    }
 
-const anggotaEmail = anggotaCheck.recordset[0].email;
+    const oldEmail = anggotaCheck.recordset[0].email;
 
-await pool.request()
-  .input('id', sql.Int, id)
-  .input('name', sql.VarChar, name)
-  .input('nim', sql.VarChar, nim)
-  .input('jurusan', sql.VarChar, departemen || prodi || null)
-  .input('departemen', sql.VarChar, departemen || null)
-  .input('prodi', sql.VarChar, prodi || null)
-  .input('jenis', sql.VarChar, type)
-  .input('email', sql.VarChar, email || null)
-  .input('phone', sql.VarChar, phone || null)
-  .input('address', sql.VarChar, address || null)
-  .input('photo_url', sql.VarChar, photo_url)
-  .query(`
-    UPDATE Anggota
-    SET
-      name = @name,
-      nim = @nim,
-      jurusan = @jurusan,
-      departemen = @departemen,
-      prodi = @prodi,
-      jenis = @jenis,
-      email = @email,
-      phone = @phone,
-      address = @address,
-      photo_url = COALESCE(@photo_url, photo_url)
-    WHERE id = @id
-  `);
+    await pool.request()
+      .input('id', sql.Int, id)
+      .input('name', sql.VarChar, name)
+      .input('nim', sql.VarChar, nim)
+      .input('jurusan', sql.VarChar, departemen || prodi || null)
+      .input('departemen', sql.VarChar, departemen || null)
+      .input('prodi', sql.VarChar, prodi || null)
+      .input('jenis', sql.VarChar, jenis)
+      .input('email', sql.VarChar, email || null)
+      .input('phone', sql.VarChar, phone || null)
+      .input('address', sql.VarChar, address || null)
+      .input('photo_url', sql.VarChar, photo_url)
+      .input('profile_completed', sql.Bit, profileCompleted ? 1 : 0)
+      .query(`
+        UPDATE Anggota
+        SET
+          name = @name,
+          nim = @nim,
+          jurusan = @jurusan,
+          departemen = @departemen,
+          prodi = @prodi,
+          jenis = @jenis,
+          email = @email,
+          phone = @phone,
+          address = @address,
+          photo_url = COALESCE(@photo_url, photo_url),
+          profile_completed = @profile_completed
+        WHERE id = @id
+      `);
 
-// Update Users berdasarkan email lama
-if (anggotaEmail) {
-  await pool.request()
-    .input('oldEmail', sql.VarChar, anggotaEmail)
-    .input('username', sql.VarChar, name)
-    .input('email', sql.VarChar, email || null)
-    .input('role', sql.VarChar, type === 'staff' ? 'petugas' : type)
-    .query(`
-      UPDATE Users
-      SET username=@username, email=@email, role=@role
-      WHERE email = @oldEmail
-    `);
-}
+    if (oldEmail) {
+      await pool.request()
+        .input('oldEmail', sql.VarChar, oldEmail)
+        .input('username', sql.VarChar, name)
+        .input('email', sql.VarChar, email || null)
+        .input('role', sql.VarChar, jenis === 'staff' ? 'petugas' : jenis)
+        .query(`
+          UPDATE Users
+          SET
+            username = @username,
+            email = @email,
+            role = @role
+          WHERE email = @oldEmail
+        `);
+    }
 
     const updated = await pool.request()
       .input('id', sql.Int, id)
       .query(`
-        SELECT id, custom_id,
-          name, nim,
-          COALESCE(departemen, jurusan) AS departemen,
-          prodi,
-          jenis AS type, email, phone, address,
-          photo_url,
+        SELECT
+          A.id,
+          A.custom_id,
+          A.name,
+          A.nim,
+          COALESCE(A.departemen, A.jurusan) AS departemen,
+          A.prodi,
+          A.jenis AS type,
+          A.email,
+          COALESCE(U.role, A.jenis) AS role,
           'aktif' AS status,
-          CONVERT(varchar, created_at, 23) AS joinDate
-        FROM Anggota WHERE id = @id
+          A.phone,
+          A.address,
+          A.photo_url,
+          A.profile_completed,
+          CONVERT(varchar, A.created_at, 23) AS joinDate
+        FROM Anggota A
+        LEFT JOIN Users U ON A.email = U.email
+        WHERE A.id = @id
       `);
 
-    res.json({ success: true, message: 'Anggota berhasil diupdate', member: updated.recordset[0] });
+    res.json({
+      success: true,
+      message: 'Anggota berhasil diupdate',
+      member: updated.recordset[0]
+    });
 
   } catch (err) {
     console.error('Update Member Error:', err);
-    res.status(500).json({ success: false, message: err.message || 'Gagal mengupdate anggota' });
+
+    res.status(500).json({
+      success: false,
+      message: err.message || 'Gagal mengupdate anggota'
+    });
   }
 });
 
@@ -1308,12 +1364,21 @@ app.post('/api/loans', async (req, res) => {
     }
 
     const memberResult = await new sql.Request(transaction)
-      .input('memberId', sql.Int, memberId)
-      .query(`
-        SELECT id, name, jenis
-        FROM Anggota
-        WHERE id = @memberId
-      `);
+  .input('memberId', sql.Int, memberId)
+  .query(`
+    SELECT
+      id,
+      name,
+      jenis,
+      nim,
+      departemen,
+      prodi,
+      phone,
+      address,
+      profile_completed
+    FROM Anggota
+    WHERE id = @memberId
+  `);
 
     if (memberResult.recordset.length === 0) {
       await transaction.rollback();
@@ -1326,6 +1391,19 @@ app.post('/api/loans', async (req, res) => {
     const member = memberResult.recordset[0];
     const memberType = String(member.jenis || '').toLowerCase();
     const rule = LOAN_RULES[memberType];
+
+    const isProfileCompleted =
+  member.profile_completed === true ||
+  member.profile_completed === 1;
+
+if (!isProfileCompleted) {
+  await transaction.rollback();
+
+  return res.json({
+    success: false,
+    message: `${member.name} harus melengkapi profil terlebih dahulu sebelum meminjam buku`
+  });
+}
 
     if (!rule) {
       await transaction.rollback();
