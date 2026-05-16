@@ -1124,21 +1124,30 @@ app.put('/api/members/:id', uploadMember.single('photo'), async (req, res) => {
     ? `/uploads/members/${req.file.filename}`
     : null;
 
-  const jenis = type || 'mahasiswa';
+const incomingRole = type || req.body.role || null;
+
+const jenis =
+  incomingRole === 'petugas'
+    ? 'staff'
+    : incomingRole;
+
+const userRole =
+  jenis === 'staff'
+    ? 'petugas'
+    : jenis;
 
   const profileCompleted =
-    name?.trim() &&
-    nim?.trim() &&
-    email?.trim() &&
-    phone?.trim() &&
-    address?.trim() &&
-    (
-      jenis === 'staff' ||
-      (
-        departemen?.trim() &&
-        prodi?.trim()
+  name && nim && email && phone && address
+    ? (
+        jenis === 'staff' ||
+        jenis === 'petugas' ||
+        (
+          departemen &&
+          prodi
+        )
       )
-    );
+    : null;
+    
 
   try {
     const pool = await sql.connect(dbConfig);
@@ -1172,39 +1181,38 @@ app.put('/api/members/:id', uploadMember.single('photo'), async (req, res) => {
       .input('phone', sql.VarChar, phone || null)
       .input('address', sql.VarChar, address || null)
       .input('photo_url', sql.VarChar, photo_url)
-      .input('profile_completed', sql.Bit, profileCompleted ? 1 : 0)
+      .input('profile_completed', sql.Bit, profileCompleted === null ? null : profileCompleted ? 1 : 0)
       .query(`
         UPDATE Anggota
         SET
-          name = @name,
-          nim = @nim,
-          jurusan = @jurusan,
-          departemen = @departemen,
-          prodi = @prodi,
-          jenis = @jenis,
-          email = @email,
-          phone = @phone,
-          address = @address,
-          photo_url = COALESCE(@photo_url, photo_url),
-          profile_completed = @profile_completed
+          name = COALESCE(@name, name),
+nim = COALESCE(@nim, nim),
+jurusan = COALESCE(@jurusan, jurusan),
+departemen = COALESCE(@departemen, departemen),
+prodi = COALESCE(@prodi, prodi),
+jenis = COALESCE(@jenis, jenis),
+email = COALESCE(@email, email),
+phone = COALESCE(@phone, phone),
+address = COALESCE(@address, address),
+photo_url = COALESCE(@photo_url, photo_url),
+profile_completed = COALESCE(@profile_completed, profile_completed)
         WHERE id = @id
       `);
 
     if (oldEmail) {
-      await pool.request()
-        .input('oldEmail', sql.VarChar, oldEmail)
-        .input('username', sql.VarChar, name)
-        .input('email', sql.VarChar, email || null)
-        .input('role', sql.VarChar, jenis === 'staff' ? 'petugas' : jenis)
-        .query(`
-          UPDATE Users
-          SET
-            username = @username,
-            email = @email,
-            role = @role
-          WHERE email = @oldEmail
-        `);
-    }
+  await pool.request()
+    .input('oldEmail', sql.VarChar, oldEmail)
+    .input('username', sql.VarChar, name || null)
+    .input('email', sql.VarChar, email || null)
+    .input('role', sql.VarChar, userRole)
+    .query(`
+      UPDATE Users
+      SET username = COALESCE(@username, username),
+          email = COALESCE(@email, email),
+          role = COALESCE(@role, role)
+      WHERE email = COALESCE(@oldEmail, @email)
+    `);
+}
 
     const updated = await pool.request()
       .input('id', sql.Int, id)
