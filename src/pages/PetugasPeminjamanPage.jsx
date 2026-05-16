@@ -76,8 +76,12 @@ function LoanDetailModal({ loan, book, onClose, onReturn, onExtend, extendLoadin
           <div style={{ display:'flex', gap:14, padding:'16px 0 14px', borderBottom:'1px solid #f0ebe6' }}>
             <BookCoverSmall bookCode={loan.bookCode} imageUrl={book?.image_url} title={loan.bookTitle} />
             <div style={{ flex:1, minWidth:0 }}>
-              <div style={{ fontWeight:700, fontSize:14, color:'#1a1a1a', marginBottom:3 }}>{loan.bookTitle}</div>
-              <code style={{ background:'#f0ebe6', padding:'2px 7px', borderRadius:4, fontSize:10, color:'#7B1C1C', fontWeight:600 }}>{loan.bookCode}</code>
+              <div style={{ fontWeight:700, fontSize:14, color:'#1a1a1a', marginBottom:3 }}>
+  {loan.bookTitle} - {loan.copyCode || loan.bookCode}
+</div>
+<code style={{ background:'#f0ebe6', padding:'2px 7px', borderRadius:4, fontSize:10, color:'#7B1C1C', fontWeight:600 }}>
+  {loan.copyCode || loan.bookCode}
+</code>
             </div>
           </div>
 
@@ -180,15 +184,33 @@ export default function PetugasPeminjamanPage() {
     const tipe = member.type?.toLowerCase();
     if (!['mahasiswa','dosen'].includes(tipe))
       return { valid:false, msg:`${member.name} tidak memiliki hak peminjaman.` };
-    const book = books.find(b => b.title?.toLowerCase().includes(bookCode.toLowerCase()));
+  const keyword = bookCode.toLowerCase();
+
+const book = books.find(b =>
+  b.title?.toLowerCase().includes(keyword) ||
+  b.no_induk?.toLowerCase().includes(keyword) ||
+  b.copies?.some(c => c.copy_code?.toLowerCase().includes(keyword))
+);
     if (!book) return { valid:false, msg:'Kode buku tidak ditemukan.' };
     if ((book.available||0) <= 0) return { valid:false, msg:`Stok "${book.title}" habis.` };
+
+    const copy =
+  book.copies?.find(c =>
+    c.copy_code?.toLowerCase().includes(bookCode.toLowerCase()) &&
+    c.status === 'available'
+  ) ||
+  book.copies?.find(c => c.status === 'available');
+
+if (!copy) {
+  return { valid:false, msg:`Tidak ada eksemplar/copy tersedia untuk "${book.title}".` };
+}
+
     if (hasUnpaidFine(member.id)) return { valid:false, msg:`${member.name} masih punya denda belum dibayar.` };
     if (hasSameBook(member.id, bookCode)) return { valid:false, msg:`${member.name} sudah meminjam buku ini.` };
     const rule = RULES[tipe];
     if (getActiveLoanCount(member.id) >= rule.maxBuku)
       return { valid:false, msg:`Sudah mencapai batas maksimal ${rule.maxBuku} buku.` };
-    return { valid:true, book, rule };
+   return { valid:true, book, copy, rule };
   };
 
   const handleSubmit = async (e) => {
@@ -198,9 +220,14 @@ export default function PetugasPeminjamanPage() {
     if (!member) { setFormError('Anggota tidak ditemukan.'); return; }
     const v = validate(member, bookCodeInput.trim());
     if (!v.valid) { setFormError(v.msg); return; }
-    const res = await addLoan(v.book.no_induk, member.id);
+    const res = await addLoan({
+  memberId: member.id,
+  bookId: v.book.id,
+  copyId: v.copy.id,
+  copyCode: v.copy.copy_code
+});
     if (res.success) {
-      setFormSuccess(`Peminjaman "${v.book.title}" oleh ${member.name} berhasil!`);
+      setFormSuccess(`Peminjaman "${v.book.title} - ${v.copy.copy_code}" oleh ${member.name} berhasil!`);
       setNimInput(''); setBookCodeInput('');
     } else {
       setFormError(res.message);
@@ -269,7 +296,11 @@ export default function PetugasPeminjamanPage() {
       {selectedLoan && (
         <LoanDetailModal
           loan={selectedLoan}
-          book={books.find(b => b.no_induk === selectedLoan.bookCode)}
+          book={books.find(b =>
+  b.id === selectedLoan.bookId ||
+  b.no_induk === selectedLoan.bookCode ||
+  b.copies?.some(c => c.copy_code === selectedLoan.bookCode)
+)}
           onClose={() => setSelectedLoan(null)}
           onReturn={handleReturn}
           onExtend={handleExtend}
@@ -464,7 +495,11 @@ export default function PetugasPeminjamanPage() {
                     </td>
                   </tr>
                 ) : activeLoans.map(l => {
-                  const book    = books.find(b => b.no_induk === l.bookCode);
+                  const book = books.find(b =>
+  b.id === l.bookId ||
+  b.no_induk === l.bookCode ||
+  b.copies?.some(c => c.copy_code === l.bookCode)
+);
                   const isLate  = l.status === 'terlambat';
                   const tipe    = l.memberType?.toLowerCase() || 'mahasiswa';
                   const rule    = RULES[tipe] || RULES.mahasiswa;

@@ -379,7 +379,9 @@ const lateCount = myLoans.filter(
 </div>
 
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 3 }}>{l.bookTitle}</div>
+                          <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 3 }}>
+  {l.bookTitle} - {l.copyCode || l.bookCode}
+</div>
                           <div style={{ fontSize: 11, color: 'var(--gray-text)', marginBottom: 8 }}>
                             Kode: <code style={{ background: 'var(--gray-light)', padding: '1px 6px', borderRadius: 3, fontSize: 11 }}>{l.bookCode}</code>
                           </div>
