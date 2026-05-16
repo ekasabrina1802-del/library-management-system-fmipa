@@ -926,7 +926,7 @@ export default function BukuPage() {
               </>
             ) : (
               <div className="info-text" style={{ color: '#666', fontSize: '13px', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Eye size={14} /> Klik tombol "Lihat Detail" untuk melihat informasi buku
+                <Eye size={14} /> Klik tombol "Lihat Detail" atau select kolom untuk melihat informasi buku
               </div>
             )}
           </div>
@@ -975,6 +975,7 @@ export default function BukuPage() {
           </div>
         </div>
 
+        {isPetugas && (
         <div
           style={{
             marginBottom: 16,
@@ -989,6 +990,7 @@ export default function BukuPage() {
         >
           📌 Silakan pilih salah satu buku terlebih dahulu untuk mengedit data buku.
         </div>
+        )}
 
         {/* ---- GRID VIEW ---- */}
         {viewMode === 'grid' ? (

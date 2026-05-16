@@ -120,31 +120,35 @@ export default function DashboardPage() {
   const { books, members, loans, activityLog, getDendaTotal } = useApp();
   const { user } = useAuth();
   const [chartType, setChartType] = useState('bulanan');
+  const [logPage, setLogPage] = useState(1);
+  const LOG_PER_PAGE = 20;
 
  const totalBooks = books.length;
-const totalAvail = books.reduce((s, b) => s + Number(b.available || 0), 0);
+  const totalAvail = books.reduce((s, b) => s + Number(b.available || 0), 0);
 
-const activeMembers = members.filter(m => m.status === 'aktif').length;
+  const activeMembers = members.filter(m => m.status === 'aktif').length;
 
-const activeLoanCount = loans.filter(l =>
-  ['dipinjam', 'diperpanjang', 'terlambat'].includes(normalizeStatus(l.status))
-).length;
+  const activeLoanCount = loans.filter(l =>
+    ['dipinjam', 'diperpanjang', 'terlambat'].includes(normalizeStatus(l.status))
+  ).length;
 
-const overdueLoanCount = loans.filter(l =>
-  normalizeStatus(l.status) === 'terlambat'
-).length;
+  const overdueLoanCount = loans.filter(l =>
+    normalizeStatus(l.status) === 'terlambat'
+  ).length;
 
-const dendaTotal = getDendaTotal();
+  const dendaTotal = getDendaTotal();
 
-const monthlyChartData = buildMonthlyChartData(loans);
-const dailyChartData = buildDailyChartData(loans);
+  const monthlyChartData = buildMonthlyChartData(loans);
+  const dailyChartData = buildDailyChartData(loans);
 
-const chartData = chartType === 'bulanan' ? monthlyChartData : dailyChartData;
-const chartKey = chartType === 'bulanan' ? 'month' : 'day';
+  const chartData = chartType === 'bulanan' ? monthlyChartData : dailyChartData;
+  const chartKey = chartType === 'bulanan' ? 'month' : 'day';
 
 
   const todayStr = new Date().toLocaleDateString('id-ID');
   const todayLog = activityLog.filter(a => a.time && a.time.includes(todayStr));
+  const totalLogPages = Math.ceil(todayLog.length / LOG_PER_PAGE);
+  const pagedLog = todayLog.slice((logPage - 1) * LOG_PER_PAGE, logPage * LOG_PER_PAGE);
 
   return (
     <div>
@@ -246,7 +250,7 @@ const chartKey = chartType === 'bulanan' ? 'month' : 'day';
         <div style={{ textAlign: 'center', padding: 32, color: 'var(--gray-text)', fontSize: 13 }}>
           Belum ada aktivitas hari ini.
         </div>
-      ) : todayLog.slice(0, 15).map(a => (
+      ) : pagedLog.map(a => (
         <div key={a.id} className="activity-item">
           <div className="activity-dot" />
           <div style={{ flex: 1 }}>
@@ -274,6 +278,21 @@ const chartKey = chartType === 'bulanan' ? 'month' : 'day';
           </div>
         </div>
       ))}
+      {totalLogPages > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 12, borderTop: '1px solid #eee' }}>
+          <span style={{ fontSize: 12, color: 'var(--gray-text)' }}>
+            Hal {logPage} / {totalLogPages}
+          </span>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button className="btn btn-ghost btn-sm" disabled={logPage === 1} onClick={() => setLogPage(p => p - 1)}>
+              ← Sebelumnya
+            </button>
+            <button className="btn btn-primary btn-sm" disabled={logPage === totalLogPages} onClick={() => setLogPage(p => p + 1)}>
+              Selanjutnya →
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   </div>
 )}

@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { FileDown, FileText } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { FileDown, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import XLSX from 'xlsx-js-style';
 import { useApp } from '../components/AppContext';
 
 const COLORS = ['#7B1C1C', '#0D1B2A', '#2E7D32', '#E65100'];
+const PAGE_SIZE = 25;
 
 export default function DendaPage() {
   const { loans } = useApp();
@@ -12,6 +13,7 @@ export default function DendaPage() {
   const currentYear = new Date().getFullYear();
   const [filterYear, setFilterYear] = useState('');
   const [filterMonth, setFilterMonth] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - i);
   const monthOptions = [
     { value: '1', label: 'Januari' }, { value: '2', label: 'Februari' },
@@ -38,6 +40,11 @@ export default function DendaPage() {
     }
 
     return true;
+  }).sort((a, b) => {
+    // Urutkan: yang paling baru dikembalikan / dipinjam di atas
+    const dateA = new Date(a.returnDate || a.loanDate || a.dueDate || 0);
+    const dateB = new Date(b.returnDate || b.loanDate || b.dueDate || 0);
+    return dateB - dateA;
   });
 
   const dendaLoans = filteredLoans.filter(l => Number(l.denda) > 0);
@@ -354,10 +361,23 @@ export default function DendaPage() {
 
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
-              <Pie data={pieData} cx="50%" cy="50%" outerRadius={70} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
+              <Pie
+                data={pieData}
+                cx="50%"
+                cy="50%"
+                outerRadius={70}
+                dataKey="value"
+                label={false}
+              >
                 {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
               </Pie>
-              <Tooltip />
+              <Tooltip formatter={(value, name) => [value, name]} />
+              <Legend
+                layout="vertical"
+                align="right"
+                verticalAlign="middle"
+                formatter={(value, entry) => `${value}: ${entry.payload.value}`}
+              />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -380,7 +400,7 @@ export default function DendaPage() {
                 { key: 'terlambat', label: 'Terlambat' },
                 { key: 'selesai', label: 'Selesai' },
               ].map(f => (
-                <button key={f.key} className={`chart-tab ${filter === f.key ? 'active' : ''}`} onClick={() => setFilter(f.key)}>
+                <button key={f.key} className={`chart-tab ${filter === f.key ? 'active' : ''}`} onClick={() => { setFilter(f.key); setCurrentPage(1); }}>
                   {f.label}
                 </button>
               ))}
@@ -390,18 +410,18 @@ export default function DendaPage() {
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <span style={{ fontSize: 12, color: 'var(--gray-text)', whiteSpace: 'nowrap' }}>Periode:</span>
               <select className="form-control" style={{ width: 120, fontSize: 12, padding: '4px 8px', height: 32 }}
-                value={filterMonth} onChange={e => setFilterMonth(e.target.value)}>
+                value={filterMonth} onChange={e => { setFilterMonth(e.target.value); setCurrentPage(1); }}>
                 <option value="">Semua Bulan</option>
                 {monthOptions.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
               </select>
               <select className="form-control" style={{ width: 100, fontSize: 12, padding: '4px 8px', height: 32 }}
-                value={filterYear} onChange={e => setFilterYear(e.target.value)}>
+                value={filterYear} onChange={e => { setFilterYear(e.target.value); setCurrentPage(1); }}>
                 <option value="">Semua Thn</option>
                 {yearOptions.map(y => <option key={y} value={String(y)}>{y}</option>)}
               </select>
               {(filterYear || filterMonth) && (
                 <button className="btn btn-ghost btn-sm" style={{ height: 32, fontSize: 11 }}
-                  onClick={() => { setFilterYear(''); setFilterMonth(''); }}>
+                  onClick={() => { setFilterYear(''); setFilterMonth(''); setCurrentPage(1); }}>
                   ✕ Reset
                 </button>
               )}
@@ -412,54 +432,90 @@ export default function DendaPage() {
           </div>
         </div>
 
-        <div className="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Kode Buku</th>
-                <th>Judul Buku</th>
-                <th>Peminjam</th>
-                <th>Tipe</th>
-                <th>Tgl Pinjam</th>
-                <th>Batas Kembali</th>
-                <th>Tgl Kembali</th>
-                <th>Denda</th>
-                <th>Status</th>
-              </tr>
-            </thead>
+        {(() => {
+          const totalPages = Math.ceil(filteredLoans.length / PAGE_SIZE);
+          const startIdx = (currentPage - 1) * PAGE_SIZE;
+          const pagedLoans = filteredLoans.slice(startIdx, startIdx + PAGE_SIZE);
 
-            <tbody>
-              {filteredLoans.length === 0 ? (
-                <tr><td colSpan={10} style={{ textAlign: 'center', padding: 30, color: 'var(--gray-text)' }}>Tidak ada data</td></tr>
-              ) : filteredLoans.map(l => (
-                <tr key={l.id}>
-                  <td style={{ fontSize: 11 }}>{l.id}</td>
-                  <td><code style={{ fontSize: 11, background: 'var(--gray-light)', padding: '1px 5px', borderRadius: 3 }}>{l.bookCode}</code></td>
-                  <td style={{ fontWeight: 600, fontSize: 12, maxWidth: 160 }}>{l.bookTitle}</td>
-                  <td style={{ fontSize: 12 }}>{l.memberName}</td>
-                  <td><span className={`badge ${l.memberType === 'mahasiswa' ? 'badge-info' : 'badge-success'}`} style={{ fontSize: 10 }}>{l.memberType}</span></td>
-                  <td style={{ fontSize: 12 }}>{l.loanDate}</td>
-                  <td style={{ fontSize: 12 }}>{l.dueDate}</td>
-                  <td style={{ fontSize: 12 }}>{l.returnDate || '-'}</td>
-                  <td style={{ fontWeight: Number(l.denda) > 0 ? 700 : 400, color: Number(l.denda) > 0 ? 'var(--danger)' : 'inherit', fontSize: 12 }}>
-                    {Number(l.denda) > 0 ? `Rp ${Number(l.denda).toLocaleString('id-ID')}` : '-'}
-                  </td>
-                  <td>
-                    <span className={`badge ${l.status === 'dikembalikan' ? 'badge-success' : l.status === 'terlambat' ? 'badge-danger' : 'badge-warning'}`}>
-                      {l.status === 'dipinjam' ? 'Dipinjam' : l.status === 'terlambat' ? 'Terlambat' : 'Dikembalikan'}
+          return (
+            <>
+              <div className="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Kode Buku</th>
+                      <th>Judul Buku</th>
+                      <th>Peminjam</th>
+                      <th>Tipe</th>
+                      <th>Tgl Pinjam</th>
+                      <th>Batas Kembali</th>
+                      <th>Tgl Kembali</th>
+                      <th>Denda</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {pagedLoans.length === 0 ? (
+                      <tr><td colSpan={10} style={{ textAlign: 'center', padding: 30, color: 'var(--gray-text)' }}>Tidak ada data</td></tr>
+                    ) : pagedLoans.map(l => (
+                      <tr key={l.id}>
+                        <td style={{ fontSize: 11 }}>{l.id}</td>
+                        <td><code style={{ fontSize: 11, background: 'var(--gray-light)', padding: '1px 5px', borderRadius: 3 }}>{l.bookCode}</code></td>
+                        <td style={{ fontWeight: 600, fontSize: 12, maxWidth: 160 }}>{l.bookTitle}</td>
+                        <td style={{ fontSize: 12 }}>{l.memberName}</td>
+                        <td><span className={`badge ${l.memberType === 'mahasiswa' ? 'badge-info' : 'badge-success'}`} style={{ fontSize: 10 }}>{l.memberType}</span></td>
+                        <td style={{ fontSize: 12 }}>{l.loanDate}</td>
+                        <td style={{ fontSize: 12 }}>{l.dueDate}</td>
+                        <td style={{ fontSize: 12 }}>{l.returnDate || '-'}</td>
+                        <td style={{ fontWeight: Number(l.denda) > 0 ? 700 : 400, color: Number(l.denda) > 0 ? 'var(--danger)' : 'inherit', fontSize: 12 }}>
+                          {Number(l.denda) > 0 ? `Rp ${Number(l.denda).toLocaleString('id-ID')}` : '-'}
+                        </td>
+                        <td>
+                          <span className={`badge ${l.status === 'dikembalikan' ? 'badge-success' : l.status === 'terlambat' ? 'badge-danger' : 'badge-warning'}`}>
+                            {l.status === 'dipinjam' ? 'Dipinjam' : l.status === 'diperpanjang' ? 'Dipinjam' : l.status === 'terlambat' ? 'Terlambat' : 'Dikembalikan'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div style={{ marginTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8, fontSize: 12, color: 'var(--gray-text)' }}>
+                <span>
+                  Menampilkan {filteredLoans.length === 0 ? 0 : startIdx + 1}–{Math.min(startIdx + PAGE_SIZE, filteredLoans.length)} dari {filteredLoans.length} entri
+                  &nbsp;·&nbsp; Total Denda: <b style={{ color: 'var(--danger)' }}>Rp {filteredLoans.reduce((s, l) => s + Number(l.denda || 0), 0).toLocaleString('id-ID')}</b>
+                </span>
+
+                {totalPages > 1 && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage(p => p - 1)}
+                      style={{ opacity: currentPage === 1 ? 0.4 : 1, display: 'flex', alignItems: 'center', gap: 4 }}
+                    >
+                      <ChevronLeft size={14} /> Sebelumnya
+                    </button>
+                    <span style={{ fontSize: 12, color: '#555', padding: '0 4px' }}>
+                      Hal {currentPage} / {totalPages}
                     </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div style={{ marginTop: 12, display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--gray-text)' }}>
-          <span>{filteredLoans.length} entri</span>
-          <span>Total Denda Terfilter: Rp {filteredLoans.reduce((s, l) => s + Number(l.denda || 0), 0).toLocaleString('id-ID')}</span>
-        </div>
+                    <button
+                      className="btn btn-primary btn-sm"
+                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage(p => p + 1)}
+                      style={{ opacity: currentPage === totalPages ? 0.4 : 1, display: 'flex', alignItems: 'center', gap: 4 }}
+                    >
+                      Selanjutnya <ChevronRight size={14} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
+          );
+        })()}
       </div>
     </div>
   );

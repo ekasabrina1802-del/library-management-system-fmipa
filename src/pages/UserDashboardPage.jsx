@@ -150,7 +150,7 @@ const profilePhoto = currentMember?.photo_url || user?.photo_url;
 );
 
   const activeLoans = myLoans.filter(l =>
-    ['dipinjam', 'Dipinjam'].includes(l.status)
+    ['dipinjam', 'Dipinjam', 'diperpanjang', 'Diperpanjang'].includes(l.status)
   );
   const overdueLoans = myLoans.filter(l =>
     ['terlambat', 'Terlambat'].includes(l.status)

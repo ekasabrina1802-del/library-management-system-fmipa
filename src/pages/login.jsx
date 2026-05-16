@@ -91,10 +91,10 @@ export default function LoginPage() {
   return (
     <div className="login-page">
 
-      <div className="login-left">
+      <div className="login-left" style={{ flex: '0 0 55%' }}>
         <div>
           <div className="login-tag">
-            The Precise Curator
+            FMIPA LIBRARY
           </div>
 
           <h1 className="login-headline">
@@ -104,21 +104,21 @@ export default function LoginPage() {
             <br />
             dengan
             <br />
-            Presisi.
+            Baca Buku.
           </h1>
 
           <p className="login-desc">
             Selamat datang di Sistem Informasi Perpustakaan FMIPA.
-            Akses koleksi literatur sains terlengkap dalam lingkungan digital yang terstruktur.
+            Setiap rumus besar lahir dari buku yang dibaca berulang kali.
           </p>
 
           <div className="login-faculty">
-            Fakultas Matematika dan Ilmu Pengetahuan Alam
+            Fakultas Matematika dan Ilmu Pengetahuan Alam Universitas Negeri Surabaya
           </div>
         </div>
       </div>
 
-      <div className="login-right">
+      <div className="login-right" style={{ flex: '0 0 45%' }}>
         <div>
           <h2>
             Masuk ke Sistem

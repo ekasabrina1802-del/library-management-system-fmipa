@@ -44,6 +44,7 @@ function daysFromNow(dateStr) {
 function StatusBadge({ status }) {
   const map = {
     dipinjam:     { label: 'Dipinjam',     cls: 'badge-warning' },
+    diperpanjang: { label: 'Dipinjam',     cls: 'badge-warning' },
     terlambat:    { label: 'Terlambat',    cls: 'badge-danger' },
     dikembalikan: { label: 'Dikembalikan', cls: 'badge-success' },
   };
@@ -297,7 +298,7 @@ export default function UserDendaPage() {
   const filteredLoans = myLoans.filter(l => {
     const s = (l.status || '').toLowerCase();
     const isLate = s === 'terlambat' || (s === 'dipinjam' && l.dueDate < today);
-    if (filter === 'dipinjam')   return s === 'dipinjam' && l.dueDate >= today;
+    if (filter === 'dipinjam') return (s === 'dipinjam' || s === 'diperpanjang') && l.dueDate >= today;
     if (filter === 'terlambat')  return isLate;
     if (filter === 'selesai')    return s === 'dikembalikan';
     return true;
