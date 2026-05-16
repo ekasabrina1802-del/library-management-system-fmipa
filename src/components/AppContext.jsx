@@ -1,3 +1,4 @@
+//AppContext.jsx
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from '../components/AuthContext';
 
@@ -236,29 +237,59 @@ export function AppProvider({ children }) {
     }
   };
 
-  const updateMember = async (id, updates) => {
-    try {
-      const isFormData = updates instanceof FormData;
-      const res = await fetch(`${API_URL}/api/members/${id}`, {
-        method: 'PUT',
-        headers: isFormData ? { 'ngrok-skip-browser-warning': 'true' } : jsonHeaders,
-        body: isFormData ? updates : JSON.stringify(updates)
-      });
-      const data = await res.json();
-      if (data.success) {
-        await fetchMembers();
-        const name = getField(updates, 'name');
-        const nim = getField(updates, 'nim');
-        const email = getField(updates, 'email');
-        addLog('member', `Memperbarui data anggota: ${name || '-'} (${nim || '-'}) — ${email || '-'}`, 'member');
-        return true;
-      }
-      return false;
-    } catch (err) {
-      console.error(err);
-      return false;
+ const updateMember = async (id, updates) => {
+  try {
+    const isFormData = updates instanceof FormData;
+
+    const res = await fetch(`${API_URL}/api/members/${id}`, {
+      method: 'PUT',
+      headers: isFormData
+        ? { 'ngrok-skip-browser-warning': 'true' }
+        : jsonHeaders,
+      body: isFormData
+        ? updates
+        : JSON.stringify(updates)
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+
+      const mappedUpdates =
+        updates instanceof FormData
+          ? Object.fromEntries(updates.entries())
+          : updates;
+
+      setMembers(prev =>
+        prev.map(member =>
+          member.id === id
+            ? { ...member, ...mappedUpdates }
+            : member
+        )
+      );
+
+      await fetchMembers();
+
+      const name = getField(updates, 'name');
+      const nim = getField(updates, 'nim');
+      const email = getField(updates, 'email');
+
+      addLog(
+        'member',
+        `Memperbarui data anggota: ${name || '-'} (${nim || '-'}) — ${email || '-'}`,
+        'member'
+      );
+
+      return true;
     }
-  };
+
+    return false;
+
+  } catch (err) {
+    console.error(err);
+    return false;
+  }
+};
 
   const deleteMember = async (id) => {
     try {

@@ -221,7 +221,7 @@ function MemberDetailModal({ member, loans, books, onClose, onEdit, extendLoan, 
           <button
             onClick={onClose}
             style={{
-              position: 'absolute', top: 18, right: 18,
+              position: 'absolute', top: 23, right: 18,
               color: 'rgba(255,255,255,0.7)', background: 'rgba(255,255,255,0.12)',
               border: 'none', borderRadius: '50%', width: 30, height: 30,
               display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
