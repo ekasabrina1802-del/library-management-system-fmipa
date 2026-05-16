@@ -620,8 +620,15 @@ const bookId = insertedBook.recordset[0].id;
 let parsedCopies = [];
 
 try {
-  parsedCopies = copies ? JSON.parse(copies) : [];
-} catch {
+  if (Array.isArray(copies)) {
+    parsedCopies = copies;
+  } else if (typeof copies === 'string') {
+    parsedCopies = copies ? JSON.parse(copies) : [];
+  } else {
+    parsedCopies = [];
+  }
+} catch (err) {
+  console.error('Parse copies error:', err);
   parsedCopies = [];
 }
 
@@ -660,18 +667,19 @@ for (const copy of parsedCopies) {
 app.put('/api/books/:id', upload.single('image'), async (req, res) => {
   const { id } = req.params;
 
-  const {
-    no_induk,
-    no_klasifikasi,
-    title,
-    author,
-    publisher,
-    year,
-    isbn,
-    category,
-    stock,
-    description
-  } = req.body;
+ const {
+  no_induk,
+  no_klasifikasi,
+  title,
+  author,
+  publisher,
+  year,
+  isbn,
+  category,
+  stock,
+  description,
+  copies
+} = req.body;
 
   try {
     const pool = await sql.connect(dbConfig);
@@ -723,6 +731,62 @@ app.put('/api/books/:id', upload.single('image'), async (req, res) => {
           image_url = @image_url
         WHERE id = @id
       `);
+
+let parsedCopies = [];
+
+try {
+  if (Array.isArray(copies)) {
+    parsedCopies = copies;
+  } else if (typeof copies === 'string') {
+    parsedCopies = copies ? JSON.parse(copies) : [];
+  } else {
+    parsedCopies = [];
+  }
+} catch (err) {
+  console.error('Parse copies error:', err);
+  parsedCopies = [];
+}
+
+if (parsedCopies.length > 0) {
+  for (const copy of parsedCopies) {
+  const copyId = Number(copy.id);
+
+  await pool.request()
+    .input('copy_id', sql.Int, Number.isInteger(copyId) ? copyId : null)
+      .input('buku_id', sql.Int, id)
+      .input('copy_code', sql.VarChar, copy.copy_code)
+      .input('status', sql.VarChar, copy.status || 'available')
+      .query(`
+  IF EXISTS (
+    SELECT 1 FROM BukuCopy
+    WHERE id = @copy_id
+      AND buku_id = @buku_id
+  )
+  BEGIN
+    UPDATE BukuCopy
+    SET copy_code = @copy_code,
+        status = @status
+    WHERE id = @copy_id
+      AND buku_id = @buku_id
+  END
+  ELSE IF EXISTS (
+    SELECT 1 FROM BukuCopy
+    WHERE copy_code = @copy_code
+  )
+  BEGIN
+    UPDATE BukuCopy
+    SET buku_id = @buku_id,
+        status = @status
+    WHERE copy_code = @copy_code
+  END
+  ELSE
+  BEGIN
+    INSERT INTO BukuCopy (buku_id, copy_code, status)
+    VALUES (@buku_id, @copy_code, @status)
+  END
+`);
+  }
+}
 
     res.json({
       success: true,
@@ -1237,7 +1301,16 @@ app.get('/api/loans/user/:nim', async (req, res) => {
   try {
     const pool = await sql.connect(dbConfig);
     const result = await pool.request().input('nim', sql.VarChar, req.params.nim).query(`
-      SELECT P.id, B.no_induk AS bookCode, B.title AS bookTitle, B.image_url, P.status, P.denda,
+      SELECT 
+  P.id,
+  P.buku_id AS bookId,
+  P.copy_id AS copyId,
+  P.copy_code AS copyCode,
+  B.no_induk AS bookCode,
+  B.title AS bookTitle,
+  B.image_url,
+  P.status,
+  P.denda,
              CONVERT(varchar, P.tgl_pinjam, 23) AS loanDate, 
              CONVERT(varchar, P.tgl_jatuh_tempo, 23) AS dueDate
       FROM Peminjaman P 
