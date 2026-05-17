@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import Login from './pages/Login';
+import Login from './pages/login';
 
 // Auth & Layout
 import Layout from "./components/Layout";
@@ -22,7 +22,7 @@ import UserPeminjamanPage from './pages/UserPeminjamanPage';
 import UserPengembalianPage from './pages/UserPengembalianPage';
 import PetugasDendaPage from "./pages/PetugasDendaPage";
 import UserDendaPage from "./pages/UserDendaPage";
-import MahasiswaPage from "./pages/MahasiswaPage";
+import MahasiswaPage from "./pages/Mahasiswapage";
 
 function App() {
   const { user } = useAuth();
