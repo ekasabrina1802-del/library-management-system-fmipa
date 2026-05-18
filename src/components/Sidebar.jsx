@@ -1,4 +1,5 @@
 // Sidebar.jsx
+import logo from '../assets/LOGO3.png';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -64,12 +65,33 @@ export default function Sidebar() {
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-logo">
-        <div className="role-badge">
-          {user?.role?.toUpperCase() || 'GUEST'}
-        </div>
-        <div className="app-name">
-          Perpustakaan<br />Fakultas FMIPA
+      <div
+        className="sidebar-logo"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
+        }}
+      >
+        <img
+          src={logo}
+          alt="Logo FMIPA"
+          style={{
+            width: '75px',
+            height: '75px',
+            objectFit: 'contain'
+          }}
+        />
+
+        <div>
+          <div className="role-badge">
+            {user?.role?.toUpperCase() || 'GUEST'}
+          </div>
+
+          <div className="app-name">
+            Perpustakaan<br />
+            Fakultas FMIPA
+          </div>
         </div>
       </div>
 

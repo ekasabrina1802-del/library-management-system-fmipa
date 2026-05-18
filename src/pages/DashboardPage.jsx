@@ -165,43 +165,168 @@ export default function DashboardPage() {
 
       {/* Stat Cards */}
       <div className="grid-4 mb-24">
-        <div className="stat-card">
-          <div className="stat-icon maroon"><BookOpen size={20} /></div>
+
+        {/* Buku */}
+        <div style={{ 
+          background: 'linear-gradient(135deg, #fff5f5, #ffffff)',
+          border: '1.5px solid #FED7D7',
+          borderRadius: 14,
+          padding: '20px 22px',
+          boxShadow: '0 2px 8px rgba(229,62,62,0.08)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start'
+        }}>
           <div>
-            <div className="stat-value">{totalBooks}</div>
-            <div className="stat-label">Total Buku Terkatalog</div>
-            <div className="stat-change">↑ {totalAvail} tersedia</div>
+            <div style={{ fontSize: 11, color: '#e53e3e', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>
+              Total Buku
+            </div>
+
+            <div style={{ fontSize: 28, fontWeight: 800, color: '#e53e3e', lineHeight: 1 }}>
+              {totalBooks}
+            </div>
+
+            <div style={{ fontSize: 12, color: '#4f5661', marginTop: 10 }}>
+              ↑ {totalAvail} tersedia
+            </div>
+          </div>
+
+          <div style={{
+            width: 42,
+            height: 42,
+            borderRadius: 12,
+            background: '#fff1f1',
+            border: '1px solid #fbc2c2',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#e53e3e'
+          }}>
+            <BookOpen size={20} />
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon navy"><Users size={20} /></div>
+
+        {/* Anggota */}
+        <div style={{
+          background: 'linear-gradient(135deg, #fffaf0, #ffffff)',
+          border: '1.5px solid #feebc8',
+          borderRadius: 14,
+          padding: '20px 22px',
+          boxShadow: '0 2px 8px rgba(214,158,46,0.08)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start'
+        }}>
           <div>
-            <div className="stat-value">{activeMembers}</div>
-            <div className="stat-label">Anggota Aktif</div>
-            <div className="stat-change" style={{ color: 'var(--info)' }}>
+            <div style={{ fontSize: 11, color: '#d69e2e', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>
+              Anggota Aktif
+            </div>
+
+            <div style={{ fontSize: 28, fontWeight: 800, color: '#d69e2e', lineHeight: 1 }}>
+              {activeMembers}
+            </div>
+
+            <div style={{ fontSize: 12, color: '#4f5661', marginTop: 10 }}>
               {members.filter(m => m.type === 'mahasiswa').length} mahasiswa · {members.filter(m => m.type === 'dosen').length} dosen
             </div>
           </div>
+
+          <div style={{
+            width: 42,
+            height: 42,
+            borderRadius: 12,
+            background: '#fff7e6',
+            border: '1px solid #feebc8',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#d69e2e'
+          }}>
+            <Users size={20} />
+          </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon orange"><BookMarked size={20} /></div>
+
+        {/* Dipinjam */}
+        <div style={{
+          background: 'linear-gradient(135deg, #f0fff4, #ffffff)',
+          border: '1.5px solid #c6f6d5',
+          borderRadius: 14,
+          padding: '20px 22px',
+          boxShadow: '0 2px 8px rgba(56,161,105,0.08)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start'
+        }}>
           <div>
-            <div className="stat-value">{activeLoanCount}</div>
-            <div className="stat-label">Sedang Dipinjam</div>
-            <div className="stat-change" style={{ color: 'var(--warning)' }}>
+            <div style={{ fontSize: 11, color: '#38a169', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>
+              Sedang Dipinjam
+            </div>
+
+            <div style={{ fontSize: 28, fontWeight: 800, color: '#38a169', lineHeight: 1 }}>
+              {activeLoanCount}
+            </div>
+
+            <div style={{ fontSize: 12, color: '#4f5661', marginTop: 10 }}>
               {overdueLoanCount} terlambat
             </div>
           </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon green"><Banknote size={20} /></div>
-          <div>
-            <div className="stat-value">Rp {(dendaTotal / 1000).toFixed(0)}k</div>
-            <div className="stat-label">Denda Masuk Bulan Ini</div>
-            <div className="stat-change">Total: Rp {dendaTotal.toLocaleString('id-ID')}</div>
+
+          <div style={{
+            width: 42,
+            height: 42,
+            borderRadius: 12,
+            background: '#ecfff3',
+            border: '1px solid #c6f6d5',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#38a169'
+          }}>
+            <BookMarked size={20} />
           </div>
         </div>
-      </div>
+
+        {/* Denda */}
+        <div style={{
+          background: 'linear-gradient(135deg, #eff6ff, #ffffff)',
+          border: '1.5px solid #bfdbfe',
+          borderRadius: 14,
+          padding: '20px 22px',
+          boxShadow: '0 2px 8px rgba(37,99,235,0.08)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start'
+        }}>
+          <div>
+            <div style={{ fontSize: 11, color: '#2563eb', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>
+              Denda Bulan Ini
+            </div>
+
+            <div style={{ fontSize: 28, fontWeight: 800, color: '#2563eb', lineHeight: 1 }}>
+              Rp {dendaTotal.toLocaleString('id-ID')}
+            </div>
+
+            <div style={{ fontSize: 12, color: '#4f5661', marginTop: 10 }}>
+              Total pemasukan denda
+            </div>
+          </div>
+
+    <div style={{
+      width: 42,
+      height: 42,
+      borderRadius: 12,
+      background: '#eef4ff',
+      border: '1px solid #bfdbfe',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: '#2563eb'
+    }}>
+      <Banknote size={20} />
+    </div>
+  </div>
+
+</div>
 
       <div className="grid-2 mb-24" style={{ gridTemplateColumns: '1fr' }}>
         {/* Chart */}

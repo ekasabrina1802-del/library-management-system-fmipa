@@ -50,10 +50,10 @@ export default function AdminPengembalianPage() {
   const onTimeCount   = completedLoans.length - lateCount;
 
   const statCards = [
-    { label: 'Total Pengembalian', value: completedLoans.length, color: '#2E7D32', bg: 'rgba(46,125,50,0.07)',  border: 'rgba(46,125,50,0.18)',  icon: <BookOpen size={16} /> },
-    { label: 'Tepat Waktu',        value: onTimeCount,            color: '#0D1B2A', bg: 'rgba(13,27,42,0.07)',   border: 'rgba(13,27,42,0.18)',   icon: <CheckCircle size={16} /> },
-    { label: 'Kasus Terlambat',    value: lateCount,              color: '#991B1B', bg: 'rgba(153,27,27,0.07)',  border: 'rgba(153,27,27,0.18)',  icon: <AlertCircle size={16} /> },
-    { label: 'Denda Terkumpul',    value: `Rp ${totalDenda.toLocaleString('id-ID')}`, color: '#B45309', bg: 'rgba(180,83,9,0.07)', border: 'rgba(180,83,9,0.18)', icon: <TrendingDown size={16} /> },
+    { label: 'Total Pengembalian', value: completedLoans.length, color: '#E53E3E', bg: 'linear-gradient(135deg, #fff5f5, #ffffff)', border: '#FED7D7', shadow: 'rgba(229,62,62,0.08)', iconBg: '#fff1f1', icon: <BookOpen size={18} /> },
+    { label: 'Tepat Waktu', value: onTimeCount, color: '#D69E2E', bg: 'linear-gradient(135deg, #fffaf0, #ffffff)', border: '#FEEBC8', shadow: 'rgba(214,158,46,0.08)', iconBg: '#fff7e6', icon: <CheckCircle size={18} /> },
+    { label: 'Kasus Terlambat', value: lateCount, color: '#38A169', bg: 'linear-gradient(135deg, #f0fff4, #ffffff)', border: '#C6F6D5', shadow: 'rgba(56,161,105,0.08)', iconBg: '#ecfff3', icon: <AlertCircle size={18} /> },
+    { label: 'Denda Terkumpul', value: `Rp ${totalDenda.toLocaleString('id-ID')}`, color: '#2563EB', bg: 'linear-gradient(135deg, #eff6ff, #ffffff)', border: '#BFDBFE', shadow: 'rgba(37,99,235,0.08)', iconBg: '#eef4ff', icon: <TrendingDown size={18} /> },
   ];
 
   return (
@@ -66,29 +66,29 @@ export default function AdminPengembalianPage() {
       </div>
 
       {/* ── Stat Cards ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
+      <div className="grid-4 mb-24" style={{ gap: '16px' }}>
+
         {statCards.map((s, i) => (
-          <div key={i} style={{
-            background: s.bg, border: `1px solid ${s.border}`,
-            borderRadius: 14, padding: '20px 22px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-            display: 'flex', alignItems: 'center', gap: 16,
-          }}>
-            <div style={{
-              width: 40, height: 40, borderRadius: 10,
-              background: s.bg, border: `1px solid ${s.border}`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: s.color, flexShrink: 0,
-            }}>
-              {s.icon}
-            </div>
+
+          <div
+            key={i}
+            style={{ background: s.bg, border: `1.5px solid ${s.border}`, borderRadius: 14, padding: '20px 22px', minHeight: 120, boxShadow: `0 2px 8px ${s.shadow}`, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
+          >
+
             <div>
-              <div style={{ fontSize: 11, color: s.color, textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 4 }}>
+              <div style={{ fontSize: 11, color: s.color, textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>
                 {s.label}
               </div>
-              <div style={{ fontSize: i === 3 ? 15 : 28, fontWeight: 800, color: s.color, lineHeight: 1, fontFamily: "'DM Mono', monospace" }}>
+
+              <div style={{ fontSize: i === 3 ? 18 : 28, fontWeight: 800, color: s.color, lineHeight: 1, fontFamily: "'DM Mono', monospace" }}>
                 {s.value}
               </div>
+            </div>
+
+            <div
+              style={{ width: 42, height: 42, borderRadius: 12, background: s.iconBg, border: `1px solid ${s.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: s.color, flexShrink: 0 }}
+            >
+              {s.icon}
             </div>
           </div>
         ))}

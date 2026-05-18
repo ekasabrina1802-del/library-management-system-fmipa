@@ -421,18 +421,76 @@ export default function AdminAnggotaPage() {
   const totalCount     = members.filter(m => m.role !== 'admin').length;
 
   const statCards = [
-    { label: 'Petugas Aktif',  value: staffCount,     color: '#7B1C1C', bg: 'rgba(123,28,28,0.07)',  border: 'rgba(123,28,28,0.18)',  icon: <ShieldCheck size={16} /> },
-    { label: 'Dosen',          value: dosenCount,      color: '#0D1B2A', bg: 'rgba(13,27,42,0.07)',   border: 'rgba(13,27,42,0.18)',   icon: <UserCheck size={16} /> },
-    { label: 'Mahasiswa',      value: mahasiswaCount,  color: '#065F46', bg: 'rgba(6,95,70,0.07)',    border: 'rgba(6,95,70,0.18)',    icon: <Users size={16} /> },
-    { label: 'Total Member',   value: totalCount,      color: '#B45309', bg: 'rgba(180,83,9,0.07)',   border: 'rgba(180,83,9,0.18)',   icon: <Users size={16} /> },
-  ];
+  { label: 'Petugas Aktif', value: staffCount, desc: 'Total petugas aktif', color: '#E53E3E', bg: 'linear-gradient(135deg, #fff5f5, #ffffff)', border: '#FED7D7', shadow: 'rgba(229,62,62,0.08)', iconBg: '#fff1f1', icon: <ShieldCheck size={18} /> },
 
-  const filterButtons = [
-    { key: 'semua',     label: 'Semua',     activeColor: '#7B1C1C', activeBg: 'rgba(123,28,28,0.09)' },
-    { key: 'petugas',   label: 'Petugas',   activeColor: '#B45309', activeBg: 'rgba(180,83,9,0.1)' },
-    { key: 'dosen',     label: 'Dosen',     activeColor: '#0D1B2A', activeBg: 'rgba(13,27,42,0.09)' },
-    { key: 'mahasiswa', label: 'Mahasiswa', activeColor: '#065F46', activeBg: 'rgba(6,95,70,0.09)' },
-  ];
+  { label: 'Dosen', value: dosenCount, desc: 'Data dosen aktif', color: '#D69E2E', bg: 'linear-gradient(135deg, #fffaf0, #ffffff)', border: '#FEEBC8', shadow: 'rgba(214,158,46,0.08)', iconBg: '#fff7e6', icon: <UserCheck size={18} /> },
+
+  { label: 'Mahasiswa', value: mahasiswaCount, desc: 'Mahasiswa terdaftar', color: '#38A169', bg: 'linear-gradient(135deg, #f0fff4, #ffffff)', border: '#C6F6D5', shadow: 'rgba(56,161,105,0.08)', iconBg: '#ecfff3', icon: <Users size={18} /> },
+
+  { label: 'Total Member', value: totalCount, desc: 'Total seluruh member', color: '#2563EB', bg: 'linear-gradient(135deg, #eff6ff, #ffffff)', border: '#BFDBFE', shadow: 'rgba(37,99,235,0.08)', iconBg: '#eef4ff', icon: <Users size={18} /> },
+];
+
+const filterButtons = [
+  { key: 'semua', label: 'Semua', activeColor: '#E53E3E', activeBg: '#fff5f5' },
+  { key: 'petugas', label: 'Petugas', activeColor: '#D69E2E', activeBg: '#fffaf0' },
+  { key: 'dosen', label: 'Dosen', activeColor: '#38A169', activeBg: '#f0fff4' },
+  { key: 'mahasiswa', label: 'Mahasiswa', activeColor: '#2563EB', activeBg: '#eff6ff' },
+];
+
+{/* Stats Cards */}
+<div className="grid-4 mb-24">
+  {statCards.map((card, index) => (
+
+    <div
+      key={index}
+      style={{ background: card.bg, border: `1.5px solid ${card.border}`, borderRadius: 14, padding: '20px 22px', height: 120, boxShadow: `0 2px 8px ${card.shadow}`, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
+    >
+
+      <div>
+        <div style={{ fontSize: 11, color: card.color, textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>
+          {card.label}
+        </div>
+
+        <div style={{ fontSize: 28, fontWeight: 800, color: card.color, lineHeight: 1, fontFamily: "'DM Mono', monospace" }}>
+          {card.value}
+        </div>
+
+        <div style={{ fontSize: 12, color: '#4f5661', marginTop: 10 }}>
+          {card.desc}
+        </div>
+      </div>
+
+      <div
+        style={{ width: 42, height: 42, borderRadius: 12, background: card.iconBg, border: `1px solid ${card.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: card.color, flexShrink: 0 }}
+      >
+        {card.icon}
+      </div>
+
+      
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        
+        <div>
+          <div style={{ fontSize: 11, color: card.color, textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>
+            {card.label}
+          </div>
+
+          <div style={{ fontSize: 28, fontWeight: 800, color: card.color, lineHeight: 1 }}>
+            {card.value}
+          </div>
+
+          <div style={{ fontSize: 12, color: '#4f5661', marginTop: 10 }}>
+            Total data {card.label.toLowerCase()}
+          </div>
+        </div>
+
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: card.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: card.color }}>
+          {card.icon}
+        </div>
+
+      </div>
+    </div>
+  ))}
+</div>
 
   return (
     <div>

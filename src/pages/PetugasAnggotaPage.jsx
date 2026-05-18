@@ -627,39 +627,48 @@ export default function AnggotaPage() {
     return <span className="badge badge-success">Dosen</span>;
   };
 
-  /* Stat card style identical to PeminjamanPage */
   const statCards = [
-    {
-      label: 'Mahasiswa Aktif',
-      value: mahasiswaCount,
-      color: '#7B1C1C',
-      bg: 'rgba(123,28,28,0.07)',
-      border: 'rgba(123,28,28,0.18)',
-      icon: <GraduationCap size={16} />,
-    },
-    {
-      label: 'Dosen Aktif',
-      value: dosenCount,
-      color: '#0D1B2A',
-      bg: 'rgba(13,27,42,0.07)',
-      border: 'rgba(13,27,42,0.18)',
-      icon: <UserCheck size={16} />,
-    },
-    {
-      label: 'Total Anggota',
-      value: totalCount,
-      color: '#B45309',
-      bg: 'rgba(180,83,9,0.07)',
-      border: 'rgba(180,83,9,0.18)',
-      icon: <Users size={16} />,
-    },
+    { label: 'Mahasiswa Aktif', value: mahasiswaCount, color: '#E53E3E', bg: 'linear-gradient(135deg, #fff5f5, #ffffff)', border: '#FED7D7', shadow: 'rgba(229,62,62,0.08)', iconBg: '#fff1f1', icon: <GraduationCap size={18} /> },
+
+    { label: 'Dosen Aktif', value: dosenCount, color: '#38A169', bg: 'linear-gradient(135deg, #f0fff4, #ffffff)', border: '#C6F6D5', shadow: 'rgba(56,161,105,0.08)', iconBg: '#ecfff3', icon: <UserCheck size={18} /> },
+
+    { label: 'Total Anggota', value: totalCount, color: '#2563EB', bg: 'linear-gradient(135deg, #eff6ff, #ffffff)', border: '#BFDBFE', shadow: 'rgba(37,99,235,0.08)', iconBg: '#eef4ff', icon: <Users size={18} /> },
   ];
 
   const filterButtons = [
-    { key: 'semua',      label: 'Semua',     activeColor: '#7B1C1C', activeBg: 'rgba(123,28,28,0.09)' },
-    { key: 'mahasiswa',  label: 'Mahasiswa', activeColor: '#2563eb', activeBg: '#dbeafe' },
-    { key: 'dosen',      label: 'Dosen',     activeColor: '#16a34a', activeBg: '#dcfce7' },
+    { key: 'semua', label: 'Semua', activeColor: '#E53E3E', activeBg: '#fff5f5' },
+    { key: 'mahasiswa', label: 'Mahasiswa', activeColor: '#2563EB', activeBg: '#eff6ff' },
+    { key: 'dosen', label: 'Dosen', activeColor: '#38A169', activeBg: '#f0fff4' },
   ];
+
+    {/* Stats Cards */}
+    <div className="grid-4 mb-24" style={{ gap: '16px' }}>
+
+      {statCards.map((s, i) => (
+
+        <div
+          key={i}
+          style={{ background: s.bg, border: `1.5px solid ${s.border}`, borderRadius: 14, padding: '20px 22px', minHeight: 120, boxShadow: `0 2px 8px ${s.shadow}`, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
+        >
+
+          <div>
+            <div style={{ fontSize: 11, color: s.color, textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>
+              {s.label}
+            </div>
+
+            <div style={{ fontSize: 28, fontWeight: 800, color: s.color, lineHeight: 1, fontFamily: "'DM Mono', monospace" }}>
+              {s.value}
+            </div>
+          </div>
+
+          <div
+            style={{ width: 42, height: 42, borderRadius: 12, background: s.iconBg, border: `1px solid ${s.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: s.color, flexShrink: 0 }}
+          >
+            {s.icon}
+          </div>
+        </div>
+      ))}
+    </div>
 
   return (
     <div>

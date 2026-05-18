@@ -750,167 +750,85 @@ export default function BukuPage() {
         </p>
       </div>
 
-      {/* Stats */}
+      {/* Stats Cards */}
       <div className="grid-4 mb-24" style={{ gap: '16px' }}>
-      <div
-        style={{
-          background: 'linear-gradient(135deg, #7B1C1C, #a83232)',
-          border: '1px solid transparent',
-          borderRadius: 14,
-          padding: '20px 22px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-        }}
-      >
-        <div
-          style={{
-            fontSize: 11,
-            color: 'rgba(255,255,255,0.75)',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
-            fontWeight: 600,
-            marginBottom: 6,
-          }}
-        >
-          Koleksi Buku
+
+        {/* Koleksi Buku */}
+        <div style={{ background: 'linear-gradient(135deg, #fff5f5, #ffffff)', border: '1.5px solid #FED7D7', borderRadius: 14, padding: '20px 22px', minHeight: 120, boxShadow: '0 2px 8px rgba(229,62,62,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          
+          <div>
+            <div style={{ fontSize: 11, color: '#E53E3E', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>
+              Koleksi Buku
+            </div>
+
+            <div style={{ fontSize: 28, fontWeight: 800, color: '#E53E3E', lineHeight: 1, fontFamily: "'DM Mono', monospace" }}>
+              {totalJudul}
+            </div>
+          </div>
+
+          <div style={{ width: 42, height: 42, borderRadius: 12, background: '#fff1f1', border: '1px solid #FED7D7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#E53E3E' }}>
+            <BookOpen size={18} />
+          </div>
+
         </div>
 
-        <div
-          style={{
-            fontSize: 28,
-            fontWeight: 800,
-            color: 'white',
-            lineHeight: 1,
-            fontFamily: "'DM Mono', monospace",
-          }}
-        >
-          {totalJudul}
+        {/* Buku Tersedia */}
+        <div style={{ background: 'linear-gradient(135deg, #fffaf0, #ffffff)', border: '1.5px solid #FEEBC8', borderRadius: 14, padding: '20px 22px', minHeight: 120, boxShadow: '0 2px 8px rgba(214,158,46,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          
+          <div>
+            <div style={{ fontSize: 11, color: '#D69E2E', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>
+              Buku Tersedia
+            </div>
+
+            <div style={{ fontSize: 28, fontWeight: 800, color: '#D69E2E', lineHeight: 1, fontFamily: "'DM Mono', monospace" }}>
+              {totalUnitTersedia}
+            </div>
+          </div>
+
+          <div style={{ width: 42, height: 42, borderRadius: 12, background: '#fff7e6', border: '1px solid #FEEBC8', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D69E2E' }}>
+            <CheckCircle size={18} />
+          </div>
+
         </div>
 
-        <div style={{ marginTop: 6, opacity: 0.5 }}>
-          <BookOpen size={16} color="white" />
+        {/* Buku Dipinjam */}
+        <div style={{ background: 'linear-gradient(135deg, #f0fff4, #ffffff)', border: '1.5px solid #C6F6D5', borderRadius: 14, padding: '20px 22px', minHeight: 120, boxShadow: '0 2px 8px rgba(56,161,105,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          
+          <div>
+            <div style={{ fontSize: 11, color: '#38A169', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>
+              Buku Dipinjam
+            </div>
+
+            <div style={{ fontSize: 28, fontWeight: 800, color: '#38A169', lineHeight: 1, fontFamily: "'DM Mono', monospace" }}>
+              {totalDipinjam}
+            </div>
+          </div>
+
+          <div style={{ width: 42, height: 42, borderRadius: 12, background: '#ecfff3', border: '1px solid #C6F6D5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#38A169' }}>
+            <Clock size={18} />
+          </div>
+
+        </div>
+
+        {/* Buku Habis */}
+        <div style={{ background: 'linear-gradient(135deg, #eff6ff, #ffffff)', border: '1.5px solid #BFDBFE', borderRadius: 14, padding: '20px 22px', minHeight: 120, boxShadow: '0 2px 8px rgba(37,99,235,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          
+          <div>
+            <div style={{ fontSize: 11, color: '#2563EB', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>
+              Buku Habis
+            </div>
+
+            <div style={{ fontSize: 28, fontWeight: 800, color: '#2563EB', lineHeight: 1, fontFamily: "'DM Mono', monospace" }}>
+              {totalJudulHabis}
+            </div>
+          </div>
+
+          <div style={{ width: 42, height: 42, borderRadius: 12, background: '#eef4ff', border: '1px solid #BFDBFE', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563EB' }}>
+            <XCircle size={18} />
+          </div>
+
         </div>
       </div>
-
-      {/* Buku Tersedia */}
-      <div
-        style={{
-          background: 'linear-gradient(135deg, #fffaf0, #ffffff)',
-          border: '1px solid #FEEBC8',
-          borderRadius: 14,
-          padding: '20px 22px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-        }}
-      >
-        <div
-          style={{
-            fontSize: 11,
-            color: '#D69E2E',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
-            fontWeight: 600,
-            marginBottom: 6,
-          }}
-        >
-          Buku Tersedia
-        </div>
-
-        <div
-          style={{
-            fontSize: 28,
-            fontWeight: 800,
-            color: '#D69E2E',
-            lineHeight: 1,
-            fontFamily: "'DM Mono', monospace",
-          }}
-        >
-          {totalUnitTersedia}
-        </div>
-
-        <div style={{ marginTop: 6, opacity: 0.5 }}>
-          <CheckCircle size={16} color="#D69E2E" />
-        </div>
-      </div>
-
-      {/* Buku Dipinjam */}
-      <div
-        style={{
-          background: 'linear-gradient(135deg, #fff5f5, #ffffff)',
-          border: '1px solid #FED7D7',
-          borderRadius: 14,
-          padding: '20px 22px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-        }}
-      >
-        <div
-          style={{
-            fontSize: 11,
-            color: '#E53E3E',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
-            fontWeight: 600,
-            marginBottom: 6,
-          }}
-        >
-          Buku Dipinjam
-        </div>
-
-        <div
-          style={{
-            fontSize: 28,
-            fontWeight: 800,
-            color: '#E53E3E',
-            lineHeight: 1,
-            fontFamily: "'DM Mono', monospace",
-          }}
-        >
-          {totalDipinjam}
-        </div>
-
-        <div style={{ marginTop: 6, opacity: 0.5 }}>
-          <Clock size={16} color="#E53E3E" />
-        </div>
-      </div>
-
-      {/* Buku Habis */}
-      <div
-        style={{
-          background: 'linear-gradient(135deg, #f7fafc, #ffffff)',
-          border: '1px solid #E2E8F0',
-          borderRadius: 14,
-          padding: '20px 22px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-        }}
-      >
-        <div
-          style={{
-            fontSize: 11,
-            color: '#4A5568',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
-            fontWeight: 600,
-            marginBottom: 6,
-          }}
-        >
-          Buku Habis
-        </div>
-
-        <div
-          style={{
-            fontSize: 28,
-            fontWeight: 800,
-            color: '#4A5568',
-            lineHeight: 1,
-            fontFamily: "'DM Mono', monospace",
-          }}
-        >
-          {totalJudulHabis}
-        </div>
-
-        <div style={{ marginTop: 6, opacity: 0.5 }}>
-          <XCircle size={16} color="#4A5568" />
-        </div>
-      </div>
-    </div>
      
       <div className="card">
         <div className="flex-between mb-16">

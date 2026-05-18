@@ -1,6 +1,6 @@
 // PetugasPeminjamanPage.jsx — Redesigned with balanced layout
 import { useState } from 'react';
-import { Search, Plus, AlertCircle, BookOpen, RefreshCw, CheckCircle, X, User, ChevronRight, TrendingDown, ArrowRight } from 'lucide-react';
+import { Search, Plus, AlertCircle, BookOpen, RefreshCw, CheckCircle, X, User, Users, ChevronRight, TrendingDown, ArrowRight } from 'lucide-react';
 import { useApp } from '../components/AppContext';
 import ApiImage from '../components/ApiImage';
 
@@ -262,10 +262,10 @@ export default function PetugasPeminjamanPage() {
     : null;
 
   const stats = [
-    { label: 'Total Aktif',   value: totalActive,                                        color: '#7B1C1C', bg: 'rgba(123,28,28,0.07)',  border: 'rgba(123,28,28,0.18)' },
-    { label: 'Terlambat',     value: lateCount,                                           color: '#991B1B', bg: 'rgba(153,27,27,0.07)',  border: 'rgba(153,27,27,0.18)' },
-    { label: 'Buku Tersedia', value: books.filter(b => (b.available || 0) > 0).length,   color: '#2E7D32', bg: 'rgba(46,125,50,0.07)',   border: 'rgba(46,125,50,0.18)' },
-    { label: 'Total Anggota', value: members.length,                                      color: '#B45309', bg: 'rgba(180,83,9,0.07)',   border: 'rgba(180,83,9,0.18)' },
+    { label: 'Total Aktif', value: totalActive, color: '#E53E3E', bg: 'linear-gradient(135deg, #fff5f5, #ffffff)', border: '#FED7D7', shadow: 'rgba(229,62,62,0.08)', iconBg: '#fff1f1', icon: <BookOpen size={18} /> },
+    { label: 'Terlambat', value: lateCount, color: '#D69E2E', bg: 'linear-gradient(135deg, #fffaf0, #ffffff)', border: '#FEEBC8', shadow: 'rgba(214,158,46,0.08)', iconBg: '#fff7e6', icon: <AlertCircle size={18} /> },
+    { label: 'Buku Tersedia', value: books.filter(b => (b.available || 0) > 0).length, color: '#38A169', bg: 'linear-gradient(135deg, #f0fff4, #ffffff)', border: '#C6F6D5', shadow: 'rgba(56,161,105,0.08)', iconBg: '#ecfff3', icon: <CheckCircle size={18} /> },
+    { label: 'Total Anggota', value: members.length, color: '#2563EB', bg: 'linear-gradient(135deg, #eff6ff, #ffffff)', border: '#BFDBFE', shadow: 'rgba(37,99,235,0.08)', iconBg: '#eef4ff', icon: <Users size={18} /> },
   ];
 
   return (
@@ -288,12 +288,31 @@ export default function PetugasPeminjamanPage() {
         <p className="page-subtitle">Catat peminjaman baru dan kelola pinjaman aktif — klik baris untuk pengembalian atau perpanjangan.</p>
       </div>
 
-      {/* ── Stat Cards ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
+      {/* Stats Cards */}
+      <div className="grid-4 mb-24" style={{ gap: '16px' }}>
+
         {stats.map((s, i) => (
-          <div key={i} style={{ background: s.bg, border: `1px solid ${s.border}`, borderRadius: 14, padding: '18px 20px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-            <div style={{ fontSize: 11, color: s.color, textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>{s.label}</div>
-            <div style={{ fontSize: 28, fontWeight: 800, color: s.color, lineHeight: 1, fontFamily: "'DM Mono', monospace" }}>{s.value}</div>
+
+          <div
+            key={i}
+            style={{ background: s.bg, border: `1.5px solid ${s.border}`, borderRadius: 14, padding: '20px 22px', minHeight: 120, boxShadow: `0 2px 8px ${s.shadow}`, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
+          >
+
+            <div>
+              <div style={{ fontSize: 11, color: s.color, textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>
+                {s.label}
+              </div>
+
+              <div style={{ fontSize: 28, fontWeight: 800, color: s.color, lineHeight: 1, fontFamily: "'DM Mono', monospace" }}>
+                {s.value}
+              </div>
+            </div>
+
+            <div
+              style={{ width: 42, height: 42, borderRadius: 12, background: s.iconBg, border: `1px solid ${s.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: s.color, flexShrink: 0 }}
+            >
+              {s.icon}
+            </div>
           </div>
         ))}
       </div>

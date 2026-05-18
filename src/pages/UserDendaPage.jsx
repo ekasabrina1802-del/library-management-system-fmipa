@@ -360,182 +360,146 @@ export default function UserDendaPage() {
         </div>
       )}
 
-      {/* ── Summary cards ── */}
+      {/* Stat cards */}
       <div className="grid-4 mb-24" style={{ gap: 16 }}>
 
         {/* Status Akun */}
         <div
           style={{
             background: akunAman
-              ? 'linear-gradient(135deg, #166534, #15803D)'
-              : 'linear-gradient(135deg, #7B1C1C, #a83232)',
+              ? '#cdfeda'
+              : '#ffcbcb',
 
-            border: '1px solid transparent',
+            border: akunAman
+              ? '1.5px solid #84feab'
+              : '1.5px solid #ff9898',
+
             borderRadius: 14,
             padding: '20px 22px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+            minHeight: 120,
+
+            boxShadow: akunAman
+              ? '0 2px 8px rgba(56,161,105,0.08)'
+              : '0 2px 8px rgba(229,62,62,0.08)',
+
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start'
           }}
         >
-          <div
-            style={{
-              fontSize: 11,
-              color: 'rgba(255,255,255,0.75)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-              fontWeight: 600,
-              marginBottom: 6,
-            }}
-          >
-            Status Akun
+
+          <div>
+
+            <div
+              style={{
+                fontSize: 11,
+                color: akunAman ? '#38A169' : '#E53E3E',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+                fontWeight: 600,
+                marginBottom: 6
+              }}
+            >
+              Status Akun
+            </div>
+
+            <div
+              style={{
+                fontSize: 24,
+                fontWeight: 800,
+                color: akunAman ? '#38A169' : '#E53E3E',
+                lineHeight: 1,
+                fontFamily: "'DM Mono', monospace"
+              }}
+            >
+              {akunAman ? 'Aman ✓' : 'Warning'}
+            </div>
+
           </div>
 
           <div
             style={{
-              fontSize: 28,
-              fontWeight: 900,
-              color: '#FFFFFF',
-              lineHeight: 1,
-              fontFamily: "'DM Mono', monospace",
+              width: 42,
+              height: 42,
+              borderRadius: 12,
+
+              background: akunAman
+                ? '#dcfce7'
+                : '#fee2e2',
+
+              border: akunAman
+                ? '1px solid #C6F6D5'
+                : '1px solid #FED7D7',
+
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+
+              color: akunAman ? '#38A169' : '#E53E3E'
             }}
           >
-            {akunAman ? 'Aman ✓' : 'Warning'}
-          </div>
-
-          <div style={{ marginTop: 6 }}>
-            {akunAman ? (
-              <CheckCircle size={16} color="white" />
-            ) : (
-              <AlertTriangle size={16} color="white" />
-            )}
+            {akunAman
+              ? <CheckCircle size={18} />
+              : <AlertTriangle size={18} />
+            }
           </div>
         </div>
 
         {/* Total Denda */}
-        <div
-          style={{
-            background:
-              totalDendaKeseluruhan > 0
-                ? 'linear-gradient(135deg, #1D4ED8, #2563EB)'
-                : 'linear-gradient(135deg, #0f2e96, #2563EB)',
+        <div style={{ background: 'linear-gradient(135deg, #eff6ff, #ffffff)', border: '1.5px solid #BFDBFE', borderRadius: 14, padding: '20px 22px', minHeight: 120, boxShadow: '0 2px 8px rgba(37,99,235,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
 
-            border: '1px solid transparent',
-            borderRadius: 14,
-            padding: '20px 22px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-          }}
-        >
-          <div
-            style={{
-              fontSize: 11,
-              color: 'rgba(255,255,255,0.75)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-              fontWeight: 600,
-              marginBottom: 6,
-            }}
-          >
-            Total Denda Aktif
+          <div>
+            <div style={{ fontSize: 11, color: '#2563EB', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>
+              Total Denda Aktif
+            </div>
+
+            <div style={{ fontSize: 20, fontWeight: 800, color: '#2563EB', lineHeight: 1, fontFamily: "'DM Mono', monospace" }}>
+              Rp {totalDendaKeseluruhan.toLocaleString('id-ID')}
+            </div>
           </div>
 
-          <div
-            style={{
-              fontSize: 28,
-              fontWeight: 900,
-              color: '#FFFFFF',
-              lineHeight: 1,
-              fontFamily: "'DM Mono', monospace",
-            }}
-          >
-            {totalDendaKeseluruhan > 0
-              ? `Rp ${(totalDendaKeseluruhan / 1000).toFixed(0)}K`
-              : 'Rp 0'}
+          <div style={{ width: 42, height: 42, borderRadius: 12, background: '#eef4ff', border: '1px solid #BFDBFE', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563EB' }}>
+            <Clock size={18} />
           </div>
 
-          <div style={{ marginTop: 6 }}>
-            <Clock size={16} color="white" />
-          </div>
         </div>
 
         {/* Buku Terlambat */}
-        <div
-          style={{
-            background: 'linear-gradient(135deg, #fff5f5, #ffffff)',
-            border: '1px solid #FED7D7',
-            borderRadius: 14,
-            padding: '20px 22px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-          }}
-        >
-          <div
-            style={{
-              fontSize: 11,
-              color: '#E53E3E',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-              fontWeight: 600,
-              marginBottom: 6,
-            }}
-          >
-            Buku Terlambat
+        <div style={{ background: 'linear-gradient(135deg, #fffaf0, #ffffff)', border: '1.5px solid #FEEBC8', borderRadius: 14, padding: '20px 22px', minHeight: 120, boxShadow: '0 2px 8px rgba(214,158,46,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+
+          <div>
+            <div style={{ fontSize: 11, color: '#D69E2E', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>
+              Buku Terlambat
+            </div>
+
+            <div style={{ fontSize: 28, fontWeight: 800, color: '#D69E2E', lineHeight: 1, fontFamily: "'DM Mono', monospace" }}>
+              {bukuTerlambat}
+            </div>
           </div>
 
-          <div
-            style={{
-              fontSize: 28,
-              fontWeight: 800,
-              color: '#E53E3E',
-              lineHeight: 1,
-              fontFamily: "'DM Mono', monospace",
-            }}
-          >
-            {bukuTerlambat}
+          <div style={{ width: 42, height: 42, borderRadius: 12, background: '#fff7e6', border: '1px solid #FEEBC8', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D69E2E' }}>
+            <AlertTriangle size={18} />
           </div>
 
-          <div style={{ marginTop: 6 }}>
-            <AlertTriangle size={16} color="#E53E3E" />
-          </div>
         </div>
 
         {/* Sedang Dipinjam */}
-        <div
-          style={{
-            background: 'linear-gradient(135deg, #fffaf0, #ffffff)',
-            border: '1px solid #FEEBC8',
-            borderRadius: 14,
-            padding: '20px 22px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-          }}
-        >
-          <div
-            style={{
-              fontSize: 11,
-              color: '#D69E2E',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-              fontWeight: 600,
-              marginBottom: 6,
-            }}
-          >
-            Sedang Dipinjam
+        <div style={{ background: 'linear-gradient(135deg, #f0fff4, #ffffff)', border: '1.5px solid #C6F6D5', borderRadius: 14, padding: '20px 22px', minHeight: 120, boxShadow: '0 2px 8px rgba(56,161,105,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+
+          <div>
+            <div style={{ fontSize: 11, color: '#38A169', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>
+              Sedang Dipinjam
+            </div>
+
+            <div style={{ fontSize: 28, fontWeight: 800, color: '#38A169', lineHeight: 1, fontFamily: "'DM Mono', monospace" }}>
+              {bukuSedangDipinjam}
+            </div>
           </div>
 
-          <div
-            style={{
-              fontSize: 28,
-              fontWeight: 800,
-              color: '#D69E2E',
-              lineHeight: 1,
-              fontFamily: "'DM Mono', monospace",
-            }}
-          >
-            {bukuSedangDipinjam}
-          </div>
-
-          <div style={{ marginTop: 6 }}>
-            <BookOpen size={16} color="#D69E2E" />
+          <div style={{ width: 42, height: 42, borderRadius: 12, background: '#ecfff3', border: '1px solid #C6F6D5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#38A169' }}>
+            <BookOpen size={18} />
           </div>
         </div>
-
       </div>
 
       {/* ── Chart denda (hanya jika ada data) ── */}

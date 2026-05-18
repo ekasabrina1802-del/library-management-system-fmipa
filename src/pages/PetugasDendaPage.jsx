@@ -292,51 +292,52 @@ export default function DendaPage() {
         <p className="page-subtitle">Rekap data peminjaman, pengembalian, dan denda dari database.</p>
       </div>
 
+      {/* Stats Cards */}
       <div className="grid-4 mb-24">
         {/* Total Denda */}
-        <div style={{
-          background: 'linear-gradient(135deg, #7B1C1C, #a83232)',
-          borderRadius: 14, padding: '20px 22px', color: 'white',
-          boxShadow: '0 4px 16px rgba(123,28,28,0.3)'
+        <div style={{ 
+          background: 'linear-gradient(135deg, #fff5f5, #ffffff)',
+          border: '1.5px solid #FED7D7', borderRadius: 14, padding: '20px 22px',
+          boxShadow: '0 2px 8px rgba(229,62,62,0.08)'
         }}>
-          <div style={{ fontSize: 11, opacity: 0.75, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 6 }}>Total Denda</div>
-          <div style={{ fontSize: 28, fontWeight: 800, lineHeight: 1 }}>Rp {(totalDenda / 1000).toFixed(0)}K</div>
-          <div style={{ fontSize: 12, opacity: 0.8, marginTop: 4 }}>Rp {totalDenda.toLocaleString('id-ID')}</div>
+          <div style={{ fontSize: 11, color: '#e53e3e', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>Total Denda</div>
+          <div style={{ fontSize: 28, fontWeight: 800, color: '#e53e3e', lineHeight: 1 }}>Rp {totalDenda.toLocaleString('id-ID')}</div>
+          <div style={{ fontSize: 12, color: '#4f5661', marginTop: 13 }}>Rp {totalDenda.toLocaleString('id-ID')}</div>
         </div>
 
         {/* Terlambat */}
         <div style={{
-          background: 'linear-gradient(135deg, #fff5f5, #fff)',
-          border: '1px solid #fed7d7', borderRadius: 14, padding: '20px 22px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+          background: 'linear-gradient(135deg, #fffaf0, #ffffff)',
+          border: '1.5px solid #feebc8', borderRadius: 14, padding: '20px 22px',
+          boxShadow: '0 2px 8px rgba(214,158,46,0.08)'
         }}>
-          <div style={{ fontSize: 11, color: '#e53e3e', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>Terlambat / Denda</div>
-          <div style={{ fontSize: 28, fontWeight: 800, color: '#e53e3e', lineHeight: 1 }}>{totalLate}</div>
-          <div style={{ fontSize: 12, color: '#718096', marginTop: 4 }}>transaksi bermasalah</div>
+          <div style={{ fontSize: 11, color: '#d69e2e', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>Terlambat / Denda</div>
+          <div style={{ fontSize: 28, fontWeight: 800, color: '#d69e2e', lineHeight: 1 }}>{totalLate}</div>
+          <div style={{ fontSize: 12, color: '#4f5661', marginTop: 10 }}>transaksi bermasalah</div>
         </div>
 
         {/* Sudah Dikembalikan */}
         <div style={{
-          background: 'linear-gradient(135deg, #f0fff4, #fff)',
-          border: '1px solid #c6f6d5', borderRadius: 14, padding: '20px 22px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+          background: 'linear-gradient(135deg, #f0fff4, #ffffff)',
+          border: '1.5px solid #c6f6d5', borderRadius: 14, padding: '20px 22px',
+          boxShadow: '0 2px 8px rgba(56,161,105,0.08)'
         }}>
           <div style={{ fontSize: 11, color: '#38a169', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>Dikembalikan</div>
           <div style={{ fontSize: 28, fontWeight: 800, color: '#38a169', lineHeight: 1 }}>{totalSelesai}</div>
-          <div style={{ fontSize: 12, color: '#718096', marginTop: 4 }}>dari {loans.length} total transaksi</div>
+          <div style={{ fontSize: 12, color: '#4f5661', marginTop: 10 }}>dari {loans.length} total transaksi</div>
         </div>
 
         {/* Belum Dikembalikan */}
         <div style={{
-          background: 'linear-gradient(135deg, #fffaf0, #fff)',
-          border: '1px solid #feebc8', borderRadius: 14, padding: '20px 22px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+          background: 'linear-gradient(135deg, #eff6ff, #ffffff)',
+          border: '1.5px solid #bfdbfe', borderRadius: 14, padding: '20px 22px',
+          boxShadow: '0 2px 8px rgba(37,99,235,0.08)'
         }}>
-          <div style={{ fontSize: 11, color: '#d69e2e', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>Belum Dikembalikan</div>
-          <div style={{ fontSize: 28, fontWeight: 800, color: '#d69e2e', lineHeight: 1 }}>{totalBelumKembali}</div>
-          <div style={{ fontSize: 12, color: '#718096', marginTop: 4 }}>{loans.filter(l => l.status === 'terlambat').length} di antaranya terlambat</div>
+          <div style={{ fontSize: 11, color: '#2563eb', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>Belum Dikembalikan</div>
+          <div style={{ fontSize: 28, fontWeight: 800, color: '#2563eb', lineHeight: 1 }}>{totalBelumKembali}</div>
+          <div style={{ fontSize: 12, color: '#4f5661', marginTop: 10 }}>{loans.filter(l => l.status === 'terlambat').length} di antaranya terlambat</div>
         </div>
-      </div>
+    </div>
 
       <div className="grid-2 mb-24">
         <div className="card">

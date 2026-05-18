@@ -501,52 +501,83 @@ const profilePhoto = currentMember?.photo_url || user?.photo_url;
           </div>
         </div>
 
-        {/* Stat cards grid */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: 16,
-        }}>
-          <StatCard
-            icon={<BookOpen size={16} color="#7B1C1C" />}
-            value={`${activeLoans.length} / ${rules.max}`}
-            label="Kuota Pinjam"
-            bg="linear-gradient(135deg, #7B1C1C, #a83232)"
-            border="transparent"
-            textColor="white"
-            labelColor="rgba(255,255,255,0.75)"
-            delay={0} visible={visible}
-          />
-          <StatCard
-            icon={<Clock size={16} color="#D97706" />}
-            value={activeLoans.length}
-            label="Buku Aktif"
-            bg="linear-gradient(135deg, #fffaf0, #fff)"
-            border="#feebc8"
-            textColor="#d69e2e"
-            labelColor="#d69e2e"
-            delay={100} visible={visible}
-          />
-          <StatCard
-            icon={<AlertCircle size={16} color="#e53e3e" />}
-            value={overdueLoans.length}
-            label="Terlambat"
-            bg="linear-gradient(135deg, #fff5f5, #fff)"
-            border="#fed7d7"
-            textColor="#e53e3e"
-            labelColor="#e53e3e"
-            delay={200} visible={visible}
-          />
-          <StatCard
-            icon={<DollarSign size={16} color="#38a169" />}
-            value={`Rp ${((dendaSaya ?? 0) / 1000).toFixed(0)}K`}
-            label="Total Denda Saya"
-            bg="linear-gradient(135deg, #f0fff4, #fff)"
-            border="#c6f6d5"
-            textColor="#38a169"
-            labelColor="#38a169"
-            delay={300} visible={visible}
-          />
+        {/* Stat cards */}
+        <div className="grid-4 mb-24" style={{ gap: '16px' }}>
+
+          {/* Kuota Pinjam */}
+          <div style={{ background: 'linear-gradient(135deg, #fff5f5, #ffffff)', border: '1.5px solid #FED7D7', borderRadius: 14, padding: '20px 22px', minHeight: 120, boxShadow: '0 2px 8px rgba(229,62,62,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+
+            <div>
+              <div style={{ fontSize: 11, color: '#E53E3E', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>
+                Kuota Pinjam
+              </div>
+
+              <div style={{ fontSize: 28, fontWeight: 800, color: '#E53E3E', lineHeight: 1, fontFamily: "'DM Mono', monospace" }}>
+                {activeLoans.length} / {rules.max}
+              </div>
+            </div>
+
+            <div style={{ width: 42, height: 42, borderRadius: 12, background: '#fff1f1', border: '1px solid #FED7D7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#E53E3E' }}>
+              <BookOpen size={18} />
+            </div>
+
+          </div>
+
+          {/* Buku Aktif */}
+          <div style={{ background: 'linear-gradient(135deg, #fffaf0, #ffffff)', border: '1.5px solid #FEEBC8', borderRadius: 14, padding: '20px 22px', minHeight: 120, boxShadow: '0 2px 8px rgba(214,158,46,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+
+            <div>
+              <div style={{ fontSize: 11, color: '#D69E2E', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>
+                Buku Aktif
+              </div>
+
+              <div style={{ fontSize: 28, fontWeight: 800, color: '#D69E2E', lineHeight: 1, fontFamily: "'DM Mono', monospace" }}>
+                {activeLoans.length}
+              </div>
+            </div>
+
+            <div style={{ width: 42, height: 42, borderRadius: 12, background: '#fff7e6', border: '1px solid #FEEBC8', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D69E2E' }}>
+              <Clock size={18} />
+            </div>
+
+          </div>
+
+          {/* Terlambat */}
+          <div style={{ background: 'linear-gradient(135deg, #f0fff4, #ffffff)', border: '1.5px solid #C6F6D5', borderRadius: 14, padding: '20px 22px', minHeight: 120, boxShadow: '0 2px 8px rgba(56,161,105,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+
+            <div>
+              <div style={{ fontSize: 11, color: '#38A169', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>
+                Terlambat
+              </div>
+
+              <div style={{ fontSize: 28, fontWeight: 800, color: '#38A169', lineHeight: 1, fontFamily: "'DM Mono', monospace" }}>
+                {overdueLoans.length}
+              </div>
+            </div>
+
+            <div style={{ width: 42, height: 42, borderRadius: 12, background: '#ecfff3', border: '1px solid #C6F6D5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#38A169' }}>
+              <AlertCircle size={18} />
+            </div>
+
+          </div>
+
+          {/* Total Denda */}
+          <div style={{ background: 'linear-gradient(135deg, #eff6ff, #ffffff)', border: '1.5px solid #BFDBFE', borderRadius: 14, padding: '20px 22px', minHeight: 120, boxShadow: '0 2px 8px rgba(37,99,235,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+
+            <div>
+              <div style={{ fontSize: 11, color: '#2563EB', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>
+                Total Denda Saya
+              </div>
+
+              <div style={{ fontSize: 18, fontWeight: 800, color: '#2563EB', lineHeight: 1, fontFamily: "'DM Mono', monospace" }}>
+                Rp {dendaSaya.toLocaleString('id-ID')}
+              </div>
+            </div>
+
+            <div style={{ width: 42, height: 42, borderRadius: 12, background: '#eef4ff', border: '1px solid #BFDBFE', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563EB' }}>
+              <DollarSign size={18} />
+            </div>
+          </div>
         </div>
 
         {/* Progress bar for quota */}

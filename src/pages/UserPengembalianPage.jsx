@@ -70,135 +70,115 @@ const activeLoans = myLoans.filter(
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid-3" style={{ gap: 12, marginBottom: 24 }}>
+      {/* Stats Card */}
+      <div className="grid-3 mb-24" style={{ gap: '16px' }}>
 
-        {/* Total Dikembalikan */}
-        <div
-          style={{
-            background: 'linear-gradient(135deg, #f0fff4, #ffffff)',
-            border: '1px solid #C6F6D5',
-            borderRadius: 14,
-            padding: '20px 22px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-          }}
-        >
-          <div
-            style={{
-              fontSize: 11,
-              color: '#38A169',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-              fontWeight: 600,
-              marginBottom: 6,
-            }}
-          >
-            Total Dikembalikan
-          </div>
+  {/* Total Dikembalikan — MERAH */}
+  <div
+    style={{
+      background: 'linear-gradient(135deg, #fff5f5, #ffffff)',
+      border: '1.5px solid #FED7D7',
+      borderRadius: 14,
+      padding: '20px 22px',
+      minHeight: 120,
+      boxShadow: '0 2px 8px rgba(229,62,62,0.08)',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start'
+    }}
+  >
 
-          <div
-            style={{
-              fontSize: 28,
-              fontWeight: 800,
-              color: '#38A169',
-              lineHeight: 1,
-              fontFamily: "'DM Mono', monospace",
-            }}
-          >
-            {completedLoans.length}
-          </div>
-
-          <div style={{ marginTop: 6, opacity: 0.5 }}>
-            <CheckCircle size={16} color="#38A169" />
-          </div>
-        </div>
-
-        {/* Kasus Terlambat */}
-        <div
-          style={{
-            background: 'linear-gradient(135deg, #fff5f5, #ffffff)',
-            border: '1px solid #FED7D7',
-            borderRadius: 14,
-            padding: '20px 22px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-          }}
-        >
-          <div
-            style={{
-              fontSize: 11,
-              color: '#E53E3E',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-              fontWeight: 600,
-              marginBottom: 6,
-            }}
-          >
-            Kasus Terlambat
-          </div>
-
-          <div
-            style={{
-              fontSize: 28,
-              fontWeight: 800,
-              color: '#E53E3E',
-              lineHeight: 1,
-              fontFamily: "'DM Mono', monospace",
-            }}
-          >
-            {terlambatCount}
-          </div>
-
-          <div style={{ marginTop: 6, opacity: 0.5 }}>
-            <AlertCircle size={16} color="#E53E3E" />
-          </div>
-        </div>
-
-        {/* Total Denda Dibayar */}
-        <div
-          style={{
-            background:
-              totalDenda > 0
-                ? 'linear-gradient(135deg, #0f2e96, #2563EB)'
-                : 'linear-gradient(135deg, #0f2e96, #2563EB)',
-
-            border: '1px solid transparent',
-
-            borderRadius: 14,
-            padding: '20px 22px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-          }}
-        >
-          <div
-            style={{
-              fontSize: 11,
-              color: 'white',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-              fontWeight: 600,
-              marginBottom: 6,
-            }}
-          >
-            Total Denda Dibayar
-          </div>
-
-          <div
-            style={{
-              fontSize: 28,
-              fontWeight: 800,
-              color: totalDenda > 0 ? '#D69E2E' : '#ffffff',
-              lineHeight: 1,
-              fontFamily: "'DM Mono', monospace",
-            }}
-          >
-            Rp {totalDenda.toLocaleString('id-ID')}
-          </div>
-
-          <div style={{ marginTop: 6, opacity: 0.5 }}>
-            <Clock size={16} color="white" />
-
-          </div>
-        </div>
+    <div>
+      <div style={{ fontSize: 11, color: '#E53E3E', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>
+        Total Dikembalikan
       </div>
+
+      <div style={{ fontSize: 28, fontWeight: 800, color: '#E53E3E', lineHeight: 1, fontFamily: "'DM Mono', monospace" }}>
+        {completedLoans.length}
+      </div>
+    </div>
+
+    <div style={{ width: 42, height: 42, borderRadius: 12, background: '#fff1f1', border: '1px solid #FED7D7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#E53E3E' }}>
+      <CheckCircle size={18} />
+    </div>
+
+  </div>
+
+  {/* Kasus Terlambat — KUNING */}
+  <div
+    style={{
+      background: 'linear-gradient(135deg, #fffaf0, #ffffff)',
+      border: '1.5px solid #FEEBC8',
+      borderRadius: 14,
+      padding: '20px 22px',
+      minHeight: 120,
+      boxShadow: '0 2px 8px rgba(214,158,46,0.08)',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start'
+    }}
+  >
+
+    <div>
+      <div style={{ fontSize: 11, color: '#D69E2E', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>
+        Kasus Terlambat
+      </div>
+
+      <div style={{ fontSize: 28, fontWeight: 800, color: '#D69E2E', lineHeight: 1, fontFamily: "'DM Mono', monospace" }}>
+        {terlambatCount}
+      </div>
+    </div>
+
+    <div style={{ width: 42, height: 42, borderRadius: 12, background: '#fff7e6', border: '1px solid #FEEBC8', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D69E2E' }}>
+      <AlertCircle size={18} />
+    </div>
+
+  </div>
+
+  {/* Total Denda Dibayar — HIJAU */}
+  <div
+    style={{
+      background: 'linear-gradient(135deg, #f0fff4, #ffffff)',
+      border: '1.5px solid #C6F6D5',
+      borderRadius: 14,
+      padding: '20px 22px',
+      minHeight: 120,
+      boxShadow: '0 2px 8px rgba(56,161,105,0.08)',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start'
+    }}
+  >
+
+    <div>
+      <div style={{ fontSize: 11, color: '#38A169', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>
+        Total Denda Dibayar
+      </div>
+
+      <div style={{ fontSize: 18, fontWeight: 800, color: '#38A169', lineHeight: 1, fontFamily: "'DM Mono', monospace" }}>
+        Rp {totalDenda.toLocaleString('id-ID')}
+      </div>
+    </div>
+
+    <div
+      style={{
+        width: 42,
+        height: 42,
+        borderRadius: 12,
+        background: '#ecfff3',
+        border: '1px solid #C6F6D5',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: '#38A169'
+      }}
+    >
+      <Clock size={18} />
+    </div>
+
+  </div>
+
+</div>
 
       {/* Alert denda aktif (belum dikembalikan tapi sudah terlambat) */}
       {dendaAktif > 0 && (
