@@ -48,20 +48,9 @@ const upload = multer({
   storage: multer.memoryStorage()
 });
 
-const memberUploadDir = path.join(__dirname, 'uploads', 'members');
-fs.mkdirSync(memberUploadDir, { recursive: true });
-
-const memberStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, memberUploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueName = Date.now() + '-' + file.originalname.replace(/\s+/g, '-');
-    cb(null, uniqueName);
-  }
+const uploadMember = multer({
+  storage: multer.memoryStorage()
 });
-
-const uploadMember = multer({ storage: memberStorage });
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -978,7 +967,18 @@ app.get('/api/members', async (req, res) => {
 app.post('/api/members', uploadMember.single('photo'), async (req, res) => {
   const { name, nim, departemen, prodi, type, email, phone, address, password } = req.body;
 
-  const photo_url = req.file ? `/uploads/members/${req.file.filename}` : null;
+  let photo_url = null;
+
+if (req.file) {
+  const uploadResult = await uploadToCloudinary(
+    req.file.buffer,
+    'perpus-fmipa/members'
+  );
+
+  photo_url = uploadResult.secure_url;
+
+  console.log('Cloudinary member upload success:', photo_url);
+}
 
   try {
     if (!name || !type) {
@@ -1100,9 +1100,7 @@ app.put('/api/members/:id', uploadMember.single('photo'), async (req, res) => {
     address
   } = req.body;
 
-  const photo_url = req.file
-    ? `/uploads/members/${req.file.filename}`
-    : null;
+  let photo_url = null;
 
   const incomingRole = type || req.body.role || null;
 
@@ -1128,7 +1126,18 @@ app.put('/api/members/:id', uploadMember.single('photo'), async (req, res) => {
         )
       : null;
 
-  try {
+    try {
+    if (req.file) {
+      const uploadResult = await uploadToCloudinary(
+        req.file.buffer,
+        'perpus-fmipa/members'
+      );
+
+      photo_url = uploadResult.secure_url;
+
+      console.log('Cloudinary member update upload success:', photo_url);
+    }
+
     const anggotaCheck = await pool.query(`
       SELECT id, email
       FROM anggota
@@ -1293,9 +1302,16 @@ app.post('/api/members/:id/photo', uploadMember.single('photo'), async (req, res
     });
   }
 
-  const photo_url = `/uploads/members/${req.file.filename}`;
-
   try {
+    const uploadResult = await uploadToCloudinary(
+      req.file.buffer,
+      'perpus-fmipa/members'
+    );
+
+    const photo_url = uploadResult.secure_url;
+
+    console.log('Cloudinary member photo upload success:', photo_url);
+
     await pool.query(`
       UPDATE anggota
       SET photo_url = $1
@@ -1306,6 +1322,7 @@ app.post('/api/members/:id/photo', uploadMember.single('photo'), async (req, res
       success: true,
       photo_url
     });
+
   } catch (err) {
     console.error('Upload Photo Error:', err);
     res.status(500).json({
