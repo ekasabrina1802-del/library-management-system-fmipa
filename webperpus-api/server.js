@@ -5,10 +5,34 @@ const multer = require('multer');
 const path = require('path');
 const bcrypt = require('bcrypt');
 const fs = require('fs');
+const { v2: cloudinary } = require('cloudinary');
 const { OAuth2Client } = require('google-auth-library');
 require('dotenv').config();
 
 const app = express();
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+const uploadToCloudinary = (buffer, folder) => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder,
+        resource_type: 'image'
+      },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+
+    stream.end(buffer);
+  });
+};
 
 app.use(cors({
   origin: '*',
@@ -20,20 +44,9 @@ app.use(express.json());
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-const bookUploadDir = path.join(__dirname, 'uploads', 'books');
-fs.mkdirSync(bookUploadDir, { recursive: true });
-
-const bookStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, bookUploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueName = Date.now() + '-' + file.originalname.replace(/\s+/g, '-');
-    cb(null, uniqueName);
-  }
+const upload = multer({
+  storage: multer.memoryStorage()
 });
-
-const upload = multer({ storage: bookStorage });
 
 const memberUploadDir = path.join(__dirname, 'uploads', 'members');
 fs.mkdirSync(memberUploadDir, { recursive: true });
@@ -621,12 +634,23 @@ app.post('/api/books', upload.single('image'), async (req, res) => {
     copies
   } = req.body;
 
-  const image_url = req.file ? `/uploads/books/${req.file.filename}` : null;
+let image_url = null;
 
-  const client = await pool.connect();
+const client = await pool.connect();
 
-  try {
-    await client.query('BEGIN');
+try {
+  await client.query('BEGIN');
+
+  if (req.file) {
+    const uploadResult = await uploadToCloudinary(
+      req.file.buffer,
+      'perpus-fmipa/books'
+    );
+
+    image_url = uploadResult.secure_url;
+
+    console.log('Cloudinary book upload success:', image_url);
+  }
 
     const insertedBook = await client.query(`
       INSERT INTO buku
@@ -729,9 +753,16 @@ app.put('/api/books/:id', upload.single('image'), async (req, res) => {
       });
     }
 
-    const image_url = req.file
-      ? `/uploads/books/${req.file.filename}`
-      : oldBook.rows[0]?.image_url || null;
+    let image_url = oldBook.rows[0]?.image_url || null;
+
+if (req.file) {
+  const uploadResult = await uploadToCloudinary(
+    req.file.buffer,
+    'perpus-fmipa/books'
+  );
+
+  image_url = uploadResult.secure_url;
+}
 
     const oldStock = Number(oldBook.rows[0]?.stock ?? 0);
     const oldAvailable = Number(oldBook.rows[0]?.available ?? 0);
