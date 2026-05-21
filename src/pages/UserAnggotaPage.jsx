@@ -545,13 +545,15 @@ export default function AnggotaUserPage() {
   const member = members.find(
     m =>
       String(m.id) === String(user?.anggotaId || user?.memberId) ||
-      String(m.nim) === String(user?.nim) ||
-      m.email === user?.email
+      (user?.email && m.email?.toLowerCase() === user.email.toLowerCase())
   );
 
-  const profileIncomplete =
-    !member?.name || !member?.nim || !member?.departemen ||
-    !member?.prodi || !member?.phone || !member?.address;
+  const isDosen = member?.type === 'dosen';
+  const profileIncomplete = isDosen
+    ? !member?.name || !member?.departemen || !member?.prodi ||
+      !member?.phone || !member?.address
+    : !member?.name || !member?.nim || !member?.departemen ||
+      !member?.prodi || !member?.phone || !member?.address;
 
   if (!member) {
     return (

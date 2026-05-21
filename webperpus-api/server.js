@@ -478,13 +478,12 @@ app.post('/api/login-google', async (req, res) => {
       const customId = await generateCustomId(jenis, finalRole);
 
       const localPart = email.split('@')[0];
-      const autoNim = jenis === 'mahasiswa' ? localPart : null;
-
+      const autoNim = localPart; // mahasiswa & dosen sama-sama dapat local part email
       const insertedAnggota = await client.query(`
         INSERT INTO anggota
-          (custom_id, name, email, jenis, nim, jurusan, departemen, prodi)
+          (custom_id, name, email, jenis, nim, jurusan, departemen, prodi, profile_completed)
         VALUES
-          ($1, $2, $3, $4, $5, NULL, NULL, NULL)
+          ($1, $2, $3, $4, $5, NULL, NULL, NULL, FALSE)
         RETURNING id
       `, [customId, name, email, jenis, autoNim]);
 
