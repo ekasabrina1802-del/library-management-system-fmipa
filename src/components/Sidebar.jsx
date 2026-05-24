@@ -8,11 +8,12 @@ import {
   ArrowDownToLine,
   ArrowUpFromLine,
   FileText,
-  LogOut
+  LogOut,
+  X
 } from 'lucide-react';
 import { useAuth } from './AuthContext';
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -21,7 +22,6 @@ export default function Sidebar() {
     navigate('/');
   };
 
-  // 🔥 Semua menu dipisah per role
   const navConfig = {
     admin: [
       { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -31,7 +31,6 @@ export default function Sidebar() {
       { to: '/admin/pengembalian', icon: ArrowUpFromLine, label: 'Pengembalian' },
       { to: '/admin/denda', icon: FileText, label: 'Denda & Laporan' },
     ],
-
     petugas: [
       { to: '/petugas/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
       { to: '/petugas/buku', icon: BookOpen, label: 'Buku' },
@@ -40,7 +39,6 @@ export default function Sidebar() {
       { to: '/petugas/pengembalian', icon: ArrowUpFromLine, label: 'Pengembalian' },
       { to: '/petugas/denda', icon: FileText, label: 'Denda & Laporan' },
     ],
-
     user: [
       { to: '/user/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
       { to: '/user/buku', icon: BookOpen, label: 'Buku' },
@@ -51,46 +49,43 @@ export default function Sidebar() {
     ]
   };
 
-  // 🔥 Mapping role ke tipe menu
   const roleMap = {
     admin: 'admin',
     petugas: 'petugas',
     user: 'user',
     mahasiswa: 'user',
-    dosen: 'user', // ✅ FIX PENTING (INI YANG KAMU BUTUH)
+    dosen: 'user',
   };
 
   const roleKey = roleMap[user?.role] || 'user';
   const nav = navConfig[roleKey];
 
   return (
-    <aside className="sidebar">
-      <div
-        className="sidebar-logo"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px'
-        }}
-      >
-        <img
-          src={logo}
-          alt="Logo FMIPA"
-          style={{
-            width: '75px',
-            height: '75px',
-            objectFit: 'contain'
-          }}
-        />
+    <aside className={`sidebar${isOpen ? ' sidebar-open' : ''}`}>
+      <div className="sidebar-logo">
+        {/* Close button - mobile only */}
+        <button
+          className="sidebar-close-btn"
+          onClick={onClose}
+          aria-label="Close menu"
+        >
+          <X size={18} />
+        </button>
 
-        <div>
-          <div className="role-badge">
-            {user?.role?.toUpperCase() || 'GUEST'}
-          </div>
-
-          <div className="app-name">
-            Perpustakaan<br />
-            Fakultas FMIPA
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <img
+            src={logo}
+            alt="Logo FMIPA"
+            style={{ width: '75px', height: '75px', objectFit: 'contain' }}
+          />
+          <div>
+            <div className="role-badge">
+              {user?.role?.toUpperCase() || 'GUEST'}
+            </div>
+            <div className="app-name">
+              Perpustakaan<br />
+              Fakultas FMIPA
+            </div>
           </div>
         </div>
       </div>
@@ -101,6 +96,7 @@ export default function Sidebar() {
             key={to}
             to={to}
             className={({ isActive }) => isActive ? 'active' : ''}
+            onClick={onClose}
           >
             <Icon size={16} />
             {label}

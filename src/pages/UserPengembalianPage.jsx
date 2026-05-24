@@ -175,9 +175,7 @@ const activeLoans = myLoans.filter(
     >
       <Clock size={18} />
     </div>
-
   </div>
-
 </div>
 
       {/* Alert denda aktif (belum dikembalikan tapi sudah terlambat) */}
@@ -208,13 +206,13 @@ const activeLoans = myLoans.filter(
               Semua buku yang pernah kamu kembalikan
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             <span className="badge badge-success">{completedLoans.length} selesai</span>
             <div style={{ position: 'relative' }}>
               <Search size={11} style={{ position: 'absolute', left: 7, top: '50%', transform: 'translateY(-50%)', color: 'var(--gray-text)' }} />
               <input
                 className="form-control"
-                style={{ paddingLeft: 24, width: 160, fontSize: 11, height: 28 }}
+                style={{ paddingLeft: 24, width: '100%', minWidth: 110, maxWidth: 160, fontSize: 11, height: 28 }}
                 placeholder="Cari buku..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}

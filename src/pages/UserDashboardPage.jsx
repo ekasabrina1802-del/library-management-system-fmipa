@@ -199,7 +199,7 @@ const profilePhoto = currentMember?.photo_url || user?.photo_url;
         <PhotoSlider current={slide} onPrev={prevSlide} onNext={nextSlide} onDot={setSlide} />
 
         {/* Clock — pojok kanan atas */}
-        <div style={{ position: 'absolute', top: 24, right: 32, zIndex: 20 }}>
+        <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 20 }}>
           <LiveClock />
         </div>
 
@@ -207,8 +207,7 @@ const profilePhoto = currentMember?.photo_url || user?.photo_url;
         <div style={{
           position: 'relative', zIndex: 5,
           display: 'flex', flexDirection: 'column', alignItems: 'center',
-          padding: '0 40px',
-          // sedikit geser ke atas agar "Lihat Statistik" tidak menumpuk
+          padding: '0 clamp(16px, 5vw, 40px)',
           marginTop: '-40px',
         }}>
 

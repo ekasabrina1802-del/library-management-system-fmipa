@@ -13,7 +13,7 @@ function LiveClock() {
   }, []);
   return (
     <div style={{ textAlign: 'right' }}>
-      <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--navy)', fontVariantNumeric: 'tabular-nums' }}>
+      <div style={{ fontSize: 'clamp(16px, 3vw, 22px)', fontWeight: 700, color: 'var(--navy)', fontVariantNumeric: 'tabular-nums' }}>
         {now.toLocaleTimeString('id-ID')}
       </div>
       <div style={{ fontSize: 12, color: 'var(--gray-text)' }}>
@@ -152,7 +152,13 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <div className="flex-between mb-24">
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'flex-start',
+        marginBottom: 24,
+        gap: 12
+      }}>
         <div className="page-header" style={{ margin: 0 }}>
           <div className="page-breadcrumb">Sistem Informasi Perpustakaan</div>
           <h1 className="page-title">Ringkasan Statistik Perpustakaan</h1>
@@ -160,7 +166,9 @@ export default function DashboardPage() {
             {user?.role === 'admin' ? 'Panel Administrasi & Monitoring' : 'Panel Petugas — Kelola Peminjaman & Pengembalian'}
           </p>
         </div>
-        <LiveClock />
+        <div style={{ flexShrink: 0, textAlign: 'right', paddingTop: 4 }}>
+          <LiveClock />
+        </div>
       </div>
 
       {/* Stat Cards */}

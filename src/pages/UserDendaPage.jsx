@@ -150,7 +150,7 @@ function LoanRow({ l }) {
               {(denda > 0 && daysLate > 0) && (
                 <div style={{
                   background: '#fff', border: '1px solid #f0e0e0',
-                  borderRadius: 8, padding: '10px 14px', minWidth: 220
+                  borderRadius: 8, padding: '10px 14px', minWidth: 0, width: '100%', maxWidth: 360
                 }}>
                   <div style={{ fontWeight: 700, color: 'var(--danger)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 5 }}>
                     <Info size={13} /> Rincian Denda
@@ -181,7 +181,7 @@ function LoanRow({ l }) {
               {isActuallyLate && denda === 0 && (
                 <div style={{
                   background: '#fff5f5', border: '1px solid #ffcdd2',
-                  borderRadius: 8, padding: '10px 14px', minWidth: 220
+                  borderRadius: 8, padding: '10px 14px', minWidth: 0, width: '100%', maxWidth: 360
                 }}>
                   <div style={{ fontWeight: 700, color: 'var(--danger)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 5 }}>
                     <AlertTriangle size={13} /> Denda Berjalan

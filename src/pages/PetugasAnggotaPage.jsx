@@ -93,7 +93,7 @@ function LoanActionRow({ loan, onReturn, onExtend, extendLoading, actionResult }
           border: `1px solid ${isLate ? 'rgba(183,28,28,0.15)' : 'rgba(46,125,50,0.15)'}`,
         }}>
           {isLate ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 160 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 140 }}>
               <TrendingDown size={13} style={{ color: '#B71C1C', flexShrink: 0 }} />
               <span style={{ fontSize: 12, color: '#7B1C1C', fontWeight: 700 }}>
                 Terlambat {late} hari · Denda:{' '}
@@ -101,7 +101,7 @@ function LoanActionRow({ loan, onReturn, onExtend, extendLoading, actionResult }
               </span>
             </div>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 160 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 140 }}>
               <CheckCircle size={13} style={{ color: '#2E7D32', flexShrink: 0 }} />
               <span style={{ fontSize: 12, color: '#2E7D32', fontWeight: 600 }}>
                 Tepat waktu — tidak ada denda
@@ -702,7 +702,7 @@ export default function AnggotaPage() {
       </div>
 
       {/* ── Stat Cards — same pattern as PeminjamanPage ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 16, marginBottom: 24 }}>
         {statCards.map((s, i) => (
           <div key={i} style={{
             background: s.bg,

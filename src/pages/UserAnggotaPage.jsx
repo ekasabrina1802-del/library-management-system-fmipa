@@ -32,7 +32,7 @@ const departmentData = {
 };
 
 const styles = `
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
 
   .profile-page * { box-sizing: border-box; }
 
@@ -43,18 +43,19 @@ const styles = `
     padding: 0;
   }
 
-  /* ── Banner Hero ── */
+  /* ── Banner Hero — avatar + teks semuanya di DALAM banner ── */
   .hero-banner {
     position: relative;
     width: 100%;
     height: 200px;
     background: linear-gradient(135deg, #6b0f0f 0%, #1a0a0a 45%, #0d1b2a 100%);
-    overflow: hidden;
+    overflow: visible; /* biarkan avatar sedikit keluar ke bawah */
   }
   .hero-banner::before {
     content: '';
     position: absolute;
     inset: 0;
+    overflow: hidden;
     background:
       radial-gradient(ellipse 60% 80% at 70% 50%, rgba(180,30,30,0.25) 0%, transparent 70%),
       radial-gradient(ellipse 40% 60% at 20% 80%, rgba(13,27,42,0.8) 0%, transparent 60%);
@@ -62,90 +63,80 @@ const styles = `
   .hero-banner-rings {
     position: absolute;
     top: -80px; right: -80px;
-    width: 380px; height: 380px;
+    width: min(380px, 200vw); height: min(380px, 200vw);
     border-radius: 50%;
     border: 1px solid rgba(255,255,255,0.06);
     box-shadow: 0 0 0 40px rgba(255,255,255,0.03), 0 0 0 80px rgba(255,255,255,0.02);
+    overflow: hidden;
   }
   .hero-banner-dot {
     position: absolute;
-    bottom: 40px; left: 60px;
-    width: 6px; height: 6px;
+    bottom: 40px; left: 180px;
+    width: 5px; height: 5px;
     border-radius: 50%;
-    background: rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.25);
   }
   .hero-banner-dot2 {
     position: absolute;
-    top: 50px; left: 38%;
+    top: 40px; right: 30%;
     width: 3px; height: 3px;
     border-radius: 50%;
     background: rgba(255,160,80,0.5);
   }
-  .hero-overlay {
+
+  /* 
+    Row di dalam banner: avatar kiri + teks kanan
+    Avatar sengaja dibuat kecil (80px) dan absolute di pojok kiri bawah
+    Teks mulai dari kiri + 100px (lebar avatar 80 + gap 20)
+  */
+  .hero-content {
     position: absolute;
-    left: 340px;
-    bottom: 42px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0 20px 40px 25px;
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
     z-index: 5;
   }
 
-  .hero-name {
-    font-family: 'Playfair Display', serif;
-    font-size: 48px;
-    font-weight: 800;
-    color: white;
-    line-height: 1;
-    margin-bottom: 10px;
-    text-shadow: 0 4px 20px rgba(0,0,0,0.35);
-  }
-
-  .hero-prodi {
-    font-size: 18px;
-    color: rgba(255,255,255,0.78);
-    margin-bottom: 18px;
-    font-weight: 500;
-    letter-spacing: 0.03em;
-  }
-
-  /* ── Layout ── */
-  .profile-body {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 0 32px 60px;
-    position: relative;
-  }
-
-  /* ── Avatar Float ── */
-  .avatar-float {
-    position: relative;
-    margin-top: -90px;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    z-index: 10;
-    margin-bottom: 36px;
-  }
-
-  .avatar-ring {
+  /* Avatar menonjol ke bawah setengah ukurannya (80/2=40) */
+  .avatar-wrapper {
     position: relative;
     flex-shrink: 0;
+    width: 80px;
+    height: 80px;
+    margin-bottom: -75px;
   }
-  .avatar-ring::before {
+  .avatar-wrapper::before {
     content: '';
     position: absolute;
     inset: -4px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #c0392b, #7B1C1C, #0d1b2a);
-    z-index: -1;
+    background: linear-gradient(
+      135deg,
+      #c0392b 0%,
+      #7B1C1C 45%,
+      #0d1b2a 100%
+    );
+
+    box-shadow:
+      0 8px 24px rgba(0,0,0,0.18),
+      0 2px 8px rgba(123,28,28,0.2);
+
+    z-index: 0;
   }
-  .avatar-img {
-    width: 190px;
-    height: 190px;
+  .avatar-img-el {
+    position: relative;
+    z-index: 1;
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
     object-fit: cover;
-    display: block;
-    border: 4px solid #f0eee9;
+    border: 4px solid #f8f6f2;
     background: #2a1010;
-    font-size: 52px;
+    font-size: 26px;
     font-weight: 800;
     color: white;
     display: flex;
@@ -155,52 +146,65 @@ const styles = `
   }
   .avatar-edit-btn {
     position: absolute;
-    bottom: 8px; right: 8px;
+    bottom: 2px; right: 2px;
+    z-index: 2;
     background: white;
     border-radius: 50%;
-    width: 34px; height: 34px;
+    width: 24px; height: 24px;
     display: flex; align-items: center; justify-content: center;
     cursor: pointer;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
     border: 2px solid #f0eee9;
     transition: transform 0.2s;
   }
   .avatar-edit-btn:hover { transform: scale(1.1); }
 
-  .avatar-meta {
-    padding-bottom: 12px;
+  /* Teks nama & info di sebelah kanan avatar, di dalam banner */
+  .hero-text {
     flex: 1;
+    min-width: 0;
+    color: white;
+    padding-bottom: 4px;
+    margin-left: 12px;
   }
-  .avatar-meta-name {
+  .hero-name {
     font-family: 'Playfair Display', serif;
-    font-size: 32px;
+    font-size: clamp(20px, 3vw, 38px);
     font-weight: 800;
     color: white;
     line-height: 1.1;
-    text-shadow: 0 2px 12px rgba(0,0,0,0.4);
-    margin-bottom: 6px;
+    margin-bottom: 4px;
+    text-shadow: 0 3px 16px rgba(0,0,0,0.4);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
-  .avatar-meta-prodi {
-    font-size: 14px;
-    color: rgba(255,255,255,0.65);
-    letter-spacing: 0.04em;
-    margin-bottom: 14px;
+  .hero-prodi {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: rgba(255,255,255,0.72);
+    margin-bottom: 10px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .badge-row {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     flex-wrap: wrap;
     align-items: center;
   }
   .badge {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
     border-radius: 20px;
-    padding: 4px 13px;
+    padding: 3px 10px;
     font-size: 11px;
     font-weight: 600;
-    letter-spacing: 0.03em;
+    font-family: 'DM Sans', sans-serif;
+    letter-spacing: 0.02em;
     backdrop-filter: blur(8px);
   }
   .badge-active {
@@ -215,40 +219,48 @@ const styles = `
   }
   .badge-type {
     background: rgba(255,255,255,0.12);
-    color: rgba(255,255,255,0.8);
-    border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.85);
+    border: 1px solid rgba(255,255,255,0.2);
     text-transform: capitalize;
   }
 
-  .edit-btn {
-    margin-left: auto;
-    padding-bottom: 12px;
+  /* ── Body ── */
+  .profile-body {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+    position: relative;
+  }
+  .after-banner-row {
     display: flex;
-    align-items: flex-end;
+    justify-content: flex-end;
+    align-items: flex-start;
+    padding-top: 20px;
+    margin-bottom: 20px;
   }
   .btn-edit-profile {
     background: white;
     color: #7B1C1C;
-    border: none;
+    border: 1.5px solid rgba(123,28,28,0.15);
     border-radius: 10px;
-    padding: 11px 28px;
+    padding: 9px 22px;
     font-size: 13px;
     font-weight: 700;
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 7px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
     transition: all 0.2s;
     font-family: 'DM Sans', sans-serif;
     white-space: nowrap;
   }
   .btn-edit-profile:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 28px rgba(0,0,0,0.2);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
   }
 
-  /* ── Grid Layout ── */
+  /* ── Content Grid ── */
   .content-grid {
     display: grid;
     grid-template-columns: 1fr 300px;
@@ -257,6 +269,40 @@ const styles = `
   }
   .content-left { display: flex; flex-direction: column; gap: 20px; }
   .content-right { display: flex; flex-direction: column; gap: 20px; }
+
+  /* ── Info Grid ── */
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 28px;
+  }
+
+  /* ── Info Item — semua DM Sans, tidak ada Courier ── */
+  .info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .info-item-label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    color: #a09898;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .info-item-label svg { color: #7B1C1C; flex-shrink: 0; }
+  .info-item-value {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #1a0a0a;
+    line-height: 1.4;
+    word-break: break-word;
+  }
 
   /* ── Cards ── */
   .card-glass {
@@ -284,99 +330,20 @@ const styles = `
     margin-left: 8px;
   }
 
-  /* ── Info Grid ── */
-  .info-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-  }
-  .info-item {}
-  .info-item-label {
-    font-size: 10px;
-    color: #9b8e8e;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-bottom: 3px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-  .info-item-label svg { color: #7B1C1C; }
-  .info-item-value {
-    font-size: 14px;
-    font-weight: 600;
-    color: #1a0a0a;
-    line-height: 1.4;
-  }
-  .info-item-value.mono { font-family: 'Courier New', monospace; letter-spacing: 0.02em; }
-
-  /* ── ID Card ── */
-  .id-card {
-    background: linear-gradient(135deg, #7B1C1C 0%, #0d1b2a 100%);
-    border-radius: 16px;
-    padding: 24px;
-    color: white;
-    position: relative;
-    overflow: hidden;
-  }
-  .id-card::before {
-    content: 'FMIPA';
-    position: absolute;
-    bottom: -20px; right: -10px;
-    font-family: 'Playfair Display', serif;
-    font-size: 72px;
-    font-weight: 800;
-    color: rgba(255,255,255,0.04);
-    line-height: 1;
-    pointer-events: none;
-  }
-  .id-card-logo-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-  .id-card-logo-circle {
-    width: 36px; height: 36px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.12);
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Playfair Display', serif;
-    font-size: 13px;
-    font-weight: 800;
-  }
-  .id-card-org { font-size: 11px; opacity: 0.6; line-height: 1.3; }
-  .id-card-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 16px 0; }
-  .id-card-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
-  .id-card-key { font-size: 10px; opacity: 0.5; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 3px; }
-  .id-card-val { font-size: 13px; font-weight: 600; }
-  .id-card-nim {
-    font-family: 'Courier New', monospace;
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    margin: 4px 0 16px;
-  }
-  .id-card-strip {
-    height: 4px;
-    border-radius: 2px;
-    background: linear-gradient(to right, rgba(255,255,255,0.4), rgba(255,255,255,0.05));
-    margin-bottom: 16px;
-  }
-
-  /* ── Alert ── */
+  /* ── Alerts ── */
   .alert-warning {
     display: flex;
     align-items: flex-start;
     gap: 12px;
-    padding: 14px 18px;
+    padding: 13px 16px;
     background: #fff7ed;
     border: 1px solid #fdba74;
     border-radius: 12px;
-    margin-bottom: 20px;
+    margin-bottom: 12px;
     color: #9a3412;
     font-size: 13px;
     font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
   }
   .alert-danger {
     display: flex;
@@ -386,22 +353,83 @@ const styles = `
     background: #fef2f2;
     border: 1px solid #fecaca;
     border-radius: 12px;
-    margin-bottom: 16px;
+    margin-bottom: 10px;
     font-size: 13px;
     color: #dc2626;
+    font-family: 'DM Sans', sans-serif;
   }
 
   /* ── Empty State ── */
   .empty-state {
     text-align: center;
-    padding: 40px;
+    padding: 36px 20px;
   }
   .empty-icon {
-    width: 56px; height: 56px;
+    width: 52px; height: 52px;
     border-radius: 14px;
     background: #f5f0f0;
     display: flex; align-items: center; justify-content: center;
     margin: 0 auto 14px;
+  }
+
+  /* ── ID Card ── */
+  .id-card {
+    background: linear-gradient(135deg, #7B1C1C 0%, #0d1b2a 100%);
+    border-radius: 16px;
+    padding: 24px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .id-card-logo-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .id-card-logo-circle {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.12);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 13px;
+    font-weight: 800;
+  }
+  .id-card-org {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    opacity: 0.6;
+    line-height: 1.3;
+  }
+  .id-card-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 14px 0; }
+  .id-card-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
+  .id-card-key {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    opacity: 0.5;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 3px;
+  }
+  .id-card-val {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .id-card-nim {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    margin: 4px 0 16px;
+  }
+  .id-card-strip {
+    height: 4px;
+    border-radius: 2px;
+    background: linear-gradient(to right, rgba(255,255,255,0.4), rgba(255,255,255,0.05));
+    margin-bottom: 16px;
   }
 
   /* ── Modal ── */
@@ -425,6 +453,7 @@ const styles = `
     box-shadow: 0 24px 80px rgba(0,0,0,0.25);
     max-height: 90vh;
     overflow-y: auto;
+    font-family: 'DM Sans', sans-serif;
   }
   .modal-header {
     display: flex;
@@ -456,7 +485,14 @@ const styles = `
     gap: 18px;
   }
   .form-group { display: flex; flex-direction: column; gap: 6px; }
-  .form-label { font-size: 12px; font-weight: 600; color: #6b5555; text-transform: uppercase; letter-spacing: 0.05em; }
+  .form-label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b5555;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
   .form-control {
     border: 1.5px solid #e5dada;
     border-radius: 10px;
@@ -509,38 +545,62 @@ const styles = `
     box-shadow: 0 4px 14px rgba(123,28,28,0.3);
   }
   .btn-save:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(123,28,28,0.35); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .content-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 600px) {
+    .hero-banner { height: 170px; }
+    .hero-content { padding: 0 14px 34px 28px; gap: 20px; }
+    .avatar-wrapper { width: 80px; height: 80px; margin-bottom: -60px; }
+    .avatar-img-el { width: 80px !important; height: 80px !important; font-size: 22px !important; }
+    .hero-name { font-size: clamp(17px, 5vw, 24px); }
+    .hero-prodi { font-size: 11px; margin-bottom: 8px; }
+    .after-banner-row { padding-top: 20px; }
+    .info-grid { grid-template-columns: 1fr 1fr; gap: 16px; }
+    .card-glass { padding: 18px; }
+    .profile-body { padding: 0 14px 40px; }
+  }
+
+  @media (max-width: 420px) {
+    .hero-banner { height: 155px; }
+    .hero-content { padding: 0 12px 30px 12px; gap: 10px; }
+    .avatar-wrapper { width: 60px; height: 60px; margin-bottom: -30px; }
+    .avatar-img-el { width: 60px !important; height: 60px !important; font-size: 18px !important; }
+    .hero-name { font-size: 16px; }
+    .hero-prodi { display: none; }
+    .after-banner-row { padding-top: 38px; }
+    .info-grid { grid-template-columns: 1fr; }
+    .modal-box { padding: 18px; border-radius: 14px; }
+    .modal-grid { grid-template-columns: 1fr; gap: 12px; }
+    .modal-actions { flex-direction: column-reverse; gap: 8px; }
+    .btn-cancel, .btn-save { width: 100%; justify-content: center; }
+  }
 `;
 
-function InfoItem({ icon, label, value, mono }) {
+function InfoItem({ icon, label, value }) {
   return (
     <div className="info-item">
       <div className="info-item-label">
         {icon}
         {label}
       </div>
-      <div className={`info-item-value${mono ? ' mono' : ''}`}>{value || '—'}</div>
+      <div className="info-item-value">{value || '—'}</div>
     </div>
   );
 }
 
-
 export default function AnggotaUserPage() {
   const { members, loans, uploadMemberPhoto, updateMember } = useApp();
   const { user } = useAuth();
-  const menuRef = useRef(null);
+  const avatarRef = useRef(null);
   const [preview, setPreview] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [formData, setFormData] = useState({
     name: '', nim: '', departemen: '', prodi: '', email: '', phone: '', address: ''
   });
-
-  useEffect(() => {
-    function handleClickOutside(e) {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {}
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   const member = members.find(
     m =>
@@ -550,10 +610,8 @@ export default function AnggotaUserPage() {
 
   const isDosen = member?.type === 'dosen';
   const profileIncomplete = isDosen
-    ? !member?.name || !member?.departemen || !member?.prodi ||
-      !member?.phone || !member?.address
-    : !member?.name || !member?.nim || !member?.departemen ||
-      !member?.prodi || !member?.phone || !member?.address;
+    ? !member?.name || !member?.departemen || !member?.prodi || !member?.phone || !member?.address
+    : !member?.name || !member?.nim || !member?.departemen || !member?.prodi || !member?.phone || !member?.address;
 
   if (!member) {
     return (
@@ -561,8 +619,12 @@ export default function AnggotaUserPage() {
         <style>{styles}</style>
         <div style={{ padding: 60, textAlign: 'center' }}>
           <User size={48} style={{ color: '#9b8e8e', marginBottom: 16 }} />
-          <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>Data anggota tidak ditemukan</div>
-          <div style={{ fontSize: 13, color: '#9b8e8e' }}>Hubungi petugas perpustakaan untuk mendaftarkan diri sebagai anggota.</div>
+          <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8, fontFamily: "'DM Sans', sans-serif" }}>
+            Data anggota tidak ditemukan
+          </div>
+          <div style={{ fontSize: 13, color: '#9b8e8e', fontFamily: "'DM Sans', sans-serif" }}>
+            Hubungi petugas perpustakaan untuk mendaftarkan diri sebagai anggota.
+          </div>
         </div>
       </div>
     );
@@ -589,109 +651,114 @@ export default function AnggotaUserPage() {
     <div className="profile-page">
       <style>{styles}</style>
 
-      {/* ── Hero Banner ── */}
+      {/* ── Hero Banner — avatar + teks di dalam banner ── */}
       <div className="hero-banner">
-      <div className="hero-banner-rings" />
-      <div className="hero-banner-dot" />
-      <div className="hero-banner-dot2" />
+        <div className="hero-banner-rings" />
+        <div className="hero-banner-dot" />
+        <div className="hero-banner-dot2" />
 
-      <div className="hero-overlay">
-        <div className="hero-name">{member.name}</div>
-
-        <div className="hero-prodi">
-          {member.prodi}
-        </div>
-
-        <div className="badge-row">
-          <span className={`badge ${isActive ? 'badge-active' : 'badge-inactive'}`}>
-            {isActive ? <CheckCircle size={11} /> : <XCircle size={11} />}
-            {isActive ? 'Anggota Aktif' : 'Nonaktif'}
-          </span>
-
-          <span className="badge badge-type">
-            <Shield size={10} />
-            {member.type || 'mahasiswa'}
-          </span>
-        </div>
-      </div>
-    </div>
-
-      <div className="profile-body">
-
-        {/* ── Alerts ── */}
-        {!isActive && (
-          <div className="alert-danger">
-            <AlertCircle size={16} />
-            <span>Status keanggotaan kamu saat ini <strong>nonaktif</strong>. Hubungi petugas untuk mengaktifkan kembali.</span>
-          </div>
-        )}
-        {profileIncomplete && (
-          <div className="alert-warning">
-            <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 1 }} />
-            <span>Lengkapi data diri anda pada menu profil sebelum melakukan peminjaman buku.</span>
-          </div>
-        )}
-
-        {/* ── Avatar Float Row ── */}
-        <div className="avatar-float">
-          <div className="avatar-ring" ref={menuRef}>
+        <div className="hero-content">
+          {/* Avatar kecil di kiri, menonjol sedikit ke bawah */}
+          <div className="avatar-wrapper" ref={avatarRef}>
             {preview || member.photo_url ? (
               <ApiImage
                 src={preview || member.photo_url}
                 alt={member.name}
-                style={{ width: 190, height: 190, borderRadius: '50%', objectFit: 'cover', border: '4px solid #f0eee9', display: 'block' }}
-                fallback={
-                  <div className="avatar-img">{initials}</div>
-                }
+                style={{
+                  position: 'relative', zIndex: 1,
+                  width: '80px', height: '80px',
+                  borderRadius: '50%', objectFit: 'cover',
+                  border: '3px solid #f0eee9', display: 'block'
+                }}
+                fallback={<div className="avatar-img-el">{initials}</div>}
               />
             ) : (
-              <div className="avatar-img">{initials}</div>
+              <div className="avatar-img-el">{initials}</div>
             )}
-            <div className="avatar-edit-btn" onClick={() => document.getElementById('upload-photo').click()} title="Ganti foto">
-              <Pencil size={13} color="#7B1C1C" />
+            <div
+              className="avatar-edit-btn"
+              onClick={() => document.getElementById('upload-photo').click()}
+              title="Ganti foto"
+            >
+              <Pencil size={10} color="#7B1C1C" />
             </div>
-            <input id="upload-photo" type="file" accept="image/*" style={{ display: 'none' }}
+            <input
+              id="upload-photo"
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
               onChange={async (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
-                const url = URL.createObjectURL(file);
-                setPreview(url);
+                setPreview(URL.createObjectURL(file));
                 const result = await uploadMemberPhoto(member.id, file);
                 if (!result.success) { alert('Gagal upload foto'); setPreview(null); }
               }}
             />
           </div>
 
-          <div className="edit-btn">
-            <button className="btn-edit-profile" onClick={openEditModal}>
-              <Pencil size={13} />
-              {profileIncomplete ? 'Lengkapi Profil' : 'Edit Profil'}
-            </button>
+          {/* Teks nama + prodi + badge di sebelah kanan avatar */}
+          <div className="hero-text">
+            <div className="hero-name">{member.name}</div>
+            <div className="hero-prodi">{member.prodi}</div>
+            <div className="badge-row">
+              <span className={`badge ${isActive ? 'badge-active' : 'badge-inactive'}`}>
+                {isActive ? <CheckCircle size={10} /> : <XCircle size={10} />}
+                {isActive ? 'Anggota Aktif' : 'Nonaktif'}
+              </span>
+              <span className="badge badge-type">
+                <Shield size={9} />
+                {member.type || 'mahasiswa'}
+              </span>
+            </div>
           </div>
         </div>
+      </div>
+
+      <div className="profile-body">
+
+        {/* Row setelah banner: ruang untuk avatar yang menonjol + tombol edit di kanan */}
+        <div className="after-banner-row">
+          <button className="btn-edit-profile" onClick={openEditModal}>
+            <Pencil size={13} />
+            {profileIncomplete ? 'Lengkapi Profil' : 'Edit Profil'}
+          </button>
+        </div>
+
+        {/* ── Alerts ── */}
+        {!isActive && (
+          <div className="alert-danger" style={{ marginBottom: 16 }}>
+            <AlertCircle size={16} style={{ flexShrink: 0 }} />
+            <span>Status keanggotaan kamu saat ini <strong>nonaktif</strong>. Hubungi petugas untuk mengaktifkan kembali.</span>
+          </div>
+        )}
+        {profileIncomplete && (
+          <div className="alert-warning" style={{ marginBottom: 16 }}>
+            <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+            <span>Lengkapi data diri anda sebelum melakukan peminjaman buku.</span>
+          </div>
+        )}
 
         {/* ── Content Grid ── */}
         <div className="content-grid">
+
           {/* Left Column */}
           <div className="content-left">
-
-            {/* Informasi Keanggotaan */}
             <div className="card-glass">
               <div className="card-title">
                 <GraduationCap size={16} color="#7B1C1C" />
                 Informasi Keanggotaan
               </div>
               <div className="info-grid">
-                <InfoItem icon={<GraduationCap size={12} />} label="NIM / NIP" value={member.nim} mono />
-                <InfoItem icon={<Building2 size={12} />} label="Departemen" value={member.departemen} />
-                <InfoItem icon={<GraduationCap size={12} />} label="Program Studi" value={member.prodi} />
-                <InfoItem icon={<Mail size={12} />} label="Email" value={member.email} />
-                <InfoItem icon={<Phone size={12} />} label="No. Telp" value={member.phone || '-'} />
-                <InfoItem icon={<MapPin size={12} />} label="Alamat" value={member.address || '-'} />
-                <InfoItem icon={<CalendarDays size={12} />} label="Bergabung Sejak" value={member.joinDate} />
+                <InfoItem icon={<GraduationCap size={12} />} label="NIM / NIP"        value={member.nim} />
+                <InfoItem icon={<Building2     size={12} />} label="Departemen"       value={member.departemen} />
+                <InfoItem icon={<GraduationCap size={12} />} label="Program Studi"    value={member.prodi} />
+                <InfoItem icon={<Mail          size={12} />} label="Email"            value={member.email} />
+                <InfoItem icon={<Phone         size={12} />} label="No. Telp"         value={member.phone || '-'} />
+                <InfoItem icon={<MapPin        size={12} />} label="Alamat"           value={member.address || '-'} />
+                <InfoItem icon={<CalendarDays  size={12} />} label="Bergabung Sejak"  value={member.joinDate} />
               </div>
             </div>
-
 
             {myLoans.length === 0 && (
               <div className="card-glass">
@@ -699,8 +766,12 @@ export default function AnggotaUserPage() {
                   <div className="empty-icon">
                     <BookMarked size={24} color="#9b8e8e" />
                   </div>
-                  <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6, color: '#1a0a0a' }}>Belum Ada Riwayat Peminjaman</div>
-                  <div style={{ fontSize: 12, color: '#9b8e8e' }}>Kunjungi menu Buku untuk mulai meminjam koleksi perpustakaan.</div>
+                  <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6, color: '#1a0a0a', fontFamily: "'DM Sans', sans-serif" }}>
+                    Belum Ada Riwayat Peminjaman
+                  </div>
+                  <div style={{ fontSize: 12, color: '#9b8e8e', fontFamily: "'DM Sans', sans-serif" }}>
+                    Kunjungi menu Buku untuk mulai meminjam koleksi perpustakaan.
+                  </div>
                 </div>
               </div>
             )}
@@ -708,8 +779,6 @@ export default function AnggotaUserPage() {
 
           {/* Right Column */}
           <div className="content-right">
-
-            {/* ID Card Visual */}
             <div className="id-card">
               <div className="id-card-logo-row">
                 <div className="id-card-logo-circle">F</div>
@@ -719,7 +788,7 @@ export default function AnggotaUserPage() {
                 </div>
               </div>
               <div className="id-card-strip" />
-              <div style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Nomor Anggota</div>
+              <div className="id-card-key" style={{ marginBottom: 4 }}>Nomor Anggota</div>
               <div className="id-card-nim">{member.nim || '—'}</div>
               <div className="id-card-divider" />
               <div style={{ marginBottom: 10 }}>
@@ -739,7 +808,9 @@ export default function AnggotaUserPage() {
                 </div>
               </div>
               <div className="id-card-divider" />
-              <div style={{ fontSize: 10, opacity: 0.4, letterSpacing: '0.05em' }}>Bergabung {member.joinDate} · {member.type || 'Mahasiswa'}</div>
+              <div style={{ fontSize: 10, opacity: 0.4, letterSpacing: '0.04em', fontFamily: "'DM Sans', sans-serif" }}>
+                Bergabung {member.joinDate} · {member.type || 'Mahasiswa'}
+              </div>
             </div>
           </div>
         </div>
@@ -756,18 +827,18 @@ export default function AnggotaUserPage() {
             <div className="modal-grid">
               <div className="form-group">
                 <label className="form-label">Nama Lengkap</label>
-                <input className="form-control" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="Nama lengkap" />
+                <input className="form-control" value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="Nama lengkap" />
               </div>
               <div className="form-group">
                 <label className="form-label">NIM / NIP</label>
-                <input className="form-control" value={formData.nim} onChange={(e) => setFormData({ ...formData, nim: e.target.value })} placeholder="NIM atau NIP" />
+                <input className="form-control" value={formData.nim}
+                  onChange={(e) => setFormData({ ...formData, nim: e.target.value })} placeholder="NIM atau NIP" />
               </div>
               <div className="form-group">
                 <label className="form-label">Departemen</label>
                 <select className="form-control" value={formData.departemen}
-                  onChange={(e) => {
-                    setFormData(prev => ({ ...prev, departemen: e.target.value, prodi: '' }));
-                  }}>
+                  onChange={(e) => setFormData(prev => ({ ...prev, departemen: e.target.value, prodi: '' }))}>
                   <option value="">Pilih Departemen</option>
                   {Object.keys(departmentData).map(dep => (
                     <option key={dep} value={dep}>{dep}</option>
@@ -776,7 +847,8 @@ export default function AnggotaUserPage() {
               </div>
               <div className="form-group">
                 <label className="form-label">Program Studi</label>
-                <select className="form-control" value={formData.prodi} onChange={(e) => setFormData({ ...formData, prodi: e.target.value })}>
+                <select className="form-control" value={formData.prodi}
+                  onChange={(e) => setFormData({ ...formData, prodi: e.target.value })}>
                   <option value="">Pilih Program Studi</option>
                   {(departmentData[String(formData.departemen).trim()] || []).map(prodi => (
                     <option key={prodi} value={prodi}>{prodi}</option>
@@ -785,21 +857,22 @@ export default function AnggotaUserPage() {
               </div>
               <div className="form-group">
                 <label className="form-label">No. Telp</label>
-                <input className="form-control" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder="08xxxxxxxxxx" />
+                <input className="form-control" value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder="08xxxxxxxxxx" />
               </div>
               <div className="form-group">
                 <label className="form-label">Alamat</label>
-                <input className="form-control" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} placeholder="Kota, Provinsi" />
+                <input className="form-control" value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })} placeholder="Kota, Provinsi" />
               </div>
             </div>
             <div className="modal-actions">
               <button className="btn-cancel" onClick={() => setShowEditModal(false)}>Batal</button>
               <button className="btn-save" onClick={async () => {
                 if (!formData.name || !formData.nim || !formData.departemen || !formData.prodi || !formData.phone || !formData.address) {
-                  alert('Semua data wajib diisi');
-                  return;
+                  alert('Semua data wajib diisi'); return;
                 }
-                const updatedMember = {
+                const success = await updateMember(member.id, {
                   id: member.id,
                   name: formData.name,
                   nim: formData.nim,
@@ -813,8 +886,7 @@ export default function AnggotaUserPage() {
                   status: member.status,
                   joinDate: member.joinDate,
                   photo_url: member.photo_url || ''
-                };
-                const success = await updateMember(member.id, updatedMember);
+                });
                 if (!success) { alert('Gagal update profil'); return; }
                 setShowEditModal(false);
                 alert('Profil berhasil diperbarui');

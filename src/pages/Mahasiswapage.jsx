@@ -506,7 +506,7 @@ export default function MahasiswaPage() {
         <BookDetailModal book={selectedBook} onClose={() => setSelectedBook(null)} />
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div className="page-header" style={{ margin: 0 }}>
           <div className="page-breadcrumb">Portal Mahasiswa</div>
           <h1 className="page-title">Katalog Koleksi Buku</h1>
@@ -515,7 +515,7 @@ export default function MahasiswaPage() {
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: 340 }}>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-start' }}>
           {Object.entries(DISCIPLINE_META).map(([key, meta]) => {
             const count = (books || []).filter(b => b.category === key).length;
             return (
@@ -632,25 +632,28 @@ export default function MahasiswaPage() {
               <Search size={13} style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: 'var(--gray-text)' }} />
               <input
                 className="form-control"
-                style={{ paddingLeft: 30, width: 210 }}
+                style={{ paddingLeft: 30, width:'100%', minWidth: 140, maxWidth: 220 }}
                 placeholder="Judul, penulis, kode..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
               />
             </div>
 
-            <select className="form-control" style={{ width: 170 }} value={discipline} onChange={e => setDiscipline(e.target.value)}>
+            <select className="form-control" style={{ width: '100%', minWidth: 130, maxWidth: 170 }} value={discipline}
+              onChange={e => setDiscipline(e.target.value)}>
               {DISCIPLINES.map(d => <option key={d}>{d}</option>)}
             </select>
 
-            <select className="form-control" style={{ width: 155 }} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+            <select className="form-control" style={{ width: '100%', minWidth: 120, maxWidth: 155 }} value={statusFilter}
+              onChange={e => setStatusFilter(e.target.value)}>
               <option>Semua</option>
               <option>Tersedia</option>
               <option>Tidak Tersedia</option>
             </select>
 
             {viewMode === 'list' && (
-              <select className="form-control" style={{ width: 130 }} value={rowsPerPage} onChange={e => setRowsPerPage(Number(e.target.value))}>
+              <select className="form-control" style={{ width: '100%', minWidth: 110, maxWidth: 130 }} value={rowsPerPage}
+                onChange={e => setRowsPerPage(Number(e.target.value))}>
                 <option value={10}>10 / halaman</option>
                 <option value={20}>20 / halaman</option>
                 <option value={50}>50 / halaman</option>
@@ -693,7 +696,7 @@ export default function MahasiswaPage() {
             ) : (
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
                 gap: 16,
               }}>
                 {displayed.map(b => (

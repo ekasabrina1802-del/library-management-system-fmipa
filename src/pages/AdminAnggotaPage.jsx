@@ -518,7 +518,7 @@ const filterButtons = [
       </div>
 
       {/* Stat Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 16, marginBottom: 24 }}>
         {statCards.map((s, i) => (
           <div key={i} style={{ background: s.bg, border: `1px solid ${s.border}`, borderRadius: 14, padding: '20px 22px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', gap: 16 }}>
             <div style={{ width: 40, height: 40, borderRadius: 10, background: s.bg, border: `1px solid ${s.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: s.color, flexShrink: 0 }}>
@@ -564,7 +564,7 @@ const filterButtons = [
             {/* Search */}
             <div style={{ position: 'relative' }}>
               <Search size={13} style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
-              <input className="form-control" style={{ paddingLeft: 30, width: 220 }} placeholder="Cari nama, email, NIP..."
+              <input className="form-control" style={{ paddingLeft: 30, width: '100%', minWidth: 140, maxWidth: 220 }} placeholder="Cari nama, email, NIP..."
                 value={search} onChange={e => setSearch(e.target.value)} />
             </div>
 

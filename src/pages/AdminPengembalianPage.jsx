@@ -140,7 +140,7 @@ export default function AdminPengembalianPage() {
               <Search size={13} style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
               <input
                 className="form-control"
-                style={{ paddingLeft: 30, width: 240 }}
+                style={{ paddingLeft: 30, width:'100%', minWidth: 140, maxWidth: 220 }}
                 placeholder="Cari anggota / buku / kode..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}

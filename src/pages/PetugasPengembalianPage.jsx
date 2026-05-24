@@ -120,7 +120,7 @@ export default function PetugasPengembalianPage() {
               <Search size={12} style={{ position:'absolute', left:9, top:'50%', transform:'translateY(-50%)', color:'#9ca3af' }}/>
               <input
                 className="form-control"
-                style={{ paddingLeft:28, width:210 }}
+                style={{ paddingLeft:28, width:'100%', minWidth: 140, maxWidth: 220 }}
                 placeholder="Cari nama / judul / kode..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}

@@ -324,7 +324,7 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
 
   return (
     <div className="modal-overlay">
-      <div className="modal" style={{ maxWidth: 900, width: '90%' }}>
+      <div className="modal" style={{ maxWidth: 900, width: '95%', padding: 'clamp(16px, 3vw, 28px)' }}>
         <div className="modal-header">
           <h3 className="modal-title">{isReadOnly ? 'Detail Informasi Buku' : (isEdit ? 'Edit Buku' : 'Tambah Buku Baru')}</h3>
           <button className="modal-close" onClick={onClose}><X size={20} /></button>
@@ -831,7 +831,7 @@ export default function BukuPage() {
       </div>
      
       <div className="card">
-        <div className="flex-between mb-16">
+        <div className="flex-between mb-16" style={{ flexWrap: 'wrap', gap: 10, alignItems: 'flex-start' }}>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             {isPetugas ? (
               <>
@@ -885,9 +885,11 @@ export default function BukuPage() {
 
             <div style={{ position: 'relative' }}>
               <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#999' }} />
-              <input className="form-control" style={{ width: 220, paddingLeft: 32 }} placeholder="Cari judul atau penulis..." value={search} onChange={e => {setSearch(e.target.value); setCurrentPage(1);}} />
+              <input className="form-control" style={{ width: '100%', minWidth: 150, maxWidth: 220, paddingLeft: 32 }}
+                placeholder="Cari judul atau penulis..." value={search} onChange={e => {setSearch(e.target.value); setCurrentPage(1);}} />
             </div>
-            <select className="form-control" style={{ width: 180 }} value={filter} onChange={e => {setFilter(e.target.value); setCurrentPage(1);}}>
+            <select className="form-control" style={{ width: '100%', minWidth: 130, maxWidth: 180 }} value={filter}
+              onChange={e => {setFilter(e.target.value); setCurrentPage(1);}}>
               {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
@@ -914,7 +916,7 @@ export default function BukuPage() {
         {viewMode === 'grid' ? (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(145px, 1fr))',
             gap: 16,
             padding: '4px 0'
           }}>

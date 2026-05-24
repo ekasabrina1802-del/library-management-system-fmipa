@@ -385,16 +385,16 @@ export default function DendaPage() {
       </div>
 
       <div className="card">
-        <div className="flex-between mb-16" style={{ flexWrap: 'wrap', gap: 10 }}>
+        <div className="flex-between mb-16" style={{ flexWrap: 'wrap', gap: 12, alignItems: 'flex-start' }}>
           <div>
             <div style={{ fontWeight: 700, fontSize: 15 }}>Laporan Peminjaman</div>
             <div style={{ fontSize: 12, color: 'var(--gray-text)' }}>Rekapitulasi data perpustakaan</div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-end' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-start', width: '100%' }}>
   
             {/* Baris 1: Filter status */}
-            <div style={{ display: 'flex', gap: 4 }}>
+            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
               {[
                 { key: 'semua', label: 'Semua' },
                 { key: 'aktif', label: 'Dipinjam' },
@@ -408,7 +408,7 @@ export default function DendaPage() {
             </div>
 
             {/* Baris 2: Filter periode + export */}
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
               <span style={{ fontSize: 12, color: 'var(--gray-text)', whiteSpace: 'nowrap' }}>Periode:</span>
               <select className="form-control" style={{ width: 120, fontSize: 12, padding: '4px 8px', height: 32 }}
                 value={filterMonth} onChange={e => { setFilterMonth(e.target.value); setCurrentPage(1); }}>
@@ -426,7 +426,8 @@ export default function DendaPage() {
                   ✕ Reset
                 </button>
               )}
-              <div style={{ width: 1, height: 24, background: '#e2e8f0' }} />
+              <div style={{ width: 1, height: 24, background: '#e2e8f0',display: 'none' }}
+              className="divider-desktop" />
               <button className="btn btn-outline btn-sm" onClick={exportXLSX}><FileDown size={13} /> Export Excel</button>
               <button className="btn btn-ghost btn-sm" onClick={exportHTML}><FileText size={13} /> Export HTML</button>
             </div>

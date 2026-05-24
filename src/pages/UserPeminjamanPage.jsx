@@ -248,7 +248,7 @@ const lateCount = myLoans.filter(
       {/* Tabs */}
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
         {/* Tab nav */}
-        <div style={{ display: 'flex', borderBottom: '1px solid var(--gray-light)', background: 'var(--bg-secondary, #f9fafb)' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', borderBottom: '1px solid var(--gray-light)', background: 'var(--bg-secondary, #f9fafb)' }}>
           {tabList.map(t => (
             <button
               key={t.key}
@@ -302,8 +302,9 @@ const lateCount = myLoans.filter(
                     return (
                       <div key={l.id} style={{
                         display: 'flex',
-                        gap: 16,
-                        padding: '14px 16px',
+                        flexWrap: 'wrap',
+                        gap: 12,
+                        padding: '12px 14px',
                         background: isLate ? 'rgba(183,28,28,0.04)' : 'var(--bg-secondary, #f9fafb)',
                         borderRadius: 10,
                         border: `1px solid ${isLate ? 'rgba(183,28,28,0.2)' : 'var(--gray-light)'}`,

@@ -57,7 +57,7 @@ function LoanDetailModal({ loan, book, onClose, onReturn, onExtend, extendLoadin
 
   return (
     <div className="modal-overlay">
-      <div className="modal" style={{ maxWidth: 520, width: '95%', padding: 0, overflow: 'hidden', borderRadius: 16, boxShadow: '0 24px 60px rgba(0,0,0,0.18)' }}>
+      <div className="modal" style={{ maxWidth: 520, width: '100%', margin: 12, padding: 0, overflow: 'hidden', borderRadius: 16, boxShadow: '0 24px 60px rgba(0,0,0,0.18)' }}>
         {/* Header */}
         <div style={{
           background: 'linear-gradient(135deg, #6B1515 0%, #8B1E30 50%, #7B1C1C 100%)',
@@ -96,8 +96,7 @@ function LoanDetailModal({ loan, book, onClose, onReturn, onExtend, extendLoadin
               ['Status',         <StatusBadge dueDate={loan.dueDate} status={loan.status} />],
             ].map(([label, val], i) => (
               <div key={label} style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: '10px 14px', fontSize: 13,
+                display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, flexWrap: 'wrap', padding: '10px 14px', fontSize: 13,
                 background: i % 2 === 0 ? 'white' : '#fafafa',
                 borderBottom: i < 4 ? '1px solid #f5f0ee' : 'none',
               }}>
@@ -110,7 +109,7 @@ function LoanDetailModal({ loan, book, onClose, onReturn, onExtend, extendLoadin
           {/* Denda */}
           {late > 0 ? (
             <div style={{ padding: '12px 14px', background: 'rgba(183,28,28,0.06)', borderRadius: 10, border: '1px solid rgba(183,28,28,0.18)', marginBottom: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap', marginBottom: 6 }}>
                 <TrendingDown size={13} style={{ color: '#B71C1C' }} />
                 <span style={{ color: '#7B1C1C', fontWeight: 700, fontSize: 13 }}>Terlambat {late} hari</span>
               </div>
@@ -129,7 +128,7 @@ function LoanDetailModal({ loan, book, onClose, onReturn, onExtend, extendLoadin
           )}
 
           {/* Actions */}
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <button
               onClick={() => onExtend(loan)}
               disabled={!bisaExt || extendLoading}
@@ -321,7 +320,7 @@ export default function PetugasPeminjamanPage() {
       {actionMsg && (
         <div style={{
           padding: '11px 16px', borderRadius: 10, marginBottom: 16, fontSize: 13, fontWeight: 600,
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, flexWrap: 'wrap',
           background: actionMsg.type === 'success' ? 'rgba(46,125,50,0.08)' : 'rgba(183,28,28,0.08)',
           border: `1px solid ${actionMsg.type === 'success' ? 'rgba(46,125,50,0.25)' : 'rgba(183,28,28,0.25)'}`,
           color: actionMsg.type === 'success' ? '#2E7D32' : '#7B1C1C',
@@ -353,7 +352,7 @@ export default function PetugasPeminjamanPage() {
         {/* Form body — horizontal 3-column layout */}
         <div style={{ padding: '18px 22px' }}>
           <form onSubmit={handleSubmit}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 16, alignItems: 'start' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, alignItems: 'start' }}>
 
               {/* NIM Input */}
               <div>
@@ -472,7 +471,7 @@ export default function PetugasPeminjamanPage() {
             <Search size={12} style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
             <input
               className="form-control"
-              style={{ paddingLeft: 28, width: 220 }}
+              style={{ paddingLeft: 30, width:'100%', minWidth: 140, maxWidth: 220 }}
               placeholder="Cari nama / buku / kode..."
               value={search}
               onChange={e => setSearch(e.target.value)}
