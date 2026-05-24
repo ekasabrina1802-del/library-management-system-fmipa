@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { FileDown, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import XLSX from 'xlsx-js-style';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { useApp } from '../components/AppContext';
 
 const COLORS = ['#7B1C1C', '#0D1B2A', '#2E7D32', '#E65100'];
@@ -41,7 +43,6 @@ export default function DendaPage() {
 
     return true;
   }).sort((a, b) => {
-    // Urutkan: yang paling baru dikembalikan / dipinjam di atas
     const dateA = new Date(a.returnDate || a.loanDate || a.dueDate || 0);
     const dateB = new Date(b.returnDate || b.loanDate || b.dueDate || 0);
     return dateB - dateA;
@@ -52,8 +53,6 @@ export default function DendaPage() {
   const totalLate = filteredLoans.filter(l => l.status === 'terlambat' || (l.status === 'dikembalikan' && Number(l.denda) > 0)).length;
   const totalSelesai = filteredLoans.filter(l => l.status === 'dikembalikan').length;
   const totalBelumKembali = filteredLoans.filter(l => l.status === 'dipinjam' || l.status === 'terlambat' || l.status === 'diperpanjang').length;
-
-  
 
   const pieData = [
     { name: 'Dipinjam', value: filteredLoans.filter(l => l.status === 'dipinjam').length },
@@ -76,212 +75,307 @@ export default function DendaPage() {
   );
 
   const exportXLSX = () => {
-  const periodLabel = [
-    filterMonth ? monthOptions.find(m => m.value === filterMonth)?.label : null,
-    filterYear || null
-  ].filter(Boolean).join(' ') || 'Semua Periode';
+    const periodLabel = [
+      filterMonth ? monthOptions.find(m => m.value === filterMonth)?.label : null,
+      filterYear || null
+    ].filter(Boolean).join(' ') || 'Semua Periode';
 
-  const totalDendaFiltered = filteredLoans.reduce((s, l) => s + Number(l.denda || 0), 0);
+    const totalDendaFiltered = filteredLoans.reduce((s, l) => s + Number(l.denda || 0), 0);
 
-  // ── Style definitions ──────────────────────────────────────────
-  const sTitleBg   = { fgColor: { rgb: '7B1C1C' } };
-  const sTitleFont = { bold: true, color: { rgb: 'FFFFFF' }, sz: 14, name: 'Calibri' };
-  const sSubFont   = { bold: false, color: { rgb: 'FFFFFF' }, sz: 10, name: 'Calibri' };
-  const sHeaderBg  = { fgColor: { rgb: '0D1B2A' } };
-  const sHeaderFont= { bold: true, color: { rgb: 'FFFFFF' }, sz: 10, name: 'Calibri' };
-  const sBorderThin = {
-    top:    { style: 'thin', color: { rgb: 'E2E8F0' } },
-    bottom: { style: 'thin', color: { rgb: 'E2E8F0' } },
-    left:   { style: 'thin', color: { rgb: 'E2E8F0' } },
-    right:  { style: 'thin', color: { rgb: 'E2E8F0' } },
-  };
-  const sRowEven  = { fgColor: { rgb: 'F8F4F0' } };
-  const sRowOdd   = { fgColor: { rgb: 'FFFFFF' } };
-  const sDanger   = { fgColor: { rgb: 'FFF5F5' } };
-  const sDangerFont = { color: { rgb: 'C53030' }, bold: true, sz: 10, name: 'Calibri' };
-  const sNormalFont = { sz: 10, name: 'Calibri' };
-  const sTotalBg  = { fgColor: { rgb: 'EEF2FF' } };
-  const sTotalFont = { bold: true, color: { rgb: '3730A3' }, sz: 10, name: 'Calibri' };
-  const sCenter   = { horizontal: 'center', vertical: 'center' };
-  const sLeft     = { horizontal: 'left',   vertical: 'center' };
-  const sRight    = { horizontal: 'right',  vertical: 'center' };
+    const sTitleBg   = { fgColor: { rgb: '7B1C1C' } };
+    const sTitleFont = { bold: true, color: { rgb: 'FFFFFF' }, sz: 14, name: 'Calibri' };
+    const sSubFont   = { bold: false, color: { rgb: 'FFFFFF' }, sz: 10, name: 'Calibri' };
+    const sHeaderBg  = { fgColor: { rgb: '0D1B2A' } };
+    const sHeaderFont= { bold: true, color: { rgb: 'FFFFFF' }, sz: 10, name: 'Calibri' };
+    const sBorderThin = {
+      top:    { style: 'thin', color: { rgb: 'E2E8F0' } },
+      bottom: { style: 'thin', color: { rgb: 'E2E8F0' } },
+      left:   { style: 'thin', color: { rgb: 'E2E8F0' } },
+      right:  { style: 'thin', color: { rgb: 'E2E8F0' } },
+    };
+    const sRowEven  = { fgColor: { rgb: 'F8F4F0' } };
+    const sRowOdd   = { fgColor: { rgb: 'FFFFFF' } };
+    const sDanger   = { fgColor: { rgb: 'FFF5F5' } };
+    const sDangerFont = { color: { rgb: 'C53030' }, bold: true, sz: 10, name: 'Calibri' };
+    const sNormalFont = { sz: 10, name: 'Calibri' };
+    const sTotalBg  = { fgColor: { rgb: 'EEF2FF' } };
+    const sTotalFont = { bold: true, color: { rgb: '3730A3' }, sz: 10, name: 'Calibri' };
+    const sCenter   = { horizontal: 'center', vertical: 'center' };
+    const sLeft     = { horizontal: 'left',   vertical: 'center' };
+    const sRight    = { horizontal: 'right',  vertical: 'center' };
 
-  const cell = (v, font, fill, alignment, numFmt) => ({
-    v, t: typeof v === 'number' ? 'n' : 's',
-    s: {
-      font: font || sNormalFont,
-      fill: fill ? { patternType: 'solid', ...fill } : { patternType: 'none' },
-      alignment: alignment || sLeft,
-      border: sBorderThin,
-      ...(numFmt ? { numFmt } : {})
-    }
-  });
+    const cell = (v, font, fill, alignment, numFmt) => ({
+      v, t: typeof v === 'number' ? 'n' : 's',
+      s: {
+        font: font || sNormalFont,
+        fill: fill ? { patternType: 'solid', ...fill } : { patternType: 'none' },
+        alignment: alignment || sLeft,
+        border: sBorderThin,
+        ...(numFmt ? { numFmt } : {})
+      }
+    });
 
-  const empty = (fill) => cell('', sNormalFont, fill, sLeft);
+    const empty = (fill) => cell('', sNormalFont, fill, sLeft);
 
-  const COL = 11; // jumlah kolom
+    const COL = 11;
 
-  // ── Baris data ──────────────────────────────────────────────────
-  const dataRows = filteredLoans.map((l, i) => {
-    const isLate   = l.status === 'terlambat';
-    const isDone   = l.status === 'dikembalikan';
-    const rowFill  = isLate ? sDanger : (i % 2 === 0 ? sRowEven : sRowOdd);
-    const rowFont  = isLate ? { ...sNormalFont, color: { rgb: '744210' } } : sNormalFont;
-    const statusLabel = isDone ? '✓ Dikembalikan' : isLate ? '⚠ Terlambat' : '● Dipinjam';
-    const statusFont  = isDone
-      ? { bold: true, color: { rgb: '276749' }, sz: 10, name: 'Calibri' }
-      : isLate
-        ? sDangerFont
-        : { bold: true, color: { rgb: 'B7791F' }, sz: 10, name: 'Calibri' };
-    const denda = Number(l.denda || 0);
+    const dataRows = filteredLoans.map((l, i) => {
+      const isLate   = l.status === 'terlambat';
+      const isDone   = l.status === 'dikembalikan';
+      const rowFill  = isLate ? sDanger : (i % 2 === 0 ? sRowEven : sRowOdd);
+      const rowFont  = isLate ? { ...sNormalFont, color: { rgb: '744210' } } : sNormalFont;
+      const statusLabel = isDone ? '✓ Dikembalikan' : isLate ? '⚠ Terlambat' : '● Dipinjam';
+      const statusFont  = isDone
+        ? { bold: true, color: { rgb: '276749' }, sz: 10, name: 'Calibri' }
+        : isLate
+          ? sDangerFont
+          : { bold: true, color: { rgb: 'B7791F' }, sz: 10, name: 'Calibri' };
+      const denda = Number(l.denda || 0);
 
-    return [
-      cell(i + 1,       rowFont, rowFill, sCenter),
-      cell(String(l.id),rowFont, rowFill, sCenter),
-      cell(l.bookCode,  rowFont, rowFill, sCenter),
-      cell(l.bookTitle, rowFont, rowFill, sLeft),
-      cell(l.memberName,rowFont, rowFill, sLeft),
-      cell(l.memberType === 'mahasiswa' ? 'Mahasiswa' : l.memberType === 'dosen' ? 'Dosen' : (l.memberType || '-'), rowFont, rowFill, sCenter),
-      cell(l.loanDate,  rowFont, rowFill, sCenter),
-      cell(l.dueDate,   rowFont, rowFill, sCenter),
-      cell(l.returnDate || '-', rowFont, rowFill, sCenter),
-      cell(statusLabel, statusFont, rowFill, sCenter),
-      denda > 0
-        ? cell(denda, sDangerFont, rowFill, sRight, '"Rp "#,##0')
-        : cell('-', rowFont, rowFill, sCenter),
+      return [
+        cell(i + 1,       rowFont, rowFill, sCenter),
+        cell(String(l.id),rowFont, rowFill, sCenter),
+        cell(l.bookCode,  rowFont, rowFill, sCenter),
+        cell(l.bookTitle, rowFont, rowFill, sLeft),
+        cell(l.memberName,rowFont, rowFill, sLeft),
+        cell(l.memberType === 'mahasiswa' ? 'Mahasiswa' : l.memberType === 'dosen' ? 'Dosen' : (l.memberType || '-'), rowFont, rowFill, sCenter),
+        cell(l.loanDate,  rowFont, rowFill, sCenter),
+        cell(l.dueDate,   rowFont, rowFill, sCenter),
+        cell(l.returnDate || '-', rowFont, rowFill, sCenter),
+        cell(statusLabel, statusFont, rowFill, sCenter),
+        denda > 0
+          ? cell(denda, sDangerFont, rowFill, sRight, '"Rp "#,##0')
+          : cell('-', rowFont, rowFill, sCenter),
+      ];
+    });
+
+    const rows = [
+      [cell('LAPORAN PEMINJAMAN PERPUSTAKAAN FMIPA', sTitleFont, sTitleBg, sCenter),
+       ...Array(COL - 1).fill(empty(sTitleBg))],
+      [cell(`Periode: ${periodLabel}`, sSubFont, sTitleBg, sCenter),
+       ...Array(COL - 1).fill(empty(sTitleBg))],
+      [cell(`Dicetak: ${new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`,
+        { sz: 9, italic: true, color: { rgb: '718096' }, name: 'Calibri' }, null, sCenter),
+       ...Array(COL - 1).fill(empty(null))],
+      Array(COL).fill(empty(null)),
+      [
+        cell('No',           sHeaderFont, sHeaderBg, sCenter),
+        cell('ID',           sHeaderFont, sHeaderBg, sCenter),
+        cell('Kode Buku',    sHeaderFont, sHeaderBg, sCenter),
+        cell('Judul Buku',   sHeaderFont, sHeaderBg, sCenter),
+        cell('Peminjam',     sHeaderFont, sHeaderBg, sCenter),
+        cell('Tipe',         sHeaderFont, sHeaderBg, sCenter),
+        cell('Tgl Pinjam',   sHeaderFont, sHeaderBg, sCenter),
+        cell('Batas Kembali',sHeaderFont, sHeaderBg, sCenter),
+        cell('Tgl Kembali',  sHeaderFont, sHeaderBg, sCenter),
+        cell('Status',       sHeaderFont, sHeaderBg, sCenter),
+        cell('Denda',        sHeaderFont, sHeaderBg, sCenter),
+      ],
+      ...dataRows,
+      Array(COL).fill(empty(null)),
+      [
+        ...Array(COL - 2).fill(empty(sTotalBg)),
+        cell('TOTAL DENDA', sTotalFont, sTotalBg, sRight),
+        cell(totalDendaFiltered, sTotalFont, sTotalBg, sRight, '"Rp "#,##0'),
+      ],
     ];
-  });
 
-  // ── Susun sheet ─────────────────────────────────────────────────
-  const rows = [
-    // Row 1: Judul besar
-    [cell('LAPORAN PEMINJAMAN PERPUSTAKAAN FMIPA', sTitleFont, sTitleBg, sCenter),
-     ...Array(COL - 1).fill(empty(sTitleBg))],
+    const ws = XLSX.utils.aoa_to_sheet(rows);
 
-    // Row 2: Sub judul periode
-    [cell(`Periode: ${periodLabel}`, sSubFont, sTitleBg, sCenter),
-     ...Array(COL - 1).fill(empty(sTitleBg))],
+    ws['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: COL - 1 } },
+      { s: { r: 1, c: 0 }, e: { r: 1, c: COL - 1 } },
+      { s: { r: 2, c: 0 }, e: { r: 2, c: COL - 1 } },
+    ];
 
-    // Row 3: Tanggal cetak
-    [cell(`Dicetak: ${new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`,
-      { sz: 9, italic: true, color: { rgb: '718096' }, name: 'Calibri' }, null, sCenter),
-     ...Array(COL - 1).fill(empty(null))],
+    ws['!cols'] = [
+      { wch: 4  },
+      { wch: 6  },
+      { wch: 20 },
+      { wch: 36 },
+      { wch: 22 },
+      { wch: 11 },
+      { wch: 13 },
+      { wch: 14 },
+      { wch: 13 },
+      { wch: 16 },
+      { wch: 15 },
+    ];
 
-    // Row 4: Kosong
-    Array(COL).fill(empty(null)),
+    ws['!rows'] = [{ hpt: 28 }, { hpt: 18 }, { hpt: 14 }];
 
-    // Row 5: Header
-    [
-      cell('No',           sHeaderFont, sHeaderBg, sCenter),
-      cell('ID',           sHeaderFont, sHeaderBg, sCenter),
-      cell('Kode Buku',    sHeaderFont, sHeaderBg, sCenter),
-      cell('Judul Buku',   sHeaderFont, sHeaderBg, sCenter),
-      cell('Peminjam',     sHeaderFont, sHeaderBg, sCenter),
-      cell('Tipe',         sHeaderFont, sHeaderBg, sCenter),
-      cell('Tgl Pinjam',   sHeaderFont, sHeaderBg, sCenter),
-      cell('Batas Kembali',sHeaderFont, sHeaderBg, sCenter),
-      cell('Tgl Kembali',  sHeaderFont, sHeaderBg, sCenter),
-      cell('Status',       sHeaderFont, sHeaderBg, sCenter),
-      cell('Denda',        sHeaderFont, sHeaderBg, sCenter),
-    ],
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Laporan Peminjaman');
+    XLSX.writeFile(wb, `laporan-peminjaman-${periodLabel.replace(/\s+/g, '-')}.xlsx`);
+  };
 
-    // Data rows
-    ...dataRows,
+  const exportPDF = () => {
+    const periodLabel = [
+      filterMonth ? monthOptions.find(m => m.value === filterMonth)?.label : null,
+      filterYear || null
+    ].filter(Boolean).join(' ') || 'Semua Periode';
 
-    // Baris kosong
-    Array(COL).fill(empty(null)),
+    const totalDendaFiltered = filteredLoans.reduce((s, l) => s + Number(l.denda || 0), 0);
 
-    // Baris total
-    [
-      ...Array(COL - 2).fill(empty(sTotalBg)),
-      cell('TOTAL DENDA', sTotalFont, sTotalBg, sRight),
-      cell(totalDendaFiltered, sTotalFont, sTotalBg, sRight, '"Rp "#,##0'),
-    ],
-  ];
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+    const pageWidth = doc.internal.pageSize.getWidth();
 
-  const ws = XLSX.utils.aoa_to_sheet(rows);
+    // ── Header banner merah ──────────────────────────────────────
+    doc.setFillColor(123, 28, 28);
+    doc.rect(0, 0, pageWidth, 58, 'F');
 
-  // Merge judul & sub judul (A1:K1, A2:K2)
-  ws['!merges'] = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: COL - 1 } },
-    { s: { r: 1, c: 0 }, e: { r: 1, c: COL - 1 } },
-    { s: { r: 2, c: 0 }, e: { r: 2, c: COL - 1 } },
-  ];
+    // Accent strip tipis
+    doc.setFillColor(13, 27, 42);
+    doc.rect(0, 58, pageWidth, 3, 'F');
 
-  // Lebar kolom
-  ws['!cols'] = [
-    { wch: 4  }, // No
-    { wch: 6  }, // ID
-    { wch: 20 }, // Kode Buku
-    { wch: 36 }, // Judul
-    { wch: 22 }, // Peminjam
-    { wch: 11 }, // Tipe
-    { wch: 13 }, // Tgl Pinjam
-    { wch: 14 }, // Batas Kembali
-    { wch: 13 }, // Tgl Kembali
-    { wch: 16 }, // Status
-    { wch: 15 }, // Denda
-  ];
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.setTextColor(255, 255, 255);
+    doc.text('LAPORAN PEMINJAMAN PERPUSTAKAAN FMIPA', pageWidth / 2, 24, { align: 'center' });
 
-  // Tinggi baris judul
-  ws['!rows'] = [{ hpt: 28 }, { hpt: 18 }, { hpt: 14 }];
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(255, 220, 220);
+    doc.text(`Periode: ${periodLabel}`, pageWidth / 2, 40, { align: 'center' });
 
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Laporan Peminjaman');
-  XLSX.writeFile(wb, `laporan-peminjaman-${periodLabel.replace(/\s+/g, '-')}.xlsx`);
-};
+    // Tanggal cetak (di bawah strip)
+    const printDate = new Date().toLocaleDateString('id-ID', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+    doc.setFontSize(7.5);
+    doc.setTextColor(150, 150, 150);
+    doc.text(`Dicetak: ${printDate}`, pageWidth / 2, 72, { align: 'center' });
 
-  const exportHTML = () => {
-    const html = `<!DOCTYPE html>
-    <html>
-    <head>
-      <title>Laporan Peminjaman FMIPA</title>
-      <style>
-        body{font-family:sans-serif;padding:20px}
-        table{width:100%;border-collapse:collapse}
-        th{background:#7B1C1C;color:white;padding:8px}
-        td{padding:8px;border-bottom:1px solid #eee}
-        h1{color:#7B1C1C}
-      </style>
-    </head>
-    <body>
-      <h1>Laporan Peminjaman Perpustakaan FMIPA</h1>
-      <p>Dicetak: ${new Date().toLocaleDateString('id-ID')}</p>
-      <p>Total Denda: Rp ${totalDenda.toLocaleString('id-ID')}</p>
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Buku</th>
-            <th>Peminjam</th>
-            <th>Status</th>
-            <th>Denda</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${filteredLoans.map(l => `
-            <tr>
-              <td>${l.id}</td>
-              <td>${l.bookTitle}</td>
-              <td>${l.memberName}</td>
-              <td>${l.status}</td>
-              <td>Rp ${Number(l.denda || 0).toLocaleString('id-ID')}</td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    </body>
-    </html>`;
+    // ── Tabel ────────────────────────────────────────────────────
+    const rows = filteredLoans.map((l, i) => {
+      const denda = Number(l.denda || 0);
+      const statusLabel =
+        l.status === 'dikembalikan' ? 'Dikembalikan' :
+        l.status === 'terlambat'   ? 'Terlambat'    :
+        l.status === 'diperpanjang'? 'Dipinjam'     : 'Dipinjam';
+      return [
+        i + 1,
+        String(l.id),
+        l.bookCode || '-',
+        l.bookTitle || '-',
+        l.memberName || '-',
+        l.memberType === 'mahasiswa' ? 'Mahasiswa'
+          : l.memberType === 'dosen' ? 'Dosen'
+          : (l.memberType || '-'),
+        l.loanDate   || '-',
+        l.dueDate    || '-',
+        l.returnDate || '-',
+        statusLabel,
+        denda > 0 ? `Rp ${denda.toLocaleString('id-ID')}` : '-',
+      ];
+    });
 
-    const blob = new Blob([html], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    // A4 landscape = 841.89pt, margin 22 kiri+kanan = 797.89pt usable
+    const usableWidth = pageWidth - 44;
+    // Proporsi kolom (total = 100)
+    const colWidths = [3.5, 4, 11, 20, 11, 6.5, 8.5, 9, 8.5, 9, 9].map(p => usableWidth * p / 100);
 
-    a.href = url;
-    a.download = 'laporan.html';
-    a.click();
+    autoTable(doc, {
+      startY: 82,
+      head: [[
+        'No', 'ID', 'Kode Buku', 'Judul Buku', 'Peminjam',
+        'Tipe', 'Tgl Pinjam', 'Batas Kembali', 'Tgl Kembali', 'Status', 'Denda'
+      ]],
+      body: rows,
+      foot: [[
+        { content: '', colSpan: 9, styles: { fillColor: [238, 242, 255], lineWidth: 0 } },
+        { content: 'TOTAL DENDA', styles: { halign: 'right', fontStyle: 'bold', textColor: [55, 48, 163], fillColor: [238, 242, 255] } },
+        { content: `Rp ${totalDendaFiltered.toLocaleString('id-ID')}`, styles: { halign: 'right', fontStyle: 'bold', textColor: [197, 48, 48], fillColor: [238, 242, 255] } },
+      ]],
+      theme: 'grid',
+      tableWidth: usableWidth,
+      headStyles: {
+        fillColor: [13, 27, 42],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        fontSize: 8,
+        halign: 'center',
+        valign: 'middle',
+        cellPadding: { top: 5, bottom: 5, left: 3, right: 3 },
+        lineColor: [30, 50, 70],
+        lineWidth: 0.5,
+      },
+      bodyStyles: {
+        fontSize: 8,
+        cellPadding: { top: 4, bottom: 4, left: 4, right: 4 },
+        valign: 'middle',
+        lineColor: [226, 232, 240],
+        lineWidth: 0.3,
+        textColor: [30, 30, 30],
+      },
+      alternateRowStyles: {
+        fillColor: [248, 244, 240],
+      },
+      footStyles: {
+        fillColor: [238, 242, 255],
+        lineColor: [200, 200, 230],
+        lineWidth: 0.5,
+        fontSize: 8,
+      },
+      columnStyles: {
+        0:  { halign: 'center', cellWidth: colWidths[0]  },
+        1:  { halign: 'center', cellWidth: colWidths[1]  },
+        2:  { halign: 'center', cellWidth: colWidths[2]  },
+        3:  { halign: 'left',   cellWidth: colWidths[3]  },
+        4:  { halign: 'left',   cellWidth: colWidths[4]  },
+        5:  { halign: 'center', cellWidth: colWidths[5]  },
+        6:  { halign: 'center', cellWidth: colWidths[6]  },
+        7:  { halign: 'center', cellWidth: colWidths[7]  },
+        8:  { halign: 'center', cellWidth: colWidths[8]  },
+        9:  { halign: 'center', cellWidth: colWidths[9]  },
+        10: { halign: 'right',  cellWidth: colWidths[10] },
+      },
+      didParseCell: (data) => {
+        if (data.section === 'body') {
+          const row = filteredLoans[data.row.index];
+          if (!row) return;
+          const isLate = row.status === 'terlambat';
+          const isDone = row.status === 'dikembalikan';
+          const hasDenda = Number(row.denda || 0) > 0;
 
-    URL.revokeObjectURL(url);
+          // Baris terlambat — background merah muda
+          if (isLate) {
+            data.cell.styles.fillColor = [255, 245, 245];
+          }
+
+          // Kolom Status — warna sesuai kondisi
+          if (data.column.index === 9) {
+            data.cell.styles.fontStyle = 'bold';
+            if (isDone)      data.cell.styles.textColor = [39, 103, 73];
+            else if (isLate) data.cell.styles.textColor = [197, 48, 48];
+            else             data.cell.styles.textColor = [183, 121, 31];
+          }
+
+          // Kolom Denda — merah jika ada denda
+          if (data.column.index === 10 && hasDenda) {
+            data.cell.styles.textColor = [197, 48, 48];
+            data.cell.styles.fontStyle = 'bold';
+          }
+        }
+      },
+      // Nomor halaman di footer
+      didDrawPage: (data) => {
+        const pageCount = doc.internal.getNumberOfPages();
+        const currentPage = doc.internal.getCurrentPageInfo().pageNumber;
+        doc.setFontSize(7);
+        doc.setTextColor(160, 160, 160);
+        doc.text(
+          `Halaman ${currentPage} dari ${pageCount}`,
+          pageWidth / 2,
+          doc.internal.pageSize.getHeight() - 10,
+          { align: 'center' }
+        );
+      },
+      margin: { left: 22, right: 22, top: 82, bottom: 24 },
+      showFoot: 'lastPage',
+    });
+
+    doc.save(`laporan-peminjaman-${periodLabel.replace(/\s+/g, '-')}.pdf`);
   };
 
   return (
@@ -337,13 +431,12 @@ export default function DendaPage() {
           <div style={{ fontSize: 28, fontWeight: 800, color: '#2563eb', lineHeight: 1 }}>{totalBelumKembali}</div>
           <div style={{ fontSize: 12, color: '#4f5661', marginTop: 10 }}>{loans.filter(l => l.status === 'terlambat').length} di antaranya terlambat</div>
         </div>
-    </div>
+      </div>
 
       <div className="grid-2 mb-24">
         <div className="card">
           <div className="flex-between mb-16">
             <div style={{ fontWeight: 700, fontSize: 15 }}>Grafik Denda Bulanan</div>
-            <button className="btn btn-ghost btn-sm" onClick={exportHTML}><FileDown size={13} /> Unduh Grafik</button>
           </div>
 
           <ResponsiveContainer width="100%" height={200}>
@@ -426,10 +519,10 @@ export default function DendaPage() {
                   ✕ Reset
                 </button>
               )}
-              <div style={{ width: 1, height: 24, background: '#e2e8f0',display: 'none' }}
-              className="divider-desktop" />
+              <div style={{ width: 1, height: 24, background: '#e2e8f0', display: 'none' }}
+                className="divider-desktop" />
               <button className="btn btn-outline btn-sm" onClick={exportXLSX}><FileDown size={13} /> Export Excel</button>
-              <button className="btn btn-ghost btn-sm" onClick={exportHTML}><FileText size={13} /> Export HTML</button>
+              <button className="btn btn-ghost btn-sm" onClick={exportPDF}><FileText size={13} /> Export PDF</button>
             </div>
           </div>
         </div>

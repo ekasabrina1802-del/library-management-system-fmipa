@@ -34,7 +34,15 @@ const departmentData = {
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
 
-  .profile-page * { box-sizing: border-box; }
+  html,
+  body,
+  #root {
+    overflow-x: hidden;
+  }
+
+  .profile-page * {
+    box-sizing: border-box;
+  }
 
   .profile-page {
     font-family: 'DM Sans', sans-serif;
@@ -49,7 +57,7 @@ const styles = `
     width: 100%;
     height: 200px;
     background: linear-gradient(135deg, #6b0f0f 0%, #1a0a0a 45%, #0d1b2a 100%);
-    overflow: visible; /* biarkan avatar sedikit keluar ke bawah */
+    overflow: visible; 
   }
   .hero-banner::before {
     content: '';
@@ -63,7 +71,8 @@ const styles = `
   .hero-banner-rings {
     position: absolute;
     top: -80px; right: -80px;
-    width: min(380px, 200vw); height: min(380px, 200vw);
+    width: 380px;
+    height: 380px;
     border-radius: 50%;
     border: 1px solid rgba(255,255,255,0.06);
     box-shadow: 0 0 0 40px rgba(255,255,255,0.03), 0 0 0 80px rgba(255,255,255,0.02);
@@ -262,10 +271,9 @@ const styles = `
 
   /* ── Content Grid ── */
   .content-grid {
-    display: grid;
-    grid-template-columns: 1fr 300px;
+    display: flex;
+    flex-direction: column;
     gap: 24px;
-    align-items: start;
   }
   .content-left { display: flex; flex-direction: column; gap: 20px; }
   .content-right { display: flex; flex-direction: column; gap: 20px; }
@@ -776,45 +784,8 @@ export default function AnggotaUserPage() {
               </div>
             )}
           </div>
-
-          {/* Right Column */}
-          <div className="content-right">
-            <div className="id-card">
-              <div className="id-card-logo-row">
-                <div className="id-card-logo-circle">F</div>
-                <div className="id-card-org">
-                  <div style={{ fontWeight: 700, fontSize: 12 }}>Perpustakaan FMIPA</div>
-                  <div style={{ opacity: 0.5, fontSize: 10 }}>UNESA — Library System</div>
-                </div>
-              </div>
-              <div className="id-card-strip" />
-              <div className="id-card-key" style={{ marginBottom: 4 }}>Nomor Anggota</div>
-              <div className="id-card-nim">{member.nim || '—'}</div>
-              <div className="id-card-divider" />
-              <div style={{ marginBottom: 10 }}>
-                <div className="id-card-key">Nama Lengkap</div>
-                <div className="id-card-val">{member.name}</div>
-              </div>
-              <div className="id-card-row">
-                <div>
-                  <div className="id-card-key">Departemen</div>
-                  <div className="id-card-val" style={{ fontSize: 12 }}>{member.departemen || '—'}</div>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div className="id-card-key">Status</div>
-                  <div className="id-card-val" style={{ fontSize: 12, color: isActive ? '#86efac' : '#fca5a5' }}>
-                    {isActive ? 'Aktif' : 'Nonaktif'}
-                  </div>
-                </div>
-              </div>
-              <div className="id-card-divider" />
-              <div style={{ fontSize: 10, opacity: 0.4, letterSpacing: '0.04em', fontFamily: "'DM Sans', sans-serif" }}>
-                Bergabung {member.joinDate} · {member.type || 'Mahasiswa'}
-              </div>
-            </div>
           </div>
-        </div>
-      </div>
+
 
       {/* ── Edit Modal ── */}
       {showEditModal && (
@@ -897,6 +868,7 @@ export default function AnggotaUserPage() {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 }
