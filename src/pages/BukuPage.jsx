@@ -7,8 +7,6 @@ import ApiImage from '../components/ApiImage';
 const CATEGORIES = ['Semua Kategori', 'Matematika', 'Fisika', 'Kimia', 'Biologi'];
 const COVER_COLORS = { MTK: '#7B1C1C', FIS: '#0D1B2A', KIM: '#1B5E20', BIO: '#1A237E' };
 
-// --- Komponen Pendukung ---
-
 function BookCover({ no_klasifikasi, size = 'sm' }) {
   const kode = no_klasifikasi?.split('/')[0];
   const map = { '510': 'MTK', '530': 'FIS', '540': 'KIM', '570': 'BIO' };
@@ -29,7 +27,6 @@ function BookCover({ no_klasifikasi, size = 'sm' }) {
   );
 }
 
-// ---- Tombol "Ingatkan Saya" yang menarik ----
 function RemindMeButton({ book, user, addReminder }) {
   const [notified, setNotified] = useState(false);
 
@@ -85,31 +82,19 @@ function RemindMeButton({ book, user, addReminder }) {
 }
 
 const getAvailableCopies = (book) => {
-  // FORMAT BARU
   if (book?.copies?.length) {
-    return book.copies.filter(
-      c => c.status === 'available'
-    );
+    return book.copies.filter(c => c.status === 'available');
   }
-
-  // FORMAT LAMA
-  return Array.from({
-    length: Number(book?.stock) || 0
-  }).map((_, i) => ({
+  return Array.from({ length: Number(book?.stock) || 0 }).map((_, i) => ({
     id: `legacy-${i}`,
     status: 'available'
   }));
 };
 
 const getBorrowedCopies = (book) => {
-  // FORMAT BARU
   if (book?.copies?.length) {
-    return book.copies.filter(
-      c => c.status === 'borrowed'
-    );
+    return book.copies.filter(c => c.status === 'borrowed');
   }
-
-  // FORMAT LAMA
   return [];
 };
 
@@ -118,14 +103,12 @@ function generateCopies(bookCode, total) {
     { length: total },
     (_, i) => ({
       id: crypto.randomUUID(),
-
-      copy_code:
-        `${bookCode}-${String(i + 1).padStart(3, '0')}`,
-
+      copy_code: `${bookCode}-${String(i + 1).padStart(3, '0')}`,
       status: 'available'
     })
   );
 }
+
 function BookModal({ book, onSave, onClose, isReadOnly, user }) {
   const { loans, addLoan, addReminder, members } = useApp();
   const isEdit = !!book?.id;
@@ -151,160 +134,58 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
       m.email === user?.email
   );
 
-  const profileIncomplete =
-    !currentMember?.name ||
-    !currentMember?.nim ||
-    !currentMember?.departemen ||
-    !currentMember?.prodi ||
-    !currentMember?.phone ||
-    !currentMember?.address;
   const handleBorrowAction = async () => {
-  // VALIDASI PROFIL WAJIB LENGKAP
-  const profileIncomplete =
-    !user?.name ||
-    !user?.nim ||
-    !user?.departemen ||
-    !user?.prodi ||
-    !user?.phone ||
-    !user?.address;
+    const profileIncomplete =
+      !user?.name || !user?.nim || !user?.departemen ||
+      !user?.prodi || !user?.phone || !user?.address;
 
-  if (profileIncomplete) {
+    if (profileIncomplete) {
+      alert('Lengkapi profil anda terlebih dahulu sebelum meminjam buku.');
+      return;
+    }
 
-    alert(
-      'Lengkapi profil anda terlebih dahulu sebelum meminjam buku.'
-    );
-
-    return;
-  }
     if (getAvailableCopies(book).length <= 0) {
-      alert(`Stok buku "${book.title}" sedang kosong. Kami akan mencatat permintaan notifikasi Anda.`);
-      return;
-    }
-    const activeLoans = loans?.filter(
-  l =>
-    String(l.memberId) === String(user?.anggotaId || user?.memberId) &&
-    ['dipinjam', 'diperpanjang', 'terlambat'].includes(String(l.status).toLowerCase())
-).length || 0;
-    const rules = {
-      mahasiswa: { max: 3, duration: '1 Minggu', extend: '2x' },
-      dosen: { max: 10, duration: '1 Bulan', extend: 'N/A' }
-    };
-    const userRule = rules[user?.role] || rules.mahasiswa;
-    if (activeLoans >= userRule.max) {
-      alert(`Gagal Pinjam! Batas maksimal ${user?.role} adalah ${userRule.max} buku. Saat ini Anda masih meminjam ${activeLoans} buku.`);
-      return;
-    }
-    const confirmBorrow = window.confirm(
-      `Konfirmasi Peminjaman:\n\nJudul: ${book.title}\nDurasi: ${userRule.duration}\nBatas Maksimal: ${userRule.max} buku\n\nApakah Anda ingin melanjutkan?`
-    );
-    if (confirmBorrow) {
-
-  // =========================
-  // MODE BARU (copies)
-  // =========================
-
-  if (book.copies) {
-
-    const availableCopies =
-      getAvailableCopies(book);
-
-    if (availableCopies.length === 0) {
-
-      alert('Semua copy sedang dipinjam');
-
+      alert(`Stok buku "${book.title}" sedang kosong.`);
       return;
     }
 
-    const selectedCopy =
-      availableCopies[0];
-
-    const result = await addLoan({
-
-      memberId:
-        user?.anggotaId ||
-        user?.memberId,
-
-      bookId: book.id,
-
-      copyId: selectedCopy.id,
-
-      copyCode:
-        selectedCopy.copy_code
-
-    });
+    const result = await addLoan(book.no_induk, user?.anggotaId || user?.memberId);
 
     if (result.success) {
-
-      alert(
-        `Permintaan berhasil!\n\n` +
-        `Silahkan ambil buku di meja petugas ` +
-        `dengan menunjukkan kode buku:\n\n` +
-        `${selectedCopy.copy_code}`
-      );
-
+      alert('Permintaan berhasil!');
       onClose();
-
     } else {
-
-      alert(
-        `Gagal meminjam: ${result.message}`
-      );
-
+      alert(`Gagal meminjam: ${result.message}`);
     }
-
-  }
-
-  // =========================
-  // MODE LAMA
-  // =========================
-
-  else {
-
-    const result = await addLoan(
-
-      book.no_induk,
-
-      user?.anggotaId ||
-      user?.memberId
-
-    );
-
-    if (result.success) {
-
-      alert(
-        'Permintaan berhasil! Silahkan ambil buku di meja petugas.'
-      );
-
-      onClose();
-
-    } else {
-
-      alert(
-        `Gagal meminjam: ${result.message}`
-      );
-
-    }
-  }}
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
     if (isReadOnly) return;
+
     if (!isEdit && !form.image) {
-      alert("Foto buku wajib diunggah untuk buku baru!");
+      alert("Foto buku wajib diunggah!");
       return;
     }
+
     onSave(form);
   };
 
   const f = (k) => (e) => {
     if (isReadOnly) return;
+
     if (e.target.type === 'file') {
       const file = e.target.files[0];
+
       if (file) {
         setForm(p => ({ ...p, [k]: file }));
+
         const reader = new FileReader();
-        reader.onloadend = () => setForm(p => ({ ...p, imagePreview: reader.result }));
+
+        reader.onloadend = () =>
+          setForm(p => ({ ...p, imagePreview: reader.result }));
+
         reader.readAsDataURL(file);
       }
     } else {
@@ -313,171 +194,297 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
   };
 
   const isAvailable = getAvailableCopies(book).length > 0;
-  const descriptionRef = useRef(null);
-  useEffect(() => {
-    if (descriptionRef.current) {
-      descriptionRef.current.style.height = '0px';
-      descriptionRef.current.style.height =
-        descriptionRef.current.scrollHeight + 'px';
-    }
-  }, [form.description]);
 
   return (
-    <div className="modal-overlay">
-      <div className="modal" style={{ maxWidth: 900, width: '95%', padding: 'clamp(16px, 3vw, 28px)' }}>
-        <div className="modal-header">
-          <h3 className="modal-title">{isReadOnly ? 'Detail Informasi Buku' : (isEdit ? 'Edit Buku' : 'Tambah Buku Baru')}</h3>
-          <button className="modal-close" onClick={onClose}><X size={20} /></button>
+    <div
+      className="modal-overlay"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,0.55)',
+        zIndex: 9999,
+
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+
+        padding: 20,
+
+        overflowY: 'auto'
+      }}
+    >
+      <div
+        className="modal"
+        style={{
+          background: '#fff',
+          width: '100%',
+          maxWidth: 900,
+          borderRadius: 16,
+          padding: '24px',
+          maxHeight: 'calc(100vh - 40px)',
+          overflowY: 'auto',
+          boxShadow: '0 20px 50px rgba(0,0,0,0.25)',
+          scrollbarWidth: 'thin',
+          scrollbarColor: '#7B1C1C #f3f3f3'
+        }}
+      >
+        <div
+          className="modal-header"
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 24,
+            position: 'sticky',
+            top: 0,
+            background: '#fff',
+            zIndex: 10,
+            paddingBottom: 12
+          }}
+        >
+          <h3 className="modal-title">
+            {isReadOnly
+              ? 'Detail Informasi Buku'
+              : (isEdit ? 'Edit Buku' : 'Tambah Buku Baru')}
+          </h3>
+
+          <button
+            className="modal-close"
+            onClick={onClose}
+            style={{
+              border: 'none',
+              background: 'transparent',
+              cursor: 'pointer'
+            }}
+          >
+            <X size={20} />
+          </button>
         </div>
+
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label className="form-label">Deskripsi *</label>
+
             <textarea
-              ref={descriptionRef}
               className="form-control"
               value={form.description}
               onChange={f('description')}
               disabled={isReadOnly}
+              rows={4}
               style={{
-                overflow: 'hidden',
-                resize: 'none'
+                resize: 'vertical',
+                minHeight: 120
               }}
             />
           </div>
-          <div className="grid-2">
+
+          <div
+            className="grid-2"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: 16
+            }}
+          >
             <div className="form-group">
               <label className="form-label">No. Induk *</label>
-              <input className="form-control" value={form.no_induk} onChange={f('no_induk')} disabled={isReadOnly} required />
+
+              <input
+                className="form-control"
+                value={form.no_induk}
+                onChange={f('no_induk')}
+                disabled={isReadOnly}
+                required
+              />
             </div>
+
             <div className="form-group">
               <label className="form-label">No. Klasifikasi *</label>
-              <input className="form-control" value={form.no_klasifikasi} onChange={f('no_klasifikasi')} disabled={isReadOnly} required />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Kategori *</label>
-              <select className="form-control" value={form.category} onChange={f('category')} disabled={isReadOnly}>
-                {CATEGORIES.slice(1).map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
+
+              <input
+                className="form-control"
+                value={form.no_klasifikasi}
+                onChange={f('no_klasifikasi')}
+                disabled={isReadOnly}
+                required
+              />
             </div>
           </div>
+
+          <div className="form-group">
+            <label className="form-label">Kategori *</label>
+
+            <select
+              className="form-control"
+              value={form.category}
+              onChange={f('category')}
+              disabled={isReadOnly}
+            >
+              {CATEGORIES.slice(1).map(c => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="form-group">
             <label className="form-label">Judul Buku *</label>
-            <input className="form-control" value={form.title} onChange={f('title')} disabled={isReadOnly} required />
+
+            <input
+              className="form-control"
+              value={form.title}
+              onChange={f('title')}
+              disabled={isReadOnly}
+              required
+            />
           </div>
-          <div className="grid-2">
+
+          <div
+            className="grid-2"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: 16
+            }}
+          >
             <div className="form-group">
               <label className="form-label">Penulis *</label>
-              <input className="form-control" value={form.author} onChange={f('author')} disabled={isReadOnly} required />
+
+              <input
+                className="form-control"
+                value={form.author}
+                onChange={f('author')}
+                disabled={isReadOnly}
+                required
+              />
             </div>
+
             <div className="form-group">
               <label className="form-label">Penerbit *</label>
-              <input className="form-control" value={form.publisher} onChange={f('publisher')} disabled={isReadOnly} />
+
+              <input
+                className="form-control"
+                value={form.publisher}
+                onChange={f('publisher')}
+                disabled={isReadOnly}
+              />
             </div>
           </div>
-          <div className="grid-2">
+
+          <div
+            className="grid-2"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: 16
+            }}
+          >
             <div className="form-group">
               <label className="form-label">ISBN *</label>
-              <input className="form-control" value={form.isbn} onChange={f('isbn')} disabled={isReadOnly} />
+
+              <input
+                className="form-control"
+                value={form.isbn}
+                onChange={f('isbn')}
+                disabled={isReadOnly}
+              />
             </div>
+
             <div className="form-group">
               <label className="form-label">Tahun Terbit *</label>
-              <input className="form-control" type="number" value={form.year} onChange={f('year')} disabled={isReadOnly} />
+
+              <input
+                className="form-control"
+                type="number"
+                value={form.year}
+                onChange={f('year')}
+                disabled={isReadOnly}
+              />
             </div>
           </div>
+
           <div className="form-group">
             <label className="form-label">Jumlah Stok *</label>
-            <input className="form-control" type="number" value={form.stock} onChange={f('stock')} disabled={isReadOnly} />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Foto Buku {!isEdit && '*'}</label>
-            {!isReadOnly && (
-              <input type="file" className="form-control" accept="image/*" onChange={f('image')}
-                style={{ marginBottom: 8 }} required={!isEdit} />
-            )}
-            {form.imagePreview ? (
-              <div style={{ position: 'relative', width: 100 }}>
-                <ApiImage
-  src={form.imagePreview}
-  alt="preview"
-  style={{
-    width: 100,
-    height: 130,
-    objectFit: 'cover',
-    borderRadius: 6,
-    display: 'block',
-    border: '1px solid #ddd'
-  }}
-/>
-              </div>
-            ) : (
-              <div style={{ width: 100, height: 130, border: '2px dashed #ddd', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999', fontSize: 12 }}>
-                No Image
-              </div>
-            )}
-          </div>
-          <div className="form-group">
 
+            <input
+              className="form-control"
+              type="number"
+              value={form.stock}
+              onChange={f('stock')}
+              disabled={isReadOnly}
+            />
+          </div>
+
+          <div className="form-group">
             <label className="form-label">
-              Daftar Copy Buku
+              Foto Buku {!isEdit && '*'}
             </label>
 
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 8
-              }}
-            >
-
-              {(
-                book?.copies?.length > 0
-                  ? book.copies
-                  : generateCopies(
-                      form.no_induk || 'BOOK',
-                      Number(form.stock) || 0
-                    )
-              ).map(copy => (
-
-                <div
-                  key={copy.id}
-                  style={{
-                    padding: 10,
-                    border: '1px solid #ddd',
-                    borderRadius: 8,
-                    display: 'flex',
-                    justifyContent: 'space-between'
-                  }}
-                >
-
-                  <strong>
-                    {copy.copy_code}
-                  </strong>
-
-                  <span>
-                    {copy.status === 'available'
-                      ? 'Tersedia'
-                      : 'Dipinjam'}
-                  </span>
-
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16, borderTop: '1px solid #eee', paddingTop: '16px' }}>
-            <button type="button" className="btn btn-ghost" onClick={onClose}>{isReadOnly ? 'Tutup' : 'Batal'}</button>
-
-            {isReadOnly && (user?.role === 'mahasiswa' || user?.role === 'dosen') && (
-              isAvailable ? (
-                <button type="button" className="btn btn-primary" style={{ background: '#2D6A4F' }} onClick={handleBorrowAction}>
-                  <BookOpen size={14} /> Pinjam Buku
-                </button>
-              ) : (
-                <RemindMeButton book={book} user={user} addReminder={addReminder} />
-              )
+            {!isReadOnly && (
+              <input
+                type="file"
+                className="form-control"
+                accept="image/*"
+                onChange={f('image')}
+                required={!isEdit}
+              />
             )}
 
-            {!isReadOnly && <button type="submit" className="btn btn-primary"><Check size={14} /> Simpan</button>}
+            {form.imagePreview && (
+              <img
+                src={form.imagePreview}
+                alt="preview"
+                style={{
+                  width: 120,
+                  height: 160,
+                  objectFit: 'cover',
+                  borderRadius: 8,
+                  marginTop: 12,
+                  border: '1px solid #ddd'
+                }}
+              />
+            )}
+          </div>
+
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: 12,
+              marginTop: 24,
+              paddingTop: 20,
+              borderTop: '1px solid #eee'
+            }}
+          >
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={onClose}
+            >
+              Tutup
+            </button>
+
+            {isReadOnly &&
+              (user?.role === 'mahasiswa' ||
+                user?.role === 'dosen') && (
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handleBorrowAction}
+                >
+                  Pinjam Buku
+                </button>
+              )}
+
+            {!isReadOnly && (
+              <button
+                type="submit"
+                className="btn btn-primary"
+              >
+                Simpan
+              </button>
+            )}
           </div>
         </form>
       </div>
@@ -485,7 +492,6 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
   );
 }
 
-// ---- Kartu Buku untuk Grid View ----
 function BookCard({ book, onSelect, onDetail, isPetugas, selected }) {
   const isAvailable = getAvailableCopies(book).length > 0;
 
@@ -496,9 +502,7 @@ function BookCard({ book, onSelect, onDetail, isPetugas, selected }) {
         background: '#fff',
         borderRadius: 12,
         overflow: 'hidden',
-        border: selected?.includes(book.id)
-          ? '2px solid #7B1C1C'
-          : '1px solid #eee',
+        border: selected?.includes(book.id) ? '2px solid #7B1C1C' : '1px solid #eee',
         cursor: 'pointer',
         transition: 'transform 0.18s, box-shadow 0.18s',
         display: 'flex',
@@ -516,27 +520,16 @@ function BookCard({ book, onSelect, onDetail, isPetugas, selected }) {
         e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.06)';
       }}
     >
-      {/* Cover area */}
       <div style={{
-        position: 'relative',
-        background: '#f7f3f0',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: 160,
-        overflow: 'hidden',
+        position: 'relative', background: '#f7f3f0',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        height: 160, overflow: 'hidden',
       }}>
         {book.image_url ? (
-          <ApiImage
-  src={book.image_url}
-  alt={book.title}
-  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-/>
+          <ApiImage src={book.image_url} alt={book.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
           <BookCover no_klasifikasi={book.no_klasifikasi} size="lg" />
         )}
-
-        {/* Status badge overlay */}
         <div style={{
           position: 'absolute', top: 8, right: 8,
           background: isAvailable ? '#2D6A4F' : '#c0392b',
@@ -548,19 +541,13 @@ function BookCard({ book, onSelect, onDetail, isPetugas, selected }) {
         </div>
       </div>
 
-      {/* Info area */}
       <div style={{ padding: '12px 14px', flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <span style={{
-          fontSize: 10, fontWeight: 600, color: '#7B1C1C',
-          textTransform: 'uppercase', letterSpacing: '0.5px'
-        }}>
+        <span style={{ fontSize: 10, fontWeight: 600, color: '#7B1C1C', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
           {book.category}
         </span>
         <div style={{
-          fontWeight: 700, fontSize: 13, color: '#1a1a1a',
-          lineHeight: 1.35, overflow: 'hidden',
-          display: '-webkit-box', WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical'
+          fontWeight: 700, fontSize: 13, color: '#1a1a1a', lineHeight: 1.35,
+          overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical'
         }}>
           {book.title}
         </div>
@@ -568,43 +555,23 @@ function BookCard({ book, onSelect, onDetail, isPetugas, selected }) {
 
         <div style={{
           marginTop: 'auto', paddingTop: 10,
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          borderTop: '1px solid #f0ebe6'
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+          flexWrap: 'nowrap', borderTop: '1px solid #f0ebe6'
         }}>
-          <code style={{
-            background: '#f0ebe6', padding: '2px 7px',
-            borderRadius: 4, fontSize: 10, color: '#555'
-          }}>
+          <code style={{ background: '#f0ebe6', padding: '2px 7px', borderRadius: 4, fontSize: 10, color: '#555' }}>
             {book.no_induk}
           </code>
-          <span style={{
-            fontSize: 11, fontWeight: 600,
-            color: isAvailable ? '#2D6A4F' : '#c0392b'
-          }}>
-            {getAvailableCopies(book).length}/
-            {book.copies?.length || book.stock || 0} unit
+          <span style={{ fontSize: 9.5, fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0, color: isAvailable ? '#2D6A4F' : '#c0392b' }}>
+            {getAvailableCopies(book).length}/{book.copies?.length || book.stock || 0} unit
           </span>
         </div>
 
-        {/* Detail hint */}
         <div
-          onClick={(e) => {
-            e.stopPropagation();
-            onDetail(book);
-          }}
+          onClick={(e) => { e.stopPropagation(); onDetail(book); }}
           style={{
-            marginTop: 8,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 5,
-            padding: '6px',
-            borderRadius: 7,
-            background: '#f7f3f0',
-            color: '#7B1C1C',
-            fontSize: 11,
-            fontWeight: 600,
-            cursor: 'pointer'
+            marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            gap: 5, padding: '6px', borderRadius: 7, background: '#f7f3f0',
+            color: '#7B1C1C', fontSize: 11, fontWeight: 600, cursor: 'pointer'
           }}
         >
           <Eye size={11} /> Lihat Detail
@@ -613,8 +580,6 @@ function BookCard({ book, onSelect, onDetail, isPetugas, selected }) {
     </div>
   );
 }
-
-// --- Komponen Utama Halaman Buku ---
 
 export default function BukuPage() {
   const { books, addBook, updateBook } = useApp();
@@ -626,73 +591,35 @@ export default function BukuPage() {
   const [filter, setFilter] = useState('Semua Kategori');
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [viewMode, setViewMode] = useState('list'); // 'list' | 'grid'
-  const booksPerPage =
-    viewMode === 'grid'
-      ? 12
-      : 10;
+  const [viewMode, setViewMode] = useState('list');
+  const booksPerPage = viewMode === 'grid' ? 12 : 10;
   const [modal, setModal] = useState(null);
   const [selected, setSelected] = useState([]);
-  // --- LOGIKA STATISTIK ---
+
   const totalJudul = books.length;
   const totalUnitTersedia = books.reduce((s, b) => s + getAvailableCopies(b).length, 0);
-  const totalDipinjam = books.reduce((s, b) =>
-    s + getBorrowedCopies(b).length,
-    0
-  );
+  const totalDipinjam = books.reduce((s, b) => s + getBorrowedCopies(b).length, 0);
   const totalJudulHabis = books.filter(b => getAvailableCopies(b).length === 0).length;
 
   const filteredBooks = books.filter(b => {
+    const matchCat = filter === 'Semua Kategori' || b.category === filter;
+    const matchSearch = !search
+      || b.title?.toLowerCase().includes(search.toLowerCase())
+      || b.no_induk?.toLowerCase().includes(search.toLowerCase());
+    return matchCat && matchSearch;
+  });
 
-  const matchCat =
-    filter === 'Semua Kategori'
-    || b.category === filter;
-
-  const matchSearch =
-    !search
-    || b.title?.toLowerCase()
-      .includes(search.toLowerCase())
-
-    || b.no_induk?.toLowerCase()
-      .includes(search.toLowerCase());
-
-  return matchCat && matchSearch;
-
-});
-
-  const totalPages = Math.ceil(
-    filteredBooks.length / booksPerPage
-  );
-
-  const startIndex =
-    (currentPage - 1) * booksPerPage;
-
-  const endIndex =
-    startIndex + booksPerPage;
-
-  const filtered =
-    filteredBooks.slice(
-      startIndex,
-      endIndex
-    );
+  const totalPages = Math.ceil(filteredBooks.length / booksPerPage);
+  const startIndex = (currentPage - 1) * booksPerPage;
+  const filtered = filteredBooks.slice(startIndex, startIndex + booksPerPage);
 
   const handleRowClick = (book) => {
-  // ✅ khusus petugas = select saja
-  if (isPetugas) {
-    toggleSelect(book.id);
-    return;
-  }
-
-  // user lain tetap buka detail
-  setModal({ mode: 'view', book });
-};
+    if (isPetugas) { toggleSelect(book.id); return; }
+    setModal({ mode: 'view', book });
+  };
 
   const toggleSelect = (id) => {
-    setSelected((prev) =>
-      prev.includes(id)
-        ? []
-        : [id]
-    );
+    setSelected((prev) => prev.includes(id) ? [] : [id]);
   };
 
   return (
@@ -704,36 +631,13 @@ export default function BukuPage() {
           onSave={(f) => {
             if (modal.mode === 'edit') {
               const oldBook = modal.book;
-              const borrowed =
-                getBorrowedCopies(oldBook).length;
-
-              const copies = generateCopies(
-                f.no_induk,
-                Number(f.stock)
-              );
-
-              copies.forEach((copy, index) => {
-
-                if (index < borrowed) {
-                  copy.status = 'borrowed';
-                }
-
-              });
-
-              updateBook(modal.book.id, {
-                ...f,
-                copies
-              });
+              const borrowed = getBorrowedCopies(oldBook).length;
+              const copies = generateCopies(f.no_induk, Number(f.stock));
+              copies.forEach((copy, index) => { if (index < borrowed) copy.status = 'borrowed'; });
+              updateBook(modal.book.id, { ...f, copies });
             } else {
-              const copies = generateCopies(
-                f.no_induk,
-                Number(f.stock)
-              );
-
-              addBook({
-                ...f,
-                copies
-              });
+              const copies = generateCopies(f.no_induk, Number(f.stock));
+              addBook({ ...f, copies });
             }
             setModal(null);
           }}
@@ -752,86 +656,52 @@ export default function BukuPage() {
 
       {/* Stats Cards */}
       <div className="grid-4 mb-24" style={{ gap: '16px' }}>
-
-        {/* Koleksi Buku */}
         <div style={{ background: 'linear-gradient(135deg, #fff5f5, #ffffff)', border: '1.5px solid #FED7D7', borderRadius: 14, padding: '20px 22px', minHeight: 120, boxShadow: '0 2px 8px rgba(229,62,62,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          
           <div>
-            <div style={{ fontSize: 11, color: '#E53E3E', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>
-              Koleksi Buku
-            </div>
-
-            <div style={{ fontSize: 28, fontWeight: 800, color: '#E53E3E', lineHeight: 1, fontFamily: "'DM Mono', monospace" }}>
-              {totalJudul}
-            </div>
+            <div style={{ fontSize: 11, color: '#E53E3E', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>Koleksi Buku</div>
+            <div style={{ fontSize: 28, fontWeight: 800, color: '#E53E3E', lineHeight: 1, fontFamily: "'DM Mono', monospace" }}>{totalJudul}</div>
           </div>
-
           <div style={{ width: 42, height: 42, borderRadius: 12, background: '#fff1f1', border: '1px solid #FED7D7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#E53E3E' }}>
             <BookOpen size={18} />
           </div>
-
         </div>
 
-        {/* Buku Tersedia */}
         <div style={{ background: 'linear-gradient(135deg, #fffaf0, #ffffff)', border: '1.5px solid #FEEBC8', borderRadius: 14, padding: '20px 22px', minHeight: 120, boxShadow: '0 2px 8px rgba(214,158,46,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          
           <div>
-            <div style={{ fontSize: 11, color: '#D69E2E', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>
-              Buku Tersedia
-            </div>
-
-            <div style={{ fontSize: 28, fontWeight: 800, color: '#D69E2E', lineHeight: 1, fontFamily: "'DM Mono', monospace" }}>
-              {totalUnitTersedia}
-            </div>
+            <div style={{ fontSize: 11, color: '#D69E2E', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>Buku Tersedia</div>
+            <div style={{ fontSize: 28, fontWeight: 800, color: '#D69E2E', lineHeight: 1, fontFamily: "'DM Mono', monospace" }}>{totalUnitTersedia}</div>
           </div>
-
           <div style={{ width: 42, height: 42, borderRadius: 12, background: '#fff7e6', border: '1px solid #FEEBC8', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D69E2E' }}>
             <CheckCircle size={18} />
           </div>
-
         </div>
 
-        {/* Buku Dipinjam */}
         <div style={{ background: 'linear-gradient(135deg, #f0fff4, #ffffff)', border: '1.5px solid #C6F6D5', borderRadius: 14, padding: '20px 22px', minHeight: 120, boxShadow: '0 2px 8px rgba(56,161,105,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          
           <div>
-            <div style={{ fontSize: 11, color: '#38A169', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>
-              Buku Dipinjam
-            </div>
-
-            <div style={{ fontSize: 28, fontWeight: 800, color: '#38A169', lineHeight: 1, fontFamily: "'DM Mono', monospace" }}>
-              {totalDipinjam}
-            </div>
+            <div style={{ fontSize: 11, color: '#38A169', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>Buku Dipinjam</div>
+            <div style={{ fontSize: 28, fontWeight: 800, color: '#38A169', lineHeight: 1, fontFamily: "'DM Mono', monospace" }}>{totalDipinjam}</div>
           </div>
-
           <div style={{ width: 42, height: 42, borderRadius: 12, background: '#ecfff3', border: '1px solid #C6F6D5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#38A169' }}>
             <Clock size={18} />
           </div>
-
         </div>
 
-        {/* Buku Habis */}
         <div style={{ background: 'linear-gradient(135deg, #eff6ff, #ffffff)', border: '1.5px solid #BFDBFE', borderRadius: 14, padding: '20px 22px', minHeight: 120, boxShadow: '0 2px 8px rgba(37,99,235,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          
           <div>
-            <div style={{ fontSize: 11, color: '#2563EB', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>
-              Buku Habis
-            </div>
-
-            <div style={{ fontSize: 28, fontWeight: 800, color: '#2563EB', lineHeight: 1, fontFamily: "'DM Mono', monospace" }}>
-              {totalJudulHabis}
-            </div>
+            <div style={{ fontSize: 11, color: '#2563EB', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>Buku Habis</div>
+            <div style={{ fontSize: 28, fontWeight: 800, color: '#2563EB', lineHeight: 1, fontFamily: "'DM Mono', monospace" }}>{totalJudulHabis}</div>
           </div>
-
           <div style={{ width: 42, height: 42, borderRadius: 12, background: '#eef4ff', border: '1px solid #BFDBFE', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563EB' }}>
             <XCircle size={18} />
           </div>
-
         </div>
       </div>
-     
+
       <div className="card">
-        <div className="flex-between mb-16" style={{ flexWrap: 'wrap', gap: 10, alignItems: 'flex-start' }}>
+        {/* ── TOOLBAR ── */}
+        <div className="mb-16" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+
+          {/* Baris 1: Tombol aksi / info teks */}
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             {isPetugas ? (
               <>
@@ -849,74 +719,72 @@ export default function BukuPage() {
             )}
           </div>
 
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            {/* Toggle Grid/List — hanya untuk user non-petugas/admin, tapi bisa dibuka untuk semua */}
-            <div style={{
-              display: 'flex', background: '#f0ebe6',
-              borderRadius: 8, padding: 3, gap: 2
-            }}>
-              <button
-                onClick={() => setViewMode('list')}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 5,
-                  padding: '5px 10px', borderRadius: 6, border: 'none',
-                  background: viewMode === 'list' ? '#7B1C1C' : 'transparent',
-                  color: viewMode === 'list' ? 'white' : '#888',
-                  fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                  transition: 'all 0.15s'
-                }}
-              >
-                <LayoutList size={13} /> List
-              </button>
-              <button
-                onClick={() => setViewMode('grid')}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 5,
-                  padding: '5px 10px', borderRadius: 6, border: 'none',
-                  background: viewMode === 'grid' ? '#7B1C1C' : 'transparent',
-                  color: viewMode === 'grid' ? 'white' : '#888',
-                  fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                  transition: 'all 0.15s'
-                }}
-              >
-                <LayoutGrid size={13} /> Grid
-              </button>
-            </div>
+          {/* Baris 2: Toggle List/Grid */}
+          <div style={{ display: 'flex', background: '#f0ebe6', borderRadius: 8, padding: 3, gap: 2, alignSelf: 'flex-start' }}>
+            <button
+              onClick={() => setViewMode('list')}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                padding: '5px 10px', borderRadius: 6, border: 'none',
+                background: viewMode === 'list' ? '#7B1C1C' : 'transparent',
+                color: viewMode === 'list' ? 'white' : '#888',
+                fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s'
+              }}
+            >
+              <LayoutList size={13} /> List
+            </button>
+            <button
+              onClick={() => setViewMode('grid')}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                padding: '5px 10px', borderRadius: 6, border: 'none',
+                background: viewMode === 'grid' ? '#7B1C1C' : 'transparent',
+                color: viewMode === 'grid' ? 'white' : '#888',
+                fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s'
+              }}
+            >
+              <LayoutGrid size={13} /> Grid
+            </button>
+          </div>
 
-            <div style={{ position: 'relative' }}>
+          {/* Baris 3: Search + Filter Kategori */}
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ position: 'relative', flex: 1, minWidth: 140 }}>
               <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#999' }} />
-              <input className="form-control" style={{ width: '100%', minWidth: 150, maxWidth: 220, paddingLeft: 32 }}
-                placeholder="Cari judul atau penulis..." value={search} onChange={e => {setSearch(e.target.value); setCurrentPage(1);}} />
+              <input
+                className="form-control"
+                style={{ width: '100%', paddingLeft: 32 }}
+                placeholder="Cari judul atau penulis..."
+                value={search}
+                onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
+              />
             </div>
-            <select className="form-control" style={{ width: '100%', minWidth: 130, maxWidth: 180 }} value={filter}
-              onChange={e => {setFilter(e.target.value); setCurrentPage(1);}}>
+            <select
+              className="form-control"
+              style={{ minWidth: 130, maxWidth: 180 }}
+              value={filter}
+              onChange={e => { setFilter(e.target.value); setCurrentPage(1); }}
+            >
               {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
         </div>
 
         {isPetugas && (
-        <div
-          style={{
-            marginBottom: 16,
-            padding: '10px 14px',
-            borderRadius: 10,
-            background: 'rgba(123,28,28,0.06)',
-            border: '1px solid rgba(123,28,28,0.12)',
-            color: '#7B1C1C',
-            fontSize: 13,
-            fontWeight: 500
-          }}
-        >
-          📌 Silakan pilih salah satu buku terlebih dahulu untuk mengedit data buku.
-        </div>
+          <div style={{
+            marginBottom: 16, padding: '10px 14px', borderRadius: 10,
+            background: 'rgba(123,28,28,0.06)', border: '1px solid rgba(123,28,28,0.12)',
+            color: '#7B1C1C', fontSize: 13, fontWeight: 500
+          }}>
+            📌 Silakan pilih salah satu buku terlebih dahulu untuk mengedit data buku.
+          </div>
         )}
 
-        {/* ---- GRID VIEW ---- */}
+        {/* ── GRID VIEW ── */}
         {viewMode === 'grid' ? (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(145px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(min(45%, 160px), 1fr))',
             gap: 16,
             padding: '4px 0'
           }}>
@@ -926,27 +794,18 @@ export default function BukuPage() {
                 book={b}
                 isPetugas={isPetugas}
                 selected={selected}
-                onSelect={(book) => {
-                  if (isPetugas) {
-                    toggleSelect(book.id); // hanya petugas yang select
-                  }
-                }}
-                onDetail={(book) => {
-                  setModal({ mode: 'view', book }); // lihat detail hanya dari tombol
-                }}
+                onSelect={(book) => { if (isPetugas) toggleSelect(book.id); }}
+                onDetail={(book) => setModal({ mode: 'view', book })}
               />
             ))}
             {filtered.length === 0 && (
-              <div style={{
-                gridColumn: '1/-1', textAlign: 'center',
-                padding: 48, color: '#aaa', fontSize: 13
-              }}>
+              <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 48, color: '#aaa', fontSize: 13 }}>
                 Tidak ada buku yang ditemukan.
               </div>
             )}
           </div>
         ) : (
-          /* ---- LIST / TABLE VIEW ---- */
+          /* ── LIST / TABLE VIEW ── */
           <div className="table-container">
             <table>
               <thead>
@@ -967,62 +826,34 @@ export default function BukuPage() {
                     key={b.id}
                     onClick={() => handleRowClick(b)}
                     style={{
-                      background: selected.includes(b.id)
-                        ? 'rgba(123,28,28,0.10)'
-                        : '#fff',
-
-                      borderLeft: selected.includes(b.id)
-                        ? '5px solid #7B1C1C'
-                        : '5px solid transparent',
-
-                      boxShadow: selected.includes(b.id)
-                        ? '0 2px 10px rgba(123,28,28,0.12)'
-                        : 'none',
-
+                      background: selected.includes(b.id) ? 'rgba(123,28,28,0.10)' : '#fff',
+                      borderLeft: selected.includes(b.id) ? '5px solid #7B1C1C' : '5px solid transparent',
+                      boxShadow: selected.includes(b.id) ? '0 2px 10px rgba(123,28,28,0.12)' : 'none',
                       transition: 'all 0.18s ease',
                       cursor: 'pointer'
                     }}
                   >
-                    {/* KOLOM CENTANG */}
                     <td style={{ width: 40 }}>
                       {selected.includes(b.id) && (
-                        <div
-                          style={{
-                            width: 22,
-                            height: 22,
-                            borderRadius: '50%',
-                            background: '#7B1C1C',
-                            color: 'white',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: 12,
-                            fontWeight: 700
-                          }}
-                        >
-                          ✓
-                        </div>
+                        <div style={{
+                          width: 22, height: 22, borderRadius: '50%',
+                          background: '#7B1C1C', color: 'white',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: 12, fontWeight: 700
+                        }}>✓</div>
                       )}
                     </td>
-
-                    {/* COVER */}
                     <td>
                       {b.image_url ? (
-
-  <ApiImage
-    src={b.image_url}
-    alt={b.title}
-    style={{
-      width: 44,
-      height: 58,
-      objectFit: 'cover',
-      borderRadius: 4
-    }}
-    fallback={<BookCover no_klasifikasi={b.no_klasifikasi} />}
-  />
-) : (
-  <BookCover no_klasifikasi={b.no_klasifikasi} />
-)}
+                        <ApiImage
+                          src={b.image_url}
+                          alt={b.title}
+                          style={{ width: 44, height: 58, objectFit: 'cover', borderRadius: 4 }}
+                          fallback={<BookCover no_klasifikasi={b.no_klasifikasi} />}
+                        />
+                      ) : (
+                        <BookCover no_klasifikasi={b.no_klasifikasi} />
+                      )}
                     </td>
                     <td><code style={{ background: '#eee', padding: '2px 6px', borderRadius: 4, fontSize: '11px' }}>{b.no_induk}</code></td>
                     <td>
@@ -1044,78 +875,27 @@ export default function BukuPage() {
           </div>
         )}
       </div>
+
       {/* Pagination */}
       {totalPages > 1 && (
-
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginTop: 20,
-            paddingTop: 16,
-            borderTop: '1px solid #eee'
-          }}
-        >
-
-          {/* Info */}
-          <div
-            style={{
-              fontSize: 13,
-              color: '#666'
-            }}
-          >
-            Halaman {currentPage} dari {totalPages}
-          </div>
-
-          {/* Buttons */}
-          <div
-            style={{
-              display: 'flex',
-              gap: 8
-            }}
-          >
-
+        <div style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          marginTop: 20, paddingTop: 16, borderTop: '1px solid #eee'
+        }}>
+          <div style={{ fontSize: 13, color: '#666' }}>Halaman {currentPage} dari {totalPages}</div>
+          <div style={{ display: 'flex', gap: 8 }}>
             <button
               className="btn btn-ghost btn-sm"
-
               disabled={currentPage === 1}
-
-              onClick={() =>
-                setCurrentPage(p => p - 1)
-              }
-
-              style={{
-                opacity:
-                  currentPage === 1
-                    ? 0.5
-                    : 1
-              }}
-            >
-              ← Sebelumnya
-            </button>
-
+              onClick={() => setCurrentPage(p => p - 1)}
+              style={{ opacity: currentPage === 1 ? 0.5 : 1 }}
+            >← Sebelumnya</button>
             <button
               className="btn btn-primary btn-sm"
-
-              disabled={
-                currentPage === totalPages
-              }
-
-              onClick={() =>
-                setCurrentPage(p => p + 1)
-              }
-
-              style={{
-                opacity:
-                  currentPage === totalPages
-                    ? 0.5
-                    : 1
-              }}
-            >
-              Selanjutnya →
-            </button>
-
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(p => p + 1)}
+              style={{ opacity: currentPage === totalPages ? 0.5 : 1 }}
+            >Selanjutnya →</button>
           </div>
         </div>
       )}

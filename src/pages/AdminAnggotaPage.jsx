@@ -120,7 +120,7 @@ function MemberModal({ member = null, onSave, onClose }) {
   );
 }
 
-/* ─── Member Detail Modal — selaras PetugasAnggotaPage ─────── */
+/* ─── Member Detail Modal ───────────────────────────────────── */
 function MemberDetailModal({ member, loans, onClose, onEdit }) {
   const initials = member.name?.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() || '??';
 
@@ -131,11 +131,13 @@ function MemberDetailModal({ member, loans, onClose, onEdit }) {
 
   const roleLabel = getRoleLabel(member);
 
-  // Warna badge role di header (sama-sama putih bg untuk kontras di atas maroon)
   const rolePillColor = member.role === 'admin' ? '#fca5a5'
     : member.role === 'petugas' ? '#fde68a'
     : member.type === 'dosen' ? '#a7f3d0'
     : '#bfdbfe';
+
+  // Hanya petugas/admin murni yang bisa edit dari popup
+  const isPetugasOrAdmin = member.role === 'petugas' || member.role === 'admin';
 
   function formatDate(d) {
     if (!d) return '—';
@@ -159,7 +161,7 @@ function MemberDetailModal({ member, loans, onClose, onEdit }) {
         boxShadow: '0 24px 60px rgba(0,0,0,0.18)',
       }}>
 
-        {/* ── Header — identik dengan PetugasAnggotaPage ── */}
+        {/* ── Header ── */}
         <div style={{
           background: 'linear-gradient(135deg, #6B1515 0%, #8B1E30 50%, #7B1C1C 100%)',
           padding: '22px 24px 20px', position: 'relative',
@@ -194,7 +196,6 @@ function MemberDetailModal({ member, loans, onClose, onEdit }) {
                 {member.nim || member.custom_id || member.id} · {member.departemen || 'Perpustakaan FMIPA'}
               </div>
               <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
-                {/* Role pill — warna berbeda per role */}
                 <span style={{
                   fontSize: 11, padding: '3px 10px', borderRadius: 20, fontWeight: 700,
                   background: 'rgba(255,255,255,0.18)', color: rolePillColor,
@@ -207,16 +208,19 @@ function MemberDetailModal({ member, loans, onClose, onEdit }) {
               </div>
             </div>
 
-            <button onClick={() => onEdit(member)} style={{
-              fontSize: 12, padding: '7px 14px', borderRadius: 8, marginRight: 44, marginTop: 2,
-              background: 'rgba(255,255,255,0.15)', color: 'white',
-              border: '1px solid rgba(255,255,255,0.25)', cursor: 'pointer', fontWeight: 600, flexShrink: 0,
-            }}>
-              Edit Data
-            </button>
+            {/* Tombol Edit Data hanya untuk petugas/admin */}
+            {isPetugasOrAdmin && (
+              <button onClick={() => onEdit(member)} style={{
+                fontSize: 12, padding: '7px 14px', borderRadius: 8, marginRight: 44, marginTop: 2,
+                background: 'rgba(255,255,255,0.15)', color: 'white',
+                border: '1px solid rgba(255,255,255,0.25)', cursor: 'pointer', fontWeight: 600, flexShrink: 0,
+              }}>
+                Edit Data
+              </button>
+            )}
           </div>
 
-          {/* Stats row — sama persis dengan PetugasAnggotaPage */}
+          {/* Stats row */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginTop: 18 }}>
             {[
               { label: 'Sedang Dipinjam', val: activeLoans.length,   color: '#fde68a' },
@@ -238,7 +242,7 @@ function MemberDetailModal({ member, loans, onClose, onEdit }) {
         {/* ── Body ── */}
         <div style={{ padding: '20px 24px 24px', maxHeight: '60vh', overflowY: 'auto' }}>
 
-          {/* Info Petugas */}
+          {/* Info Member */}
           <div style={{ marginBottom: 22 }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 12 }}>
               Informasi {roleLabel}
@@ -262,7 +266,7 @@ function MemberDetailModal({ member, loans, onClose, onEdit }) {
             </div>
           </div>
 
-          {/* Pinjaman Aktif — hanya tampil untuk anggota yang bisa pinjam (bukan petugas/admin murni) */}
+          {/* Pinjaman Aktif — hanya untuk mahasiswa/dosen */}
           {(member.type === 'mahasiswa' || member.type === 'dosen') && (
             <>
               <div style={{ marginBottom: 22 }}>
@@ -377,7 +381,7 @@ function MemberDetailModal({ member, loans, onClose, onEdit }) {
             </>
           )}
 
-          {/* Untuk petugas/admin murni — tampilkan info singkat saja */}
+          {/* Untuk petugas/admin murni */}
           {member.type !== 'mahasiswa' && member.type !== 'dosen' && (
             <div style={{ textAlign: 'center', padding: '24px 16px', background: '#fafafa', borderRadius: 12, border: '1.5px dashed #e5e7eb', color: '#9ca3af', fontSize: 12 }}>
               <ShieldCheck size={24} style={{ opacity: 0.2, display: 'block', margin: '0 auto 8px', color: '#7B1C1C' }} />
@@ -399,14 +403,13 @@ export default function AdminAnggotaPage() {
   const [detailMember, setDetailMember] = useState(null);
   const [editMember,   setEditMember]   = useState(null);
 
-  // Filter: semua kecuali admin, lalu filter by role
   const filtered = members
     .filter(m => m.role !== 'admin')
     .filter(m => {
       if (roleFilter === 'petugas')   return m.role === 'petugas';
       if (roleFilter === 'dosen')     return m.role === 'dosen' || (m.type === 'dosen' && m.role !== 'petugas');
       if (roleFilter === 'mahasiswa') return m.type === 'mahasiswa' && m.role !== 'petugas';
-      return true; // semua
+      return true;
     })
     .filter(m =>
       !search ||
@@ -421,76 +424,18 @@ export default function AdminAnggotaPage() {
   const totalCount     = members.filter(m => m.role !== 'admin').length;
 
   const statCards = [
-  { label: 'Petugas Aktif', value: staffCount, desc: 'Total petugas aktif', color: '#E53E3E', bg: 'linear-gradient(135deg, #fff5f5, #ffffff)', border: '#FED7D7', shadow: 'rgba(229,62,62,0.08)', iconBg: '#fff1f1', icon: <ShieldCheck size={18} /> },
+    { label: 'Petugas Aktif', value: staffCount,     color: '#E53E3E', bg: 'linear-gradient(135deg, #fff5f5, #ffffff)', border: '#FED7D7', iconBg: '#fff1f1', icon: <ShieldCheck size={18} /> },
+    { label: 'Dosen',         value: dosenCount,     color: '#D69E2E', bg: 'linear-gradient(135deg, #fffaf0, #ffffff)', border: '#FEEBC8', iconBg: '#fff7e6', icon: <UserCheck size={18} /> },
+    { label: 'Mahasiswa',     value: mahasiswaCount, color: '#38A169', bg: 'linear-gradient(135deg, #f0fff4, #ffffff)', border: '#C6F6D5', iconBg: '#ecfff3', icon: <Users size={18} /> },
+    { label: 'Total Member',  value: totalCount,     color: '#2563EB', bg: 'linear-gradient(135deg, #eff6ff, #ffffff)', border: '#BFDBFE', iconBg: '#eef4ff', icon: <Users size={18} /> },
+  ];
 
-  { label: 'Dosen', value: dosenCount, desc: 'Data dosen aktif', color: '#D69E2E', bg: 'linear-gradient(135deg, #fffaf0, #ffffff)', border: '#FEEBC8', shadow: 'rgba(214,158,46,0.08)', iconBg: '#fff7e6', icon: <UserCheck size={18} /> },
-
-  { label: 'Mahasiswa', value: mahasiswaCount, desc: 'Mahasiswa terdaftar', color: '#38A169', bg: 'linear-gradient(135deg, #f0fff4, #ffffff)', border: '#C6F6D5', shadow: 'rgba(56,161,105,0.08)', iconBg: '#ecfff3', icon: <Users size={18} /> },
-
-  { label: 'Total Member', value: totalCount, desc: 'Total seluruh member', color: '#2563EB', bg: 'linear-gradient(135deg, #eff6ff, #ffffff)', border: '#BFDBFE', shadow: 'rgba(37,99,235,0.08)', iconBg: '#eef4ff', icon: <Users size={18} /> },
-];
-
-const filterButtons = [
-  { key: 'semua', label: 'Semua', activeColor: '#E53E3E', activeBg: '#fff5f5' },
-  { key: 'petugas', label: 'Petugas', activeColor: '#D69E2E', activeBg: '#fffaf0' },
-  { key: 'dosen', label: 'Dosen', activeColor: '#38A169', activeBg: '#f0fff4' },
-  { key: 'mahasiswa', label: 'Mahasiswa', activeColor: '#2563EB', activeBg: '#eff6ff' },
-];
-
-{/* Stats Cards */}
-<div className="grid-4 mb-24">
-  {statCards.map((card, index) => (
-
-    <div
-      key={index}
-      style={{ background: card.bg, border: `1.5px solid ${card.border}`, borderRadius: 14, padding: '20px 22px', height: 120, boxShadow: `0 2px 8px ${card.shadow}`, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
-    >
-
-      <div>
-        <div style={{ fontSize: 11, color: card.color, textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>
-          {card.label}
-        </div>
-
-        <div style={{ fontSize: 28, fontWeight: 800, color: card.color, lineHeight: 1, fontFamily: "'DM Mono', monospace" }}>
-          {card.value}
-        </div>
-
-        <div style={{ fontSize: 12, color: '#4f5661', marginTop: 10 }}>
-          {card.desc}
-        </div>
-      </div>
-
-      <div
-        style={{ width: 42, height: 42, borderRadius: 12, background: card.iconBg, border: `1px solid ${card.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: card.color, flexShrink: 0 }}
-      >
-        {card.icon}
-      </div>
-
-      
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        
-        <div>
-          <div style={{ fontSize: 11, color: card.color, textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>
-            {card.label}
-          </div>
-
-          <div style={{ fontSize: 28, fontWeight: 800, color: card.color, lineHeight: 1 }}>
-            {card.value}
-          </div>
-
-          <div style={{ fontSize: 12, color: '#4f5661', marginTop: 10 }}>
-            Total data {card.label.toLowerCase()}
-          </div>
-        </div>
-
-        <div style={{ width: 36, height: 36, borderRadius: 10, background: card.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: card.color }}>
-          {card.icon}
-        </div>
-
-      </div>
-    </div>
-  ))}
-</div>
+  const filterButtons = [
+    { key: 'semua',     label: 'Semua',     activeColor: '#E53E3E', activeBg: '#fff5f5' },
+    { key: 'petugas',   label: 'Petugas',   activeColor: '#D69E2E', activeBg: '#fffaf0' },
+    { key: 'dosen',     label: 'Dosen',     activeColor: '#38A169', activeBg: '#f0fff4' },
+    { key: 'mahasiswa', label: 'Mahasiswa', activeColor: '#2563EB', activeBg: '#eff6ff' },
+  ];
 
   return (
     <div>
@@ -517,16 +462,25 @@ const filterButtons = [
         <p className="page-subtitle">Kelola data petugas (Staff) perpustakaan dan hak akses role</p>
       </div>
 
-      {/* Stat Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 16, marginBottom: 24 }}>
+      {/* Stat Cards — grid-4 sama dengan halaman lain */}
+      <div className="grid-4 mb-24" style={{ gap: '16px' }}>
         {statCards.map((s, i) => (
-          <div key={i} style={{ background: s.bg, border: `1px solid ${s.border}`, borderRadius: 14, padding: '20px 22px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{ width: 40, height: 40, borderRadius: 10, background: s.bg, border: `1px solid ${s.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: s.color, flexShrink: 0 }}>
-              {s.icon}
-            </div>
+          <div key={i} style={{
+            background: s.bg, border: `1.5px solid ${s.border}`, borderRadius: 14,
+            padding: '20px 22px', minHeight: 120,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start'
+          }}>
             <div>
-              <div style={{ fontSize: 11, color: s.color, textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 4 }}>{s.label}</div>
-              <div style={{ fontSize: 28, fontWeight: 800, color: s.color, lineHeight: 1, fontFamily: "'DM Mono', monospace" }}>{s.value}</div>
+              <div style={{ fontSize: 11, color: s.color, textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>
+                {s.label}
+              </div>
+              <div style={{ fontSize: 28, fontWeight: 800, color: s.color, lineHeight: 1, fontFamily: "'DM Mono', monospace" }}>
+                {s.value}
+              </div>
+            </div>
+            <div style={{ width: 42, height: 42, borderRadius: 12, background: s.iconBg, border: `1px solid ${s.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: s.color, flexShrink: 0 }}>
+              {s.icon}
             </div>
           </div>
         ))}
@@ -536,43 +490,45 @@ const filterButtons = [
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
 
         {/* Card header */}
-        <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0ebe6', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, background: 'linear-gradient(to right, #fafafa, #fff5f5)' }}>
-          <div style={{ fontWeight: 700, fontSize: 15, color: '#1a1a1a', display: 'flex', alignItems: 'center', gap: 8 }}>
-            Daftar Member
-            <span style={{ fontSize: 11, background: 'rgba(123,28,28,0.08)', color: '#7B1C1C', padding: '2px 8px', borderRadius: 20, fontWeight: 700, border: '1px solid rgba(123,28,28,0.15)' }}>
-              {filtered.length} member
-            </span>
-          </div>
+        <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0ebe6', display: 'flex', flexDirection: 'column', gap: 10, background: 'linear-gradient(to right, #fafafa, #fff5f5)' }}>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            {/* Role filter toggle */}
-            <div style={{ display: 'flex', gap: 6, background: '#f3f4f6', borderRadius: 9, padding: 3 }}>
-              {filterButtons.map(btn => {
-                const isActive = roleFilter === btn.key;
-                return (
-                  <button key={btn.key} onClick={() => setRoleFilter(btn.key)} style={{
-                    padding: '5px 13px', borderRadius: 7, border: 'none', cursor: 'pointer',
-                    fontSize: 12, fontWeight: 600, transition: 'all 0.15s',
-                    background: isActive ? btn.activeBg : 'transparent',
-                    color: isActive ? btn.activeColor : '#6b7280',
-                    boxShadow: isActive ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
-                  }}>{btn.label}</button>
-                );
-              })}
+          {/* Row 1: Judul + Tambah Petugas */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+            <div style={{ fontWeight: 700, fontSize: 15, color: '#1a1a1a', display: 'flex', alignItems: 'center', gap: 8 }}>
+              Daftar Member
+              <span style={{ fontSize: 11, background: 'rgba(123,28,28,0.08)', color: '#7B1C1C', padding: '2px 8px', borderRadius: 20, fontWeight: 700, border: '1px solid rgba(123,28,28,0.15)' }}>
+                {filtered.length} member
+              </span>
             </div>
-
-            {/* Search */}
-            <div style={{ position: 'relative' }}>
-              <Search size={13} style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
-              <input className="form-control" style={{ paddingLeft: 30, width: '100%', minWidth: 140, maxWidth: 220 }} placeholder="Cari nama, email, NIP..."
-                value={search} onChange={e => setSearch(e.target.value)} />
-            </div>
-
-            {/* Add button */}
             <button className="btn btn-primary btn-sm" onClick={() => setAddModal(true)}
               style={{ display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
               <ShieldCheck size={13} /> Tambah Petugas
             </button>
+          </div>
+
+          {/* Row 2: Role filter */}
+          <div style={{ display: 'flex', gap: 6, background: '#f3f4f6', borderRadius: 9, padding: 3, overflowX: 'auto' }}>
+            {filterButtons.map(btn => {
+              const isActive = roleFilter === btn.key;
+              return (
+                <button key={btn.key} onClick={() => setRoleFilter(btn.key)} style={{
+                  padding: '5px 13px', borderRadius: 7, border: 'none', cursor: 'pointer',
+                  fontSize: 12, fontWeight: 600, transition: 'all 0.15s',
+                  background: isActive ? btn.activeBg : 'transparent',
+                  color: isActive ? btn.activeColor : '#6b7280',
+                  boxShadow: isActive ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
+                  flexShrink: 0,
+                  whiteSpace: 'nowrap',
+                }}>{btn.label}</button>
+              );
+            })}
+          </div>
+
+          {/* Row 3: Search */}
+          <div style={{ position: 'relative' }}>
+            <Search size={13} style={{ position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
+            <input className="form-control" style={{ paddingLeft: 30, width: '100%' }} placeholder="Cari nama, email, NIP..."
+              value={search} onChange={e => setSearch(e.target.value)} />
           </div>
         </div>
 
@@ -641,18 +597,11 @@ const filterButtons = [
                       </button>
                     ) : m.role === 'petugas' ? (
                       <button
-                      onClick={async () => {
-                        if (!confirm(`Kembalikan role ${m.name} menjadi dosen?`)) return;
-
-                      const ok = await updateMember(m.id, {
-                        role: '',
-                        type: 'dosen'
-                      });
-
-                        if (ok) {
-                          console.log('Role berhasil dicabut');
-                        }
-                      }}
+                        onClick={async () => {
+                          if (!confirm(`Kembalikan role ${m.name} menjadi dosen?`)) return;
+                          const ok = await updateMember(m.id, { role: '', type: 'dosen' });
+                          if (ok) console.log('Role berhasil dicabut');
+                        }}
                         style={{
                           display: 'inline-flex', alignItems: 'center', gap: 5,
                           padding: '5px 12px', borderRadius: 7,
@@ -665,16 +614,14 @@ const filterButtons = [
                         <ShieldOff size={11} /> Cabut Role
                       </button>
                     ) : (
-                      <div
-                        style={{
-                          display: 'inline-flex', alignItems: 'center', gap: 5,
-                          padding: '5px 12px', borderRadius: 7,
-                          border: '1.5px solid rgba(37,99,235,0.2)',
-                          background: 'rgba(37,99,235,0.06)',
-                          color: '#2563eb', fontSize: 11, fontWeight: 700,
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
+                      <div style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 5,
+                        padding: '5px 12px', borderRadius: 7,
+                        border: '1.5px solid rgba(37,99,235,0.2)',
+                        background: 'rgba(37,99,235,0.06)',
+                        color: '#2563eb', fontSize: 11, fontWeight: 700,
+                        whiteSpace: 'nowrap',
+                      }}>
                         <Users size={11} /> Mahasiswa
                       </div>
                     )}
