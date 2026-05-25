@@ -25,10 +25,8 @@ export function AppProvider({ children }) {
   const [books, setBooks] = useState([]);
   const [members, setMembers] = useState([]);
   const [loans, setLoans] = useState([]);
-  const [activityLog, setActivityLog] = useState(() => {
-    const saved = localStorage.getItem('activityLog');
-    return saved ? JSON.parse(saved) : [];
-  });
+ const [activityLog, setActivityLog] = useState([]);
+
 
   // ─── Fetch ───────────────────────────────────────────────────────────────────
 
@@ -72,40 +70,54 @@ export function AppProvider({ children }) {
     }
   };
 
-  useEffect(() => {
-    fetchBooks();
-    fetchMembers();
-    fetchLoans();
-  }, []);
+  const fetchActivityLogs = async () => {
+  try {
+    const res = await fetch(`${API_URL}/api/activity-logs`, {
+      headers: ngrokHeaders
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      setActivityLog(data.logs || []);
+    }
+  } catch (err) {
+    console.error('Gagal ambil activity logs:', err);
+  }
+};
+
+ useEffect(() => {
+  fetchBooks();
+  fetchMembers();
+  fetchLoans();
+  fetchActivityLogs();
+}, []);
 
   // ─── Activity Log ─────────────────────────────────────────────────────────────
 
- const addLog = (type, desc, icon = 'info') => {
-  const now = new Date();
-
-  const dateKey = now.toISOString().slice(0, 10);
-
-  const time = `${now.toLocaleDateString('id-ID')} ${now.toLocaleTimeString('id-ID', {
-    hour: '2-digit',
-    minute: '2-digit'
-  })}`;
-
-  setActivityLog(prev => {
-    const updated = [
-      {
-        id: Date.now(),
-        dateKey,
-        time,
+const addLog = async (type, desc, icon = 'info') => {
+  try {
+    const res = await fetch(`${API_URL}/api/activity-logs`, {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({
         type,
         desc,
         icon
-      },
-      ...prev
-    ].slice(0, 100);
+      })
+    });
 
-    localStorage.setItem('activityLog', JSON.stringify(updated));
-    return updated;
-  });
+    const data = await res.json();
+
+    if (data.success) {
+      await fetchActivityLogs();
+    } else {
+      console.error('Gagal simpan activity log:', data.message);
+    }
+
+  } catch (err) {
+    console.error('Gagal simpan activity log:', err);
+  }
 };
 
   // ─── Books ────────────────────────────────────────────────────────────────────

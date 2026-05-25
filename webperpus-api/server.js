@@ -1944,6 +1944,68 @@ app.put('/api/loans/:id/pay-fine', async (req, res) => {
   }
 });
 
+// ─── Activity Logs ───────────────────────────────────────────────────────────
+
+app.get('/api/activity-logs', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        id,
+        type,
+        description AS desc,
+        icon,
+        TO_CHAR(created_at + INTERVAL '7 hours', 'DD/MM/YYYY HH24:MI') AS time,
+        TO_CHAR(created_at + INTERVAL '7 hours', 'YYYY-MM-DD') AS "dateKey"
+      FROM activity_logs
+      ORDER BY created_at DESC
+      LIMIT 100
+    `);
+
+    res.json({
+      success: true,
+      logs: result.rows
+    });
+
+  } catch (err) {
+    console.error('Get Activity Logs Error:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Gagal mengambil activity logs'
+    });
+  }
+});
+
+
+app.post('/api/activity-logs', async (req, res) => {
+  const { type, desc, icon } = req.body;
+
+  if (!type || !desc) {
+    return res.status(400).json({
+      success: false,
+      message: 'type dan desc wajib dikirim'
+    });
+  }
+
+  try {
+    await pool.query(`
+      INSERT INTO activity_logs (type, description, icon)
+      VALUES ($1, $2, $3)
+    `, [type, desc, icon || 'info']);
+
+    res.json({
+      success: true,
+      message: 'Activity log berhasil disimpan'
+    });
+
+  } catch (err) {
+    console.error('Add Activity Log Error:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Gagal menyimpan activity log'
+    });
+  }
+});
+
 const updateOverdueStatus = async () => {
   try {
     const result = await pool.query(`

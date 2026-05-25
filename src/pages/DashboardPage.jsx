@@ -153,9 +153,15 @@ export default function DashboardPage() {
   const chartKey = chartType === 'bulanan' ? 'month' : 'day';
 
 
-  const today = new Date();
-const todayKey = today.toISOString().slice(0, 10);
-const todayStr = today.toLocaleDateString('id-ID');
+ const today = new Date();
+
+const todayKey = today.toLocaleDateString('en-CA', {
+  timeZone: 'Asia/Jakarta'
+});
+
+const todayStr = today.toLocaleDateString('id-ID', {
+  timeZone: 'Asia/Jakarta'
+});
 
 const todayLog = (activityLog || []).filter(a => {
   if (a.dateKey) {
