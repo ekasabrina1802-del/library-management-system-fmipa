@@ -124,7 +124,15 @@ export default function DashboardPage() {
   const LOG_PER_PAGE = 20;
 
  const totalBooks = books.length;
-  const totalAvail = books.reduce((s, b) => s + Number(b.available || 0), 0);
+ const totalAvail = books.reduce(
+    (s, b) =>
+      s +
+      (
+        b.copies?.filter(c => c.status === 'available').length ||
+        Number(b.available || 0)
+      ),
+    0
+  );
 
   const activeMembers = members.filter(m => m.status === 'aktif').length;
 
@@ -146,7 +154,9 @@ export default function DashboardPage() {
 
 
   const todayStr = new Date().toLocaleDateString('id-ID');
-  const todayLog = activityLog.filter(a => a.time && a.time.includes(todayStr));
+  const todayLog = (activityLog || []).filter(
+    a => a.time && a.time.includes(todayStr)
+  );
   const totalLogPages = Math.ceil(todayLog.length / LOG_PER_PAGE);
   const pagedLog = todayLog.slice((logPage - 1) * LOG_PER_PAGE, logPage * LOG_PER_PAGE);
 
