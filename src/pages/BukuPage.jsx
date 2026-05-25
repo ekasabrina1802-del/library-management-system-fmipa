@@ -135,29 +135,45 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
   );
 
   const handleBorrowAction = async () => {
-    const profileIncomplete =
-      !user?.name || !user?.nim || !user?.departemen ||
-      !user?.prodi || !user?.phone || !user?.address;
+  const profileIncomplete =
+    !user?.name ||
+    !user?.nim ||
+    !user?.departemen ||
+    !user?.prodi ||
+    !user?.phone ||
+    !user?.address;
 
-    if (profileIncomplete) {
-      alert('Lengkapi profil anda terlebih dahulu sebelum meminjam buku.');
-      return;
-    }
+  if (profileIncomplete) {
+    alert('Lengkapi profil anda terlebih dahulu sebelum meminjam buku.');
+    return;
+  }
 
-    if (getAvailableCopies(book).length <= 0) {
-      alert(`Stok buku "${book.title}" sedang kosong.`);
-      return;
-    }
+  // ambil copy buku yang tersedia
+  const availableCopy = getAvailableCopies(book)[0];
 
-    const result = await addLoan(book.no_induk, user?.anggotaId || user?.memberId);
+  if (!availableCopy) {
+    alert(`Stok buku "${book.title}" sedang kosong.`);
+    return;
+  }
 
-    if (result.success) {
-      alert('Permintaan berhasil!');
-      onClose();
-    } else {
-      alert(`Gagal meminjam: ${result.message}`);
-    }
+  // kirim data sesuai request backend
+  const payload = {
+    memberId: user?.anggotaId || user?.memberId,
+    bookId: book.id,
+    copyId: availableCopy.id
   };
+
+  console.log("Payload pinjam:", payload);
+
+  const result = await addLoan(payload);
+
+  if (result.success) {
+    alert('Permintaan berhasil!');
+    onClose(); 
+  } else {
+    alert(`Gagal meminjam: ${result.message}`);
+  }
+};
 
   const handleSubmit = (e) => {
     e.preventDefault();
