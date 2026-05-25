@@ -134,6 +134,7 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
       m.email === user?.email
   );
 
+  const [loadingBorrow, setLoadingBorrow] = useState(false);
   const handleBorrowAction = async () => {
   const profileIncomplete =
     !user?.name ||
@@ -165,7 +166,9 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
 
   console.log("Payload pinjam:", payload);
 
+  setLoadingBorrow(true);
   const result = await addLoan(payload);
+  setLoadingBorrow(false);
 
   if (result.success) {
     alert('Permintaan berhasil!');
@@ -488,8 +491,9 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
                   type="button"
                   className="btn btn-primary"
                   onClick={handleBorrowAction}
+                  disabled={loadingBorrow}
                 >
-                  Pinjam Buku
+                  {loadingBorrow ? 'Memproses...' : 'Pinjam Buku'}
                 </button>
               )}
 
