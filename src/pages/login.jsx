@@ -7,8 +7,7 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const IS_DEV = import.meta.env.DEV;
 
 const loginStyles = `
-  html,
-  body {
+  html, body {
     margin: 0;
     padding: 0;
     overflow: hidden;
@@ -151,9 +150,9 @@ const loginStyles = `
   }
 
   .login-error {
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    color: #dc2626;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,100,100,0.4);
+    color: #ffaaaa;
     border-radius: 10px;
     padding: 11px 16px;
     font-size: 13px;
@@ -165,11 +164,11 @@ const loginStyles = `
   }
   .btn-loading {
     width: 100%;
-    padding: 12px;
-    border-radius: 24px;
-    border: 1px solid #e5dada;
-    background: #f9f6f6;
-    color: #9b8e8e;
+    padding: 14px;
+    border-radius: 50px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.5);
     font-size: 14px;
     cursor: not-allowed;
   }
@@ -177,7 +176,7 @@ const loginStyles = `
   /* Dev mode */
   .dev-mode-label {
     font-size: 10px;
-    color: #b0a8a8;
+    color: rgba(255,255,255,0.3);
     text-transform: uppercase;
     letter-spacing: 0.1em;
     text-align: center;
@@ -192,23 +191,23 @@ const loginStyles = `
     flex: 1;
     padding: 8px;
     border-radius: 8px;
-    border: 1.5px solid #e5dada;
-    background: white;
-    color: #7B1C1C;
+    border: 1.5px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,200,100,0.9);
     font-size: 12px;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.15s;
   }
   .dev-btn:hover {
-    background: #fff5f5;
-    border-color: #7B1C1C;
+    background: rgba(255,255,255,0.15);
+    border-color: rgba(255,200,100,0.5);
   }
   .dev-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
   .login-note {
     font-size: 11.5px;
-    color: #b0a8a8;
+    color: rgba(255,255,255,0.28);
     text-align: center;
     line-height: 1.5;
   }
@@ -216,180 +215,236 @@ const loginStyles = `
   .login-footer {
     padding: 16px 48px;
     font-size: 10.5px;
-    color: #c8bfbf;
+    color: rgba(255,255,255,0.2);
     text-align: center;
-    border-top: 1px solid #f5f0f0;
+    border-top: 1px solid rgba(255,255,255,0.08);
     letter-spacing: 0.03em;
   }
 
-  /* ════════════════════════════════
-     MOBILE — full maroon, menyatu
-     ════════════════════════════════ */
-  @media (max-width: 768px) {
-  .login-page {
-    flex-direction: column;
-    background: linear-gradient(
-      160deg,
-      #7B1C1C 0%,
-      #4a0f0f 45%,
-      #0d1b2a 100%
-    );
-    height: 100dvh;        /* pakai dvh bukan vh agar lebih akurat di mobile */
-    max-height: 100dvh;
-    overflow: hidden;
-  }
-
-  .login-left {
-    flex: 0 0 auto;        /* jangan grow/shrink */
-    min-height: auto;
-    padding: 20px 22px 8px;
-    background: transparent;
-    justify-content: flex-start;
-  }
-
-  .login-left::before,
-  .login-left::after { display: none; }
-
-  .login-logo-wrap {
-    margin-bottom: 8px;
+  /* ── GOOGLE BUTTON OVERRIDE untuk desktop ── */
+  .login-google-wrap > div {
     display: flex;
     justify-content: center;
   }
 
-  .login-logo-wrap img {
-    width: 72px;
-    height: 72px;
+  /* ════════════════════════════════
+     MOBILE — full maroon seamless
+     ════════════════════════════════ */
+  @media (max-width: 768px) {
+    .login-page {
+      flex-direction: column;
+      background: linear-gradient(160deg, #7B1C1C 0%, #4a0f0f 45%, #0d1b2a 100%);
+      height: 100dvh;
+      max-height: 100dvh;
+      overflow: hidden;
+    }
+
+    .login-left {
+      flex: 0 0 auto;
+      min-height: auto;
+      padding: 28px 24px 12px;
+      background: transparent;
+      justify-content: flex-start;
+    }
+
+    .login-left::before,
+    .login-left::after { display: none; }
+
+    .login-logo-wrap {
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .login-logo-wrap img {
+      width: 80px;
+      height: 80px;
+    }
+
+    .login-tag {
+      font-size: 10px;
+      text-align: center;
+    }
+
+    .login-sub-tag {
+      font-size: 10px;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .login-headline {
+      font-size: clamp(28px, 7vw, 36px);
+      text-align: center;
+      line-height: 1.12;
+      margin-bottom: 10px;
+    }
+
+    .login-desc {
+      font-size: 12px;
+      text-align: center;
+      max-width: 100%;
+      line-height: 1.55;
+      margin: 0;
+    }
+
+    .login-faculty { display: none; }
+
+    /* RIGHT: transparent, no white card */
+    .login-right {
+      width: 100%;
+      background: transparent;
+      padding: 20px 24px 28px;
+      flex: 1 1 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      min-height: 0;
+    }
+
+    .login-right-inner {
+      background: transparent;
+      border-radius: 0;
+      padding: 0;
+      box-shadow: none;
+    }
+
+    /* Divider pengganti transisi dari hero ke form */
+    .login-right-inner::before {
+      content: '';
+      display: block;
+      width: 100%;
+      height: 1px;
+      background: rgba(255,255,255,0.1);
+      margin-bottom: 24px;
+    }
+
+    .login-right-inner h2 {
+      font-family: 'Georgia', serif;
+      font-size: 20px;
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 6px;
+      text-align: center;
+    }
+
+    .login-right-inner p {
+      font-size: 12px;
+      color: rgba(255,255,255,0.45);
+      line-height: 1.55;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .login-error {
+      background: rgba(255,80,80,0.15);
+      border: 1px solid rgba(255,100,100,0.35);
+      color: #ffb3b3;
+    }
+
+    .login-google-wrap {
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* Tombol Google tetap putih, pill shape */
+    .login-google-wrap > div {
+      width: 100% !important;
+      display: flex !important;
+      justify-content: center !important;
+    }
+
+    /* Wrapper shadow agar tombol google menonjol di atas maroon */
+    .login-google-wrap > div > div,
+    .login-google-wrap iframe {
+      border-radius: 50px !important;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.35), 0 1px 6px rgba(0,0,0,0.2) !important;
+      width: 100% !important;
+      max-width: 320px !important;
+    }
+
+    .btn-loading {
+      max-width: 320px;
+      margin: 0 auto;
+      display: block;
+    }
+
+    .login-note {
+      color: rgba(255,255,255,0.25);
+      margin-top: 4px;
+    }
+
+    .login-footer { display: none; }
+
+    .dev-mode-label {
+      color: rgba(255,255,255,0.25);
+    }
+
+    .dev-btn {
+      border-color: rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.07);
+      color: rgba(255,200,100,0.85);
+    }
+    .dev-btn:hover {
+      background: rgba(255,255,255,0.13);
+    }
   }
 
-  .login-tag {
-    font-size: 10px;
-    text-align: center;
+  @media (max-width: 420px) {
+    .login-left {
+      padding: 22px 20px 10px;
+    }
+
+    .login-logo-wrap img {
+      width: 68px;
+      height: 68px;
+    }
+
+    .login-headline {
+      font-size: clamp(24px, 7vw, 30px);
+      margin-bottom: 8px;
+    }
+
+    .login-desc {
+      font-size: 11.5px;
+    }
+
+    .login-right {
+      padding: 16px 20px 24px;
+    }
+
+    .login-right-inner h2 {
+      font-size: 18px;
+    }
+
+    .login-right-inner p {
+      font-size: 11.5px;
+      margin-bottom: 16px;
+    }
+
+    .login-google-wrap { margin-bottom: 12px; }
   }
 
-  .login-sub-tag {
-    font-size: 10px;
-    text-align: center;
-    margin-bottom: 8px;
+  /* Layar sangat kecil (iPhone SE, 375×667) */
+  @media (max-width: 390px) and (max-height: 700px) {
+    .login-logo-wrap img {
+      width: 56px;
+      height: 56px;
+    }
+
+    .login-headline {
+      font-size: 22px;
+      margin-bottom: 6px;
+    }
+
+    .login-desc { display: none; }
+
+    .login-right-inner p { display: none; }
+
+    .login-right {
+      padding: 12px 18px 20px;
+    }
   }
-
-  .login-headline {
-    font-size: clamp(20px, 6.5vw, 30px);
-    text-align: center;
-    line-height: 1.1;
-    margin-bottom: 8px;
-  }
-
-  .login-desc {
-    font-size: 11.5px;
-    text-align: center;
-    max-width: 100%;
-    line-height: 1.5;
-    margin: 0;
-  }
-
-  .login-faculty { display: none; }
-
-  .login-right {
-    width: 100%;
-    background: transparent;
-    padding: 12px 14px 14px;
-    flex: 1 1 0;           /* ambil sisa ruang persis, tidak lebih */
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    min-height: 0;         /* biar flex child bisa shrink */
-  }
-
-  .login-right-inner {
-    background: white;
-    border-radius: 20px 20px 16px 16px;
-    padding: 20px 18px 16px;
-    box-shadow:
-      0 -4px 30px rgba(0,0,0,0.2),
-      0 16px 40px rgba(0,0,0,0.15);
-    overflow: hidden;      /* jaga isi tidak meluber */
-  }
-
-  .login-right-inner h2 {
-    font-size: 18px;
-    margin-bottom: 8px;
-  }
-
-  .login-right-inner p {
-    font-size: 12px;
-    margin-bottom: 14px;
-    line-height: 1.5;
-  }
-
-  .login-google-wrap { margin-bottom: 12px; }
-
-  .login-footer { display: none; }
-}
-
-@media (max-width: 420px) {
-  .login-left {
-    padding: 16px 16px 6px;
-  }
-
-  .login-logo-wrap img {
-    width: 60px;
-    height: 60px;
-  }
-
-  .login-headline {
-    font-size: clamp(18px, 6vw, 24px);
-    margin-bottom: 6px;
-  }
-
-  .login-desc {
-    font-size: 11px;
-    line-height: 1.45;
-  }
-
-  .login-right {
-    padding: 10px 12px 12px;
-  }
-
-  .login-right-inner {
-    padding: 16px 14px 14px;
-    border-radius: 16px 16px 12px 12px;
-  }
-
-  .login-right-inner h2 {
-    font-size: 16px;
-    margin-bottom: 6px;
-  }
-
-  .login-right-inner p {
-    font-size: 11px;
-    margin-bottom: 12px;
-  }
-
-  .login-google-wrap { margin-bottom: 10px; }
-}
-
-/* Layar sangat kecil (iPhone SE, 375px × 667px) */
-@media (max-width: 390px) and (max-height: 700px) {
-  .login-logo-wrap img {
-    width: 52px;
-    height: 52px;
-  }
-
-  .login-headline {
-    font-size: 17px;
-    margin-bottom: 4px;
-  }
-
-  .login-desc { display: none; } /* korbankan deskripsi agar button tetap terlihat */
-
-  .login-right-inner {
-    padding: 14px 12px 12px;
-  }
-
-  .login-right-inner p {
-    display: none;
-  }
-}
 `;
 
 export default function LoginPage() {
