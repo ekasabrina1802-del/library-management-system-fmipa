@@ -153,12 +153,20 @@ export default function DashboardPage() {
   const chartKey = chartType === 'bulanan' ? 'month' : 'day';
 
 
-  const todayStr = new Date().toLocaleDateString('id-ID');
-  const todayLog = (activityLog || []).filter(
-    a => a.time && a.time.includes(todayStr)
-  );
-  const totalLogPages = Math.ceil(todayLog.length / LOG_PER_PAGE);
-  const pagedLog = todayLog.slice((logPage - 1) * LOG_PER_PAGE, logPage * LOG_PER_PAGE);
+  const today = new Date();
+const todayKey = today.toISOString().slice(0, 10);
+const todayStr = today.toLocaleDateString('id-ID');
+
+const todayLog = (activityLog || []).filter(a => {
+  if (a.dateKey) {
+    return a.dateKey === todayKey;
+  }
+
+  return a.time && a.time.includes(todayStr);
+});
+
+const totalLogPages = Math.ceil(todayLog.length / LOG_PER_PAGE);
+const pagedLog = todayLog.slice((logPage - 1) * LOG_PER_PAGE, logPage * LOG_PER_PAGE);
 
   return (
     <div>

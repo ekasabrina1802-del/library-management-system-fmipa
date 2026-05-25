@@ -80,15 +80,33 @@ export function AppProvider({ children }) {
 
   // ─── Activity Log ─────────────────────────────────────────────────────────────
 
-  const addLog = (type, desc, icon = 'info') => {
-    const now = new Date();
-    const time = `${now.toLocaleDateString('id-ID')} ${now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`;
-    setActivityLog(prev => {
-      const updated = [{ id: Date.now(), time, type, desc, icon }, ...prev].slice(0, 100);
-      localStorage.setItem('activityLog', JSON.stringify(updated));
-      return updated;
-    });
-  };
+ const addLog = (type, desc, icon = 'info') => {
+  const now = new Date();
+
+  const dateKey = now.toISOString().slice(0, 10);
+
+  const time = `${now.toLocaleDateString('id-ID')} ${now.toLocaleTimeString('id-ID', {
+    hour: '2-digit',
+    minute: '2-digit'
+  })}`;
+
+  setActivityLog(prev => {
+    const updated = [
+      {
+        id: Date.now(),
+        dateKey,
+        time,
+        type,
+        desc,
+        icon
+      },
+      ...prev
+    ].slice(0, 100);
+
+    localStorage.setItem('activityLog', JSON.stringify(updated));
+    return updated;
+  });
+};
 
   // ─── Books ────────────────────────────────────────────────────────────────────
 

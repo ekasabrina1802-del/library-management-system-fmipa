@@ -158,11 +158,12 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
   }
 
   // kirim data sesuai request backend
-  const payload = {
-    memberId: user?.anggotaId || user?.memberId,
-    bookId: book.id,
-    copyId: availableCopy.id
-  };
+ const payload = {
+  memberId: user?.anggotaId || user?.memberId,
+  bookId: book.id,
+  copyId: availableCopy.id,
+  copyCode: availableCopy.copy_code
+};
 
   console.log("Payload pinjam:", payload);
 
