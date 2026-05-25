@@ -25,6 +25,55 @@ const loginStyles = `
     overflow: hidden;
   }
 
+  /* ── STAR DECORATIONS ── */
+  .stars-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle var(--dur, 3s) ease-in-out infinite var(--delay, 0s);
+    opacity: 0;
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0; transform: scale(0.6); }
+    50% { opacity: var(--max-opacity, 0.7); transform: scale(1); }
+  }
+  .star-cross {
+    position: absolute;
+    pointer-events: none;
+    animation: twinkleCross var(--dur, 4s) ease-in-out infinite var(--delay, 0s);
+    opacity: 0;
+  }
+  @keyframes twinkleCross {
+    0%, 100% { opacity: 0; transform: scale(0.5) rotate(0deg); }
+    50% { opacity: var(--max-opacity, 0.6); transform: scale(1) rotate(20deg); }
+  }
+  .star-cross::before,
+  .star-cross::after {
+    content: '';
+    position: absolute;
+    background: white;
+    border-radius: 2px;
+  }
+  .star-cross::before {
+    width: var(--size, 12px);
+    height: 2px;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .star-cross::after {
+    width: 2px;
+    height: var(--size, 12px);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
   /* ── LEFT (maroon hero) ── */
   .login-left {
     flex: 1;
@@ -233,58 +282,151 @@ const loginStyles = `
   @media (max-width: 768px) {
     .login-page {
       flex-direction: column;
-      background: linear-gradient(160deg, #7B1C1C 0%, #4a0f0f 45%, #0d1b2a 100%);
+      background: linear-gradient(175deg, #8B1F1F 0%, #5a1212 35%, #2d0d0d 65%, #0d1b2a 100%);
       height: 100dvh;
       max-height: 100dvh;
       overflow: hidden;
     }
 
+    /* Ambient glow effects on mobile */
+    .login-page::before {
+      content: '';
+      position: fixed;
+      top: -80px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 340px;
+      height: 340px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(180,40,40,0.35) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .login-page::after {
+      content: '';
+      position: fixed;
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 280px;
+      height: 280px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(13,27,42,0.8) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
     .login-left {
       flex: 0 0 auto;
       min-height: auto;
-      padding: 28px 24px 12px;
+      padding: 36px 28px 16px;
       background: transparent;
       justify-content: flex-start;
+      z-index: 1;
     }
 
     .login-left::before,
     .login-left::after { display: none; }
 
     .login-logo-wrap {
-      margin-bottom: 12px;
+      margin-bottom: 18px;
       display: flex;
       justify-content: center;
     }
 
+    /* Larger logo on mobile with glowing ring */
     .login-logo-wrap img {
-      width: 80px;
-      height: 80px;
+      width: 110px;
+      height: 110px;
+      filter:
+        drop-shadow(0 0 20px rgba(246,185,59,0.35))
+        drop-shadow(0 4px 20px rgba(0,0,0,0.5));
+      animation: logoFloat 4s ease-in-out infinite;
+    }
+
+    @keyframes logoFloat {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-6px); }
+    }
+
+    /* Decorative ring around logo */
+    .login-logo-wrap {
+      position: relative;
+    }
+    .login-logo-wrap::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 128px;
+      height: 128px;
+      border-radius: 50%;
+      border: 1px solid rgba(246,185,59,0.25);
+      box-shadow:
+        0 0 0 8px rgba(246,185,59,0.06),
+        0 0 0 16px rgba(246,185,59,0.03),
+        inset 0 0 20px rgba(246,185,59,0.05);
+    }
+    .login-logo-wrap::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 148px;
+      height: 148px;
+      border-radius: 50%;
+      border: 1px dashed rgba(255,255,255,0.08);
+      animation: rotateDash 20s linear infinite;
+    }
+    @keyframes rotateDash {
+      from { transform: translate(-50%, -50%) rotate(0deg); }
+      to { transform: translate(-50%, -50%) rotate(360deg); }
     }
 
     .login-tag {
-      font-size: 10px;
+      font-size: 11px;
+      font-weight: 800;
       text-align: center;
+      letter-spacing: 0.2em;
+      color: rgba(246,185,59,0.95);
+      text-shadow: 0 0 20px rgba(246,185,59,0.4);
     }
 
     .login-sub-tag {
       font-size: 10px;
       text-align: center;
-      margin-bottom: 10px;
+      margin-bottom: 14px;
+      letter-spacing: 0.15em;
+      color: rgba(255,255,255,0.4);
+    }
+
+    /* Decorative line separator */
+    .login-sub-tag::after {
+      content: '';
+      display: block;
+      width: 48px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(246,185,59,0.5), transparent);
+      margin: 10px auto 0;
     }
 
     .login-headline {
-      font-size: clamp(28px, 7vw, 36px);
+      font-size: clamp(34px, 9vw, 44px);
       text-align: center;
-      line-height: 1.12;
-      margin-bottom: 10px;
+      line-height: 1.1;
+      margin-bottom: 12px;
+      letter-spacing: -0.01em;
     }
 
     .login-desc {
-      font-size: 12px;
+      font-size: 12.5px;
       text-align: center;
       max-width: 100%;
-      line-height: 1.55;
+      line-height: 1.6;
       margin: 0;
+      color: rgba(255,255,255,0.5);
     }
 
     .login-faculty { display: none; }
@@ -293,12 +435,13 @@ const loginStyles = `
     .login-right {
       width: 100%;
       background: transparent;
-      padding: 20px 24px 28px;
+      padding: 20px 28px 36px;
       flex: 1 1 0;
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
       min-height: 0;
+      z-index: 1;
     }
 
     .login-right-inner {
@@ -308,30 +451,32 @@ const loginStyles = `
       box-shadow: none;
     }
 
-    /* Divider pengganti transisi dari hero ke form */
+    /* Glowing divider */
     .login-right-inner::before {
       content: '';
       display: block;
       width: 100%;
       height: 1px;
-      background: rgba(255,255,255,0.1);
-      margin-bottom: 24px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), rgba(246,185,59,0.2), rgba(255,255,255,0.15), transparent);
+      margin-bottom: 28px;
     }
 
     .login-right-inner h2 {
       font-family: 'Georgia', serif;
-      font-size: 20px;
+      font-size: 22px;
       font-weight: 800;
       color: #ffffff;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
       text-align: center;
+      line-height: 1.3;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.4);
     }
 
     .login-right-inner p {
       font-size: 12px;
-      color: rgba(255,255,255,0.45);
-      line-height: 1.55;
-      margin-bottom: 20px;
+      color: rgba(255,255,255,0.4);
+      line-height: 1.6;
+      margin-bottom: 24px;
       text-align: center;
     }
 
@@ -339,39 +484,47 @@ const loginStyles = `
       background: rgba(255,80,80,0.15);
       border: 1px solid rgba(255,100,100,0.35);
       color: #ffb3b3;
+      border-radius: 12px;
+      margin-bottom: 16px;
     }
 
     .login-google-wrap {
-      margin-bottom: 14px;
+      margin-bottom: 16px;
       display: flex;
       justify-content: center;
     }
 
-    /* Tombol Google tetap putih, pill shape */
+    /* Google button wrapper */
     .login-google-wrap > div {
       width: 100% !important;
       display: flex !important;
       justify-content: center !important;
     }
 
-    /* Wrapper shadow agar tombol google menonjol di atas maroon */
     .login-google-wrap > div > div,
     .login-google-wrap iframe {
       border-radius: 50px !important;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.35), 0 1px 6px rgba(0,0,0,0.2) !important;
+      box-shadow:
+        0 4px 28px rgba(0,0,0,0.45),
+        0 1px 6px rgba(0,0,0,0.25),
+        0 0 0 1px rgba(255,255,255,0.08) !important;
       width: 100% !important;
-      max-width: 320px !important;
+      max-width: 340px !important;
     }
 
     .btn-loading {
-      max-width: 320px;
+      max-width: 340px;
       margin: 0 auto;
       display: block;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.4);
     }
 
     .login-note {
-      color: rgba(255,255,255,0.25);
-      margin-top: 4px;
+      color: rgba(255,255,255,0.22);
+      margin-top: 6px;
+      font-size: 11px;
     }
 
     .login-footer { display: none; }
@@ -392,34 +545,34 @@ const loginStyles = `
 
   @media (max-width: 420px) {
     .login-left {
-      padding: 22px 20px 10px;
+      padding: 30px 22px 14px;
     }
 
     .login-logo-wrap img {
-      width: 68px;
-      height: 68px;
+      width: 96px;
+      height: 96px;
     }
 
     .login-headline {
-      font-size: clamp(24px, 7vw, 30px);
-      margin-bottom: 8px;
+      font-size: clamp(30px, 8vw, 38px);
+      margin-bottom: 10px;
     }
 
     .login-desc {
-      font-size: 11.5px;
+      font-size: 12px;
     }
 
     .login-right {
-      padding: 16px 20px 24px;
+      padding: 16px 22px 30px;
     }
 
     .login-right-inner h2 {
-      font-size: 18px;
+      font-size: 20px;
     }
 
     .login-right-inner p {
       font-size: 11.5px;
-      margin-bottom: 16px;
+      margin-bottom: 18px;
     }
 
     .login-google-wrap { margin-bottom: 12px; }
@@ -428,13 +581,13 @@ const loginStyles = `
   /* Layar sangat kecil (iPhone SE, 375×667) */
   @media (max-width: 390px) and (max-height: 700px) {
     .login-logo-wrap img {
-      width: 56px;
-      height: 56px;
+      width: 80px;
+      height: 80px;
     }
 
     .login-headline {
-      font-size: 22px;
-      margin-bottom: 6px;
+      font-size: 28px;
+      margin-bottom: 8px;
     }
 
     .login-desc { display: none; }
@@ -442,10 +595,38 @@ const loginStyles = `
     .login-right-inner p { display: none; }
 
     .login-right {
-      padding: 12px 18px 20px;
+      padding: 12px 20px 24px;
     }
   }
 `;
+
+// Star configuration for decorative twinkling stars
+const STARS_CONFIG = [
+  // dot stars
+  { type: 'dot', top: '8%',  left: '7%',  size: 2, dur: '3.2s', delay: '0s',    opacity: 0.7 },
+  { type: 'dot', top: '12%', left: '88%', size: 2, dur: '2.8s', delay: '0.5s',  opacity: 0.6 },
+  { type: 'dot', top: '22%', left: '15%', size: 1.5, dur: '4s', delay: '1s',    opacity: 0.5 },
+  { type: 'dot', top: '18%', left: '75%', size: 3,   dur: '3.5s', delay: '0.3s', opacity: 0.65 },
+  { type: 'dot', top: '35%', left: '92%', size: 1.5, dur: '2.5s', delay: '1.2s', opacity: 0.5 },
+  { type: 'dot', top: '5%',  left: '55%', size: 2,   dur: '3.8s', delay: '0.8s', opacity: 0.55 },
+  { type: 'dot', top: '45%', left: '5%',  size: 1.5, dur: '4.2s', delay: '1.5s', opacity: 0.4 },
+  { type: 'dot', top: '55%', left: '95%', size: 2,   dur: '3.1s', delay: '0.7s', opacity: 0.5 },
+  { type: 'dot', top: '28%', left: '45%', size: 1.5, dur: '5s',   delay: '2s',   opacity: 0.3 },
+  { type: 'dot', top: '70%', left: '8%',  size: 2,   dur: '3.6s', delay: '0.4s', opacity: 0.45 },
+  { type: 'dot', top: '75%', left: '88%', size: 1.5, dur: '4.5s', delay: '1.8s', opacity: 0.4 },
+  { type: 'dot', top: '88%', left: '22%', size: 2,   dur: '2.9s', delay: '0.9s', opacity: 0.5 },
+  { type: 'dot', top: '92%', left: '70%', size: 1.5, dur: '3.3s', delay: '1.4s', opacity: 0.45 },
+  // cross/sparkle stars
+  { type: 'cross', top: '6%',  left: '30%', size: 10, dur: '4.5s', delay: '0.6s', opacity: 0.5 },
+  { type: 'cross', top: '15%', left: '62%', size: 14, dur: '3.8s', delay: '1.3s', opacity: 0.55 },
+  { type: 'cross', top: '32%', left: '82%', size: 10, dur: '5.2s', delay: '0.2s', opacity: 0.4 },
+  { type: 'cross', top: '48%', left: '18%', size: 12, dur: '4.0s', delay: '2.1s', opacity: 0.45 },
+  { type: 'cross', top: '62%', left: '78%', size: 10, dur: '3.5s', delay: '1.0s', opacity: 0.4 },
+  { type: 'cross', top: '78%', left: '42%', size: 14, dur: '4.8s', delay: '0.5s', opacity: 0.5 },
+  { type: 'cross', top: '85%', left: '85%', size: 10, dur: '3.2s', delay: '1.7s', opacity: 0.35 },
+  { type: 'cross', top: '3%',  left: '78%', size: 12, dur: '4.2s', delay: '2.5s', opacity: 0.45 },
+  { type: 'cross', top: '95%', left: '12%', size: 10, dur: '5.0s', delay: '0.8s', opacity: 0.35 },
+];
 
 export default function LoginPage() {
   const [error, setError] = useState('');
@@ -506,7 +687,7 @@ export default function LoginPage() {
         {
           theme: 'outline',
           size: 'large',
-          width: 320,
+          width: 340,
           text: 'signin_with',
           shape: 'pill'
         }
@@ -527,6 +708,43 @@ export default function LoginPage() {
     <>
       <style>{loginStyles}</style>
       <div className="login-page">
+
+        {/* ── STARS LAYER (mobile only via CSS visibility) ── */}
+        <div className="stars-layer">
+          {STARS_CONFIG.map((s, i) =>
+            s.type === 'dot' ? (
+              <div
+                key={i}
+                className="star"
+                style={{
+                  top: s.top,
+                  left: s.left,
+                  width: s.size + 'px',
+                  height: s.size + 'px',
+                  '--dur': s.dur,
+                  '--delay': s.delay,
+                  '--max-opacity': s.opacity,
+                }}
+              />
+            ) : (
+              <div
+                key={i}
+                className="star-cross"
+                style={{
+                  top: s.top,
+                  left: s.left,
+                  '--size': s.size + 'px',
+                  '--dur': s.dur,
+                  '--delay': s.delay,
+                  '--max-opacity': s.opacity,
+                  width: s.size + 'px',
+                  height: s.size + 'px',
+                }}
+              />
+            )
+          )}
+        </div>
+
         {/* ── LEFT ── */}
         <div className="login-left">
           <div className="login-left-content">
