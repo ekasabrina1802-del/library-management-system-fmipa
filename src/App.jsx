@@ -1,5 +1,4 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import Login from './pages/login';
 
 // Auth & Layout
 import Layout from "./components/Layout";
@@ -16,13 +15,29 @@ import UserAnggotaPage from "./pages/UserAnggotaPage";
 import AdminAnggotaPage from "./pages/AdminAnggotaPage";
 import PetugasPeminjamanPage from "./pages/PetugasPeminjamanPage";
 import PetugasPengembalianPage from "./pages/PetugasPengembalianPage";
-import AdminPeminjamanPage from './pages/AdminPeminjamanPage';
-import AdminPengembalianPage from './pages/AdminPengembalianPage';
-import UserPeminjamanPage from './pages/UserPeminjamanPage';
-import UserPengembalianPage from './pages/UserPengembalianPage';
+import AdminPeminjamanPage from "./pages/AdminPeminjamanPage";
+import AdminPengembalianPage from "./pages/AdminPengembalianPage";
+import UserPeminjamanPage from "./pages/UserPeminjamanPage";
+import UserPengembalianPage from "./pages/UserPengembalianPage";
 import PetugasDendaPage from "./pages/PetugasDendaPage";
 import UserDendaPage from "./pages/UserDendaPage";
-import MahasiswaPage from "./pages/Mahasiswapage";
+
+// PROTEKSI ROUTE BERDASARKAN ROLE
+function ProtectedRoute({ children, allowedRoles }) {
+  const { user } = useAuth();
+
+  // Kalau belum login, balik ke halaman login
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+
+  // Kalau role tidak sesuai, arahkan ke dashboard sesuai role
+  if (!allowedRoles.includes(user.role)) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
+}
 
 function App() {
   const { user } = useAuth();
@@ -30,46 +45,246 @@ function App() {
   return (
     <Routes>
       {/* PUBLIC ROUTES */}
-      <Route path="/" element={<LoginPage />} />
+      <Route
+        path="/"
+        element={
+          user ? <Navigate to="/dashboard" replace /> : <LoginPage />
+        }
+      />
+
       <Route path="/register" element={<RegisterPage />} />
 
       {/* GLOBAL REDIRECT UNTUK /DASHBOARD */}
-      {/* Jika ada yang akses /dashboard saja, arahkan ke rute spesifik role */}
-      <Route 
-        path="/dashboard" 
+      <Route
+        path="/dashboard"
         element={
-          user?.role === 'admin' ? <Navigate to="/admin/dashboard" /> :
-          user?.role === 'user' || user?.role === 'mahasiswa' ? <Navigate to="/user/dashboard" /> :
-          <Navigate to="/petugas/dashboard" />
-        } 
+          !user ? (
+            <Navigate to="/" replace />
+          ) : user.role === "admin" ? (
+            <Navigate to="/admin/dashboard" replace />
+          ) : user.role === "petugas" ? (
+            <Navigate to="/petugas/dashboard" replace />
+          ) : user.role === "user" ||
+            user.role === "mahasiswa" ||
+            user.role === "dosen" ? (
+            <Navigate to="/user/dashboard" replace />
+          ) : (
+            <Navigate to="/" replace />
+          )
+        }
       />
 
-      {/* --- ADMIN ROUTES --- */}
-      <Route path="/admin/dashboard" element={<Layout><DashboardPage /></Layout>} />
-      <Route path="/admin/buku" element={<Layout><BukuPage /></Layout>} />
-      <Route path="/admin/anggota" element={<Layout><AdminAnggotaPage /></Layout>} />
-      <Route path="/admin/peminjaman" element={<Layout><AdminPeminjamanPage /></Layout>} />
-      <Route path="/admin/pengembalian" element={<Layout><AdminPengembalianPage /></Layout>} />
-      <Route path="/admin/denda" element={<Layout><PetugasDendaPage /></Layout>} />
+      {/* ADMIN ROUTES */}
+      <Route
+        path="/admin/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <Layout>
+              <DashboardPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
 
-      {/* --- PETUGAS ROUTES --- */}
-      <Route path="/petugas/dashboard" element={<Layout><DashboardPage /></Layout>} />
-      <Route path="/petugas/buku" element={<Layout><BukuPage /></Layout>} />
-      <Route path="/petugas/anggota" element={<Layout><PetugasAnggotaPage /></Layout>} />
-      <Route path="/petugas/peminjaman" element={<Layout><PetugasPeminjamanPage /></Layout>} />
-      <Route path="/petugas/pengembalian" element={<Layout><PetugasPengembalianPage /></Layout>} />
-      <Route path="/petugas/denda" element={<Layout><PetugasDendaPage /></Layout>} />
+      <Route
+        path="/admin/buku"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <Layout>
+              <BukuPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
 
-      {/* --- USER / MAHASISWA ROUTES --- */}
-      <Route path="/user/dashboard" element={<Layout><UserDashboard /></Layout>} />
-<Route path="/user/buku" element={<Layout><BukuPage /></Layout>} />
-<Route path="/user/anggota" element={<Layout><UserAnggotaPage /></Layout>} />
-<Route path="/user/peminjaman" element={<Layout><UserPeminjamanPage /></Layout>} />
-<Route path="/user/pengembalian" element={<Layout><UserPengembalianPage /></Layout>} />
-<Route path="/user/denda" element={<Layout><UserDendaPage /></Layout>} />
+      <Route
+        path="/admin/anggota"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <Layout>
+              <AdminAnggotaPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/peminjaman"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <Layout>
+              <AdminPeminjamanPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/pengembalian"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <Layout>
+              <AdminPengembalianPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/denda"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <Layout>
+              <PetugasDendaPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* PETUGAS ROUTES */}
+      <Route
+        path="/petugas/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={["petugas"]}>
+            <Layout>
+              <DashboardPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/petugas/buku"
+        element={
+          <ProtectedRoute allowedRoles={["petugas"]}>
+            <Layout>
+              <BukuPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/petugas/anggota"
+        element={
+          <ProtectedRoute allowedRoles={["petugas"]}>
+            <Layout>
+              <PetugasAnggotaPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/petugas/peminjaman"
+        element={
+          <ProtectedRoute allowedRoles={["petugas"]}>
+            <Layout>
+              <PetugasPeminjamanPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/petugas/pengembalian"
+        element={
+          <ProtectedRoute allowedRoles={["petugas"]}>
+            <Layout>
+              <PetugasPengembalianPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/petugas/denda"
+        element={
+          <ProtectedRoute allowedRoles={["petugas"]}>
+            <Layout>
+              <PetugasDendaPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* USER / MAHASISWA / DOSEN ROUTES */}
+      <Route
+        path="/user/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={["user", "mahasiswa", "dosen"]}>
+            <Layout>
+              <UserDashboard />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/user/buku"
+        element={
+          <ProtectedRoute allowedRoles={["user", "mahasiswa", "dosen"]}>
+            <Layout>
+              <BukuPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/user/anggota"
+        element={
+          <ProtectedRoute allowedRoles={["user", "mahasiswa", "dosen"]}>
+            <Layout>
+              <UserAnggotaPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/user/peminjaman"
+        element={
+          <ProtectedRoute allowedRoles={["user", "mahasiswa", "dosen"]}>
+            <Layout>
+              <UserPeminjamanPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/user/pengembalian"
+        element={
+          <ProtectedRoute allowedRoles={["user", "mahasiswa", "dosen"]}>
+            <Layout>
+              <UserPengembalianPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/user/denda"
+        element={
+          <ProtectedRoute allowedRoles={["user", "mahasiswa", "dosen"]}>
+            <Layout>
+              <UserDendaPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
 
       {/* 404 NOT FOUND */}
-      <Route path="*" element={<div style={{ padding: "20px", textAlign: "center" }}><h1>404</h1><p>Halaman tidak ditemukan</p></div>} />
+      <Route
+        path="*"
+        element={
+          <div style={{ padding: "20px", textAlign: "center" }}>
+            <h1>404</h1>
+            <p>Halaman tidak ditemukan</p>
+          </div>
+        }
+      />
     </Routes>
   );
 }
