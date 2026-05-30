@@ -54,6 +54,13 @@ const loginStyles = `
     0%, 100% { opacity: 0; transform: scale(0.5) rotate(0deg); }
     50% { opacity: var(--max-opacity, 0.6); transform: scale(1) rotate(20deg); }
   }
+
+  @keyframes logoFloat {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-6px); }
+    }
+
+
   .star-cross::before,
   .star-cross::after {
     content: '';
@@ -117,7 +124,10 @@ const loginStyles = `
     width: 135px;
     height: 135px;
     object-fit: contain;
-    filter: drop-shadow(0 4px 16px rgba(0,0,0,0.3));
+    filter:
+      drop-shadow(0 0 20px rgba(246,185,59,0.35))
+      drop-shadow(0 4px 20px rgba(0,0,0,0.5));
+    animation: logoFloat 4s ease-in-out infinite;
   }
 
   .login-tag {
@@ -319,7 +329,7 @@ const loginStyles = `
     .login-left {
       flex: 0 0 auto;
       min-height: auto;
-      padding: 36px 28px 16px;
+      padding: 50px 28px 16px;
       background: transparent;
       justify-content: flex-start;
       z-index: 1;
@@ -336,17 +346,12 @@ const loginStyles = `
 
     /* Larger logo on mobile with glowing ring */
     .login-logo-wrap img {
-      width: 110px;
-      height: 110px;
+      width: 100px;
+      height: 100px;
       filter:
         drop-shadow(0 0 20px rgba(246,185,59,0.35))
         drop-shadow(0 4px 20px rgba(0,0,0,0.5));
       animation: logoFloat 4s ease-in-out infinite;
-    }
-
-    @keyframes logoFloat {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-6px); }
     }
 
     /* Decorative ring around logo */
@@ -545,12 +550,12 @@ const loginStyles = `
 
   @media (max-width: 420px) {
     .login-left {
-      padding: 30px 22px 14px;
+      padding: 50px 22px 14px;
     }
 
     .login-logo-wrap img {
-      width: 96px;
-      height: 96px;
+      width: 90px;
+      height: 90px;
     }
 
     .login-headline {
@@ -581,8 +586,8 @@ const loginStyles = `
   /* Layar sangat kecil (iPhone SE, 375×667) */
   @media (max-width: 390px) and (max-height: 700px) {
     .login-logo-wrap img {
-      width: 80px;
-      height: 80px;
+      width: 90px;
+      height: 90px;
     }
 
     .login-headline {

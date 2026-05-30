@@ -109,6 +109,87 @@ function generateCopies(bookCode, total) {
   );
 }
 
+function SuccessToast({ title, bookTitle, noInduk, onClose }) {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 4000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div style={{
+      position: 'fixed', top: 24, right: 24, zIndex: 99999,
+      background: 'linear-gradient(135deg, #1a472a, #2D6A4F)',
+      color: 'white', borderRadius: 16, padding: '20px 24px',
+      maxWidth: 360, width: 'calc(100vw - 48px)',
+      boxShadow: '0 8px 32px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.08)',
+      animation: 'slideInToast 0.35s cubic-bezier(0.34,1.56,0.64,1)',
+      display: 'flex', flexDirection: 'column', gap: 10,
+    }}>
+      <style>{`
+        @keyframes slideInToast {
+          from { opacity: 0; transform: translateX(60px) scale(0.92); }
+          to   { opacity: 1; transform: translateX(0) scale(1); }
+        }
+      `}</style>
+
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: '50%',
+            background: 'rgba(255,255,255,0.15)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 18
+          }}>✓</div>
+          <div>
+            <div style={{ fontWeight: 800, fontSize: 15 }}>Peminjaman Berhasil!</div>
+            <div style={{ fontSize: 11, opacity: 0.7, marginTop: 1 }}>Perpustakaan FMIPA UNESA</div>
+          </div>
+        </div>
+        <button onClick={onClose} style={{
+          background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white',
+          borderRadius: 8, width: 28, height: 28, cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14
+        }}>✕</button>
+      </div>
+
+      {/* Divider */}
+      <div style={{ height: 1, background: 'rgba(255,255,255,0.12)' }} />
+
+      {/* Info buku */}
+      <div style={{
+        background: 'rgba(255,255,255,0.08)', borderRadius: 10,
+        padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 4
+      }}>
+        <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.4 }}>{bookTitle}</div>
+        <code style={{
+          fontSize: 11, opacity: 0.7,
+          background: 'rgba(0,0,0,0.2)', padding: '2px 8px',
+          borderRadius: 4, alignSelf: 'flex-start'
+        }}>{noInduk}</code>
+      </div>
+
+      <div style={{ fontSize: 12, opacity: 0.75, lineHeight: 1.5 }}>
+        📍 Silakan ambil buku ke Perpustakaan FMIPA UNESA
+      </div>
+
+      {/* Progress bar */}
+      <div style={{ height: 3, background: 'rgba(255,255,255,0.15)', borderRadius: 99, overflow: 'hidden' }}>
+        <div style={{
+          height: '100%', background: 'rgba(255,255,255,0.5)', borderRadius: 99,
+          animation: 'shrinkBar 4s linear forwards'
+        }} />
+        <style>{`
+          @keyframes shrinkBar {
+            from { width: 100%; }
+            to   { width: 0%; }
+          }
+        `}</style>
+      </div>
+    </div>
+  );
+}
+
 function BookModal({ book, onSave, onClose, isReadOnly, user }) {
   const { loans, addLoan, addReminder, members } = useApp();
   const isEdit = !!book?.id;
@@ -135,6 +216,7 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
   );
 
   const [loadingBorrow, setLoadingBorrow] = useState(false);
+  const [toast, setToast] = useState(null);
   const handleBorrowAction = async () => {
   const profileIncomplete =
     !user?.name ||
@@ -172,8 +254,7 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
   setLoadingBorrow(false);
 
   if (result.success) {
-    alert('Permintaan berhasil!');
-    onClose(); 
+    setToast({ bookTitle: book.title, noInduk: book.no_induk });
   } else {
     alert(`Gagal meminjam: ${result.message}`);
   }
@@ -216,6 +297,15 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
   const isAvailable = getAvailableCopies(book).length > 0;
 
   return (
+    <>
+    {toast && (
+      <SuccessToast
+        bookTitle={toast.bookTitle}
+        noInduk={toast.noInduk}
+        onClose={() => { setToast(null); onClose(); }}
+      />
+    )}
+    
     <div
       className="modal-overlay"
       style={{
@@ -510,6 +600,7 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
         </form>
       </div>
     </div>
+    </>
   );
 }
 
