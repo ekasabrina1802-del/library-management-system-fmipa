@@ -1,6 +1,5 @@
-// AdminPengembalianPage.jsx — UI aligned with design system
 import { useState } from 'react';
-import { Search, Filter, Calendar, BookOpen, TrendingDown, AlertCircle, CheckCircle, ChevronRight } from 'lucide-react';
+import { Search, Filter, Calendar, BookOpen, TrendingDown, AlertCircle, CheckCircle, ChevronRight, Banknote } from 'lucide-react';
 import { useApp } from '../components/AppContext';
 
 function formatDate(d) {
@@ -53,7 +52,7 @@ export default function AdminPengembalianPage() {
     { label: 'Total Pengembalian', value: completedLoans.length, color: '#E53E3E', bg: 'linear-gradient(135deg, #fff5f5, #ffffff)', border: '#FED7D7', shadow: 'rgba(229,62,62,0.08)', iconBg: '#fff1f1', icon: <BookOpen size={18} /> },
     { label: 'Tepat Waktu', value: onTimeCount, color: '#D69E2E', bg: 'linear-gradient(135deg, #fffaf0, #ffffff)', border: '#FEEBC8', shadow: 'rgba(214,158,46,0.08)', iconBg: '#fff7e6', icon: <CheckCircle size={18} /> },
     { label: 'Kasus Terlambat', value: lateCount, color: '#38A169', bg: 'linear-gradient(135deg, #f0fff4, #ffffff)', border: '#C6F6D5', shadow: 'rgba(56,161,105,0.08)', iconBg: '#ecfff3', icon: <AlertCircle size={18} /> },
-    { label: 'Denda Terkumpul', value: `Rp ${totalDenda.toLocaleString('id-ID')}`, color: '#2563EB', bg: 'linear-gradient(135deg, #eff6ff, #ffffff)', border: '#BFDBFE', shadow: 'rgba(37,99,235,0.08)', iconBg: '#eef4ff', icon: <TrendingDown size={18} /> },
+    { label: 'Denda Terkumpul', value: `Rp ${totalDenda.toLocaleString('id-ID')}`, color: '#2563EB', bg: 'linear-gradient(135deg, #eff6ff, #ffffff)', border: '#BFDBFE', shadow: 'rgba(37,99,235,0.08)', iconBg: '#eef4ff', icon: <Banknote size={18} /> },
   ];
 
   return (

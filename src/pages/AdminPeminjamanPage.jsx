@@ -1,6 +1,6 @@
 // AdminPeminjamanPage.jsx — hanya menampilkan pinjaman aktif
 import { useState } from 'react';
-import { Search, Clock, Filter, Calendar, BookOpen, TrendingDown, ChevronRight, AlertCircle, CheckCircle } from 'lucide-react';
+import { Search, Clock, Filter, Calendar, BookOpen, TrendingDown, ChevronRight, AlertCircle, CheckCircle, Banknote } from 'lucide-react';
 import { useApp } from '../components/AppContext';
 
 function daysUntilDue(dueDate) {
@@ -87,7 +87,7 @@ export default function AdminPeminjamanPage() {
     { label: 'Total Aktif', value: activeLoans.length, color: '#E53E3E', bg: 'linear-gradient(135deg, #fff5f5, #ffffff)', border: '#FED7D7', shadow: 'rgba(229,62,62,0.08)', iconBg: '#fff1f1', icon: <BookOpen size={18} /> },
     { label: 'Terlambat', value: lateCount, color: '#D69E2E', bg: 'linear-gradient(135deg, #fffaf0, #ffffff)', border: '#FEEBC8', shadow: 'rgba(214,158,46,0.08)', iconBg: '#fff7e6', icon: <AlertCircle size={18} /> },
     { label: 'Diperpanjang', value: diperpanjangCount, color: '#38A169', bg: 'linear-gradient(135deg, #f0fff4, #ffffff)', border: '#C6F6D5', shadow: 'rgba(56,161,105,0.08)', iconBg: '#ecfff3', icon: <Clock size={18} /> },
-    { label: 'Akum. Denda', value: akumDendaTotal > 0 ? `Rp ${akumDendaTotal.toLocaleString('id-ID')}` : 'Rp 0', color: '#2563EB', bg: 'linear-gradient(135deg, #eff6ff, #ffffff)', border: '#BFDBFE', shadow: 'rgba(37,99,235,0.08)', iconBg: '#eef4ff', icon: <TrendingDown size={18} /> },
+    { label: 'Denda', value: akumDendaTotal > 0 ? `Rp ${akumDendaTotal.toLocaleString('id-ID')}` : 'Rp 0', color: '#2563EB', bg: 'linear-gradient(135deg, #eff6ff, #ffffff)', border: '#BFDBFE', shadow: 'rgba(37,99,235,0.08)', iconBg: '#eef4ff', icon: <Banknote size={18} /> },
   ];
 
   return (
@@ -215,7 +215,7 @@ export default function AdminPeminjamanPage() {
                 <th>Tgl Pinjam</th>
                 <th>Batas Kembali</th>
                 <th>Perpanjangan</th>
-                <th>Akum. Denda</th>
+                <th>Denda</th>
                 <th>Status</th>
               </tr>
             </thead>

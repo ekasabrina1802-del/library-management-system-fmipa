@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, CheckCircle, AlertCircle, Clock, BookOpen, Info, ChevronRight } from 'lucide-react';
+import { Search, CheckCircle, AlertCircle, Banknote, BookOpen, Info, ChevronRight } from 'lucide-react';
 import { useApp } from '../components/AppContext';
 import { useAuth } from '../components/AuthContext';
 
@@ -173,7 +173,7 @@ const activeLoans = myLoans.filter(
         color: '#38A169'
       }}
     >
-      <Clock size={18} />
+      <Banknote size={18} />
     </div>
   </div>
 </div>

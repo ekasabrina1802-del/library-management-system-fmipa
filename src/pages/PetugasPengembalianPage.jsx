@@ -1,6 +1,6 @@
 //PetugasPengembalianPage.jsx
 import { useState } from 'react';
-import { Search, Filter, Calendar, BookOpen, CheckCircle, Clock, TrendingDown } from 'lucide-react';
+import { Search, Filter, Calendar, BookOpen, CheckCircle, Clock, TrendingDown, Banknote } from 'lucide-react';
 import { useApp } from '../components/AppContext';
 
 const PERIOD_OPTIONS = [
@@ -48,7 +48,7 @@ export default function PetugasPengembalianPage() {
   const stats = [
     { label:'Total Pengembalian', value: completed.length, color:'#E53E3E', bg:'linear-gradient(135deg, #fff5f5, #ffffff)', border:'#FED7D7', shadow:'rgba(229,62,62,0.08)', iconBg:'#fff1f1', icon:<CheckCircle size={18} /> },
     { label:'Kasus Terlambat', value: totalTerlambat, color:'#D69E2E', bg:'linear-gradient(135deg, #fffaf0, #ffffff)', border:'#FEEBC8', shadow:'rgba(214,158,46,0.08)', iconBg:'#fff7e6', icon:<TrendingDown size={18} /> },
-    { label:'Denda Terkumpul', value:`Rp ${totalDenda.toLocaleString('id-ID')}`, color:'#2563EB', bg:'linear-gradient(135deg, #eff6ff, #ffffff)', border:'#BFDBFE', shadow:'rgba(37,99,235,0.08)', iconBg:'#eef4ff', icon:<Clock size={18} /> },
+    { label:'Denda Terkumpul', value:`Rp ${totalDenda.toLocaleString('id-ID')}`, color:'#2563EB', bg:'linear-gradient(135deg, #eff6ff, #ffffff)', border:'#BFDBFE', shadow:'rgba(37,99,235,0.08)', iconBg:'#eef4ff', icon:<Banknote size={18} /> },
   ];
 
   return (

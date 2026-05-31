@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { BookOpen, Clock, AlertCircle, DollarSign, Info, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { BookOpen, Clock, AlertCircle, Banknote, Info, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useApp } from '../components/AppContext';
 import { useAuth } from '../components/AuthContext';
 import ApiImage from '../components/ApiImage';
@@ -574,7 +574,7 @@ const profilePhoto = currentMember?.photo_url || user?.photo_url;
             </div>
 
             <div style={{ width: 42, height: 42, borderRadius: 12, background: '#eef4ff', border: '1px solid #BFDBFE', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563EB' }}>
-              <DollarSign size={18} />
+              <Banknote size={18} />
             </div>
           </div>
         </div>
