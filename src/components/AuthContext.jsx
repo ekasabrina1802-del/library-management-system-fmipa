@@ -140,6 +140,70 @@ const devLogin = async (role) => {
   }
 };
 
+const refreshUser = async () => {
+  if (!user?.email) return { success: false };
+
+  try {
+    const response = await fetch(
+      `${API_URL}/api/current-user?email=${encodeURIComponent(user.email)}`,
+      {
+        method: 'GET',
+        headers: {
+          'ngrok-skip-browser-warning': 'true'
+        }
+      }
+    );
+
+    const data = await response.json();
+
+    if (!data.success) {
+      return data;
+    }
+
+    const finalUser = {
+      ...data.user,
+      anggotaId: data.user.anggotaId || data.user.memberId,
+      memberId: data.user.memberId || data.user.anggotaId,
+      profileCompleted: Boolean(data.user.profileCompleted)
+    };
+
+    setUser(finalUser);
+
+    return {
+      success: true,
+      user: finalUser,
+      role: finalUser.role
+    };
+
+  } catch (error) {
+    console.error('Refresh user error:', error);
+
+    return {
+      success: false,
+      message: 'Gagal refresh user'
+    };
+  }
+};
+
+useEffect(() => {
+  if (!user?.email) return;
+
+  const interval = setInterval(() => {
+    refreshUser();
+  }, 15000);
+
+  const handleFocus = () => {
+    refreshUser();
+  };
+
+  window.addEventListener('focus', handleFocus);
+
+  return () => {
+    clearInterval(interval);
+    window.removeEventListener('focus', handleFocus);
+  };
+}, [user?.email]);
+
   // LOGOUT
   const logout = () => {
 
@@ -163,7 +227,9 @@ const devLogin = async (role) => {
 
         devLogin,
 
-        loginWithGoogle
+        loginWithGoogle,
+
+        refreshUser
 
       }}
     >

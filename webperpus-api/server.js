@@ -551,6 +551,78 @@ app.post('/api/login-google', async (req, res) => {
   }
 });
 
+app.get('/api/current-user', async (req, res) => {
+  const email = normalizeEmail(req.query.email);
+
+  if (!email) {
+    return res.status(400).json({
+      success: false,
+      message: 'Email wajib dikirim'
+    });
+  }
+
+  try {
+    const result = await pool.query(`
+      SELECT
+        u.id AS "userId",
+        u.username,
+        u.email,
+        u.role,
+        a.id AS "anggotaId",
+        a.custom_id,
+        a.nim,
+        a.jenis AS type,
+        a.departemen,
+        a.prodi,
+        a.phone,
+        a.address,
+        a.photo_url,
+        a.profile_completed
+      FROM users u
+      LEFT JOIN anggota a ON LOWER(TRIM(u.email)) = LOWER(TRIM(a.email))
+      WHERE LOWER(TRIM(u.email)) = LOWER(TRIM($1))
+    `, [email]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'User tidak ditemukan'
+      });
+    }
+
+    const user = result.rows[0];
+
+    return res.json({
+      success: true,
+      user: {
+        id: user.userId,
+        anggotaId: user.anggotaId,
+        memberId: user.anggotaId,
+        customId: user.custom_id,
+        name: user.username,
+        email: user.email,
+        role: user.role,
+        type: user.type,
+        nim: user.nim,
+        departemen: user.departemen,
+        prodi: user.prodi,
+        phone: user.phone,
+        address: user.address,
+        photo_url: user.photo_url,
+        profileCompleted: Boolean(user.profile_completed),
+        avatar: user.username?.charAt(0)?.toUpperCase() || 'U'
+      }
+    });
+
+  } catch (err) {
+    console.error('Current User Error:', err);
+    return res.status(500).json({
+      success: false,
+      message: 'Gagal mengambil data user terbaru'
+    });
+  }
+});
+
 app.get('/api/books', async (req, res) => {
   try {
     const booksResult = await pool.query(`

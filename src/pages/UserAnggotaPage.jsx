@@ -652,16 +652,33 @@ export default function AnggotaUserPage() {
     name: '', nim: '', departemen: '', prodi: '', email: '', phone: '', address: ''
   });
 
-  const member = members.find(
-    m =>
-      String(m.id) === String(user?.anggotaId || user?.memberId) ||
-      (user?.email && m.email?.toLowerCase() === user.email.toLowerCase())
-  );
+  const clean = (v) => String(v || '').trim().toLowerCase();
+
+const member = members.find(
+  m =>
+    String(m.id) === String(user?.anggotaId || user?.memberId) ||
+    clean(m.email) === clean(user?.email) ||
+    clean(m.nim) === clean(user?.nim)
+);
 
   const isDosen = member?.type === 'dosen';
   const profileIncomplete = isDosen
     ? !member?.name || !member?.departemen || !member?.prodi || !member?.phone || !member?.address
     : !member?.name || !member?.nim || !member?.departemen || !member?.prodi || !member?.phone || !member?.address;
+
+if (!members.length) {
+  return (
+    <div className="profile-page">
+      <style>{styles}</style>
+      <div style={{ padding: 60, textAlign: 'center' }}>
+        <User size={48} style={{ color: '#9b8e8e', marginBottom: 16 }} />
+        <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8, fontFamily: "'DM Sans', sans-serif" }}>
+          Memuat data anggota...
+        </div>
+      </div>
+    </div>
+  );
+}
 
   if (!member) {
     return (
