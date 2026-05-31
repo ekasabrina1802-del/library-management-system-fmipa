@@ -461,7 +461,7 @@ const profilePhoto = currentMember?.photo_url || user?.photo_url;
                       (Kode Buku: {n.bookCode || '-'})
                       {isAvailable
                         ? ' kini dapat dipinjam. Segera kunjungi perpustakaan dan tunjukkan kode buku ke petugas.'
-                        : ' masih sedang dipinjam oleh anggota lain. Kami akan terus memantaukan untuk Anda.'}
+                        : ' masih sedang dipinjam oleh anggota lain. Kami akan terus memantaukan untuk kamu.'}
                     </div>
                   </div>
                 </div>

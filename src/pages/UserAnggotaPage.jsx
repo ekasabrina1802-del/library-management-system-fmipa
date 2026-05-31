@@ -367,6 +367,48 @@ const styles = `
     font-family: 'DM Sans', sans-serif;
   }
 
+  /* ── Alert Obligation (tanggungan) ── */
+  .alert-obligation {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 18px;
+    background: linear-gradient(135deg, #fef2f2 0%, #fff5f5 100%);
+    border: 1px solid #fca5a5;
+    border-left: 4px solid #dc2626;
+    border-radius: 14px;
+    margin-bottom: 16px;
+    font-family: 'DM Sans', sans-serif;
+    box-shadow: 0 2px 12px rgba(220,38,38,0.08);
+  }
+  .alert-obligation-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(220,38,38,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .alert-obligation-body {
+    flex: 1;
+    min-width: 0;
+  }
+  .alert-obligation-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #dc2626;
+    margin-bottom: 3px;
+  }
+  .alert-obligation-desc {
+    font-size: 12px;
+    color: #9a3412;
+    line-height: 1.5;
+    opacity: 0.85;
+  }
+    
   /* ── Empty State ── */
   .empty-state {
     text-align: center;
@@ -639,6 +681,13 @@ export default function AnggotaUserPage() {
   }
 
   const myLoans = loans.filter(l => l.memberId === member.id);
+  const hasActiveLoan = myLoans.some(
+    l => l.status === 'dipinjam' || l.status === 'terlambat'
+  );
+  const hasUnpaidFine = myLoans.some(
+    l => l.fine && l.fine > 0 && !l.finePaid
+  );
+  const hasObligation = hasActiveLoan || hasUnpaidFine;
   const initials = member.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
   const isActive = member.status === 'aktif';
 
@@ -727,9 +776,15 @@ export default function AnggotaUserPage() {
 
         {/* Row setelah banner: ruang untuk avatar yang menonjol + tombol edit di kanan */}
         <div className="after-banner-row">
-          <button className="btn-edit-profile" onClick={openEditModal}>
+          <button
+            className="btn-edit-profile"
+            onClick={() => { if (!hasObligation) openEditModal(); }}
+            disabled={hasObligation}
+            title={hasObligation ? 'Selesaikan tanggungan pinjaman/denda anda terlebih dahulu untuk bisa edit profil' : ''}
+            style={hasObligation ? { opacity: 0.45, cursor: 'not-allowed', pointerEvents: 'auto' } : {}}
+          >
             <Pencil size={13} />
-            {profileIncomplete ? 'Lengkapi Profil' : 'Edit Profil'}
+            {hasObligation ? 'Ada Tanggungan' : profileIncomplete ? 'lengkapi Profil' : 'Edit Profil'}
           </button>
         </div>
 
@@ -744,6 +799,25 @@ export default function AnggotaUserPage() {
           <div className="alert-warning" style={{ marginBottom: 16 }}>
             <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 1 }} />
             <span>Lengkapi data diri anda sebelum melakukan peminjaman buku.</span>
+          </div>
+        )}
+
+        {hasObligation && (
+          <div className="alert-obligation">
+            <div className="alert-obligation-icon">
+              <AlertCircle size={18} color="#dc2626" />
+            </div>
+            <div className="alert-obligation-body">
+              <div className="alert-obligation-title">Profil kamu terkunci!  Ada Tanggungan Aktif</div>
+              <div className="alert-obligation-desc">
+                {hasActiveLoan && hasUnpaidFine
+                  ? 'Kamu memiliki buku yang belum dikembalikan dan denda yang belum dibayar.'
+                  : hasActiveLoan
+                  ? 'Kamu memiliki buku yang belum dikembalikan.'
+                  : 'Kamu memiliki denda yang belum dibayar.'}
+                {' '}Selesaikan tanggungan terlebih dahulu untuk dapat mengedit profil.
+              </div>
+            </div>
           </div>
         )}
 
