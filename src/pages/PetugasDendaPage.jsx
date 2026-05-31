@@ -381,7 +381,7 @@ export default function DendaPage() {
   return (
     <div>
       <div className="page-header">
-        <div className="page-breadcrumb">Laporan</div>
+        <div className="page-breadcrumb">DATA LAPORAN BULANAN</div>
         <h1 className="page-title">Denda & Laporan Peminjaman</h1>
         <p className="page-subtitle">Rekap data peminjaman, pengembalian, dan denda dari database.</p>
       </div>

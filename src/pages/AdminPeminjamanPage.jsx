@@ -94,7 +94,7 @@ export default function AdminPeminjamanPage() {
     <div>
       {/* Page Header */}
       <div className="page-header">
-        <div className="page-breadcrumb">ADMIN · TRANSAKSI</div>
+        <div className="page-breadcrumb">DATA TRANSAKSI PEMINJAMAN</div>
         <h1 className="page-title">Peminjaman Aktif</h1>
         <p className="page-subtitle">
           Pantau seluruh buku yang sedang dipinjam — yang sudah dikembalikan tersimpan di halaman Pengembalian.

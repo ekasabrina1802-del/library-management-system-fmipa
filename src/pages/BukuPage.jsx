@@ -27,12 +27,20 @@ function BookCover({ no_klasifikasi, size = 'sm' }) {
   );
 }
 
-function RemindMeButton({ book, user, addReminder }) {
-  const [notified, setNotified] = useState(false);
+function RemindMeButton({ book, user, addReminder, reminders }) {
+  const userId =
+  user?.anggotaId ||
+  user?.memberId ||
+  user?.id;
+
+  const notified = reminders?.some(
+    r =>
+      String(r.bookId) === String(book.id) &&
+      String(r.userId) === String(userId)
+  );
 
   const handleClick = () => {
-    addReminder(book, user.memberId || user.id);
-    setNotified(true);
+    addReminder(book, userId);
   };
 
   if (notified) {
@@ -184,7 +192,7 @@ function SuccessToast({ bookTitle, noInduk, onClose }) {
 }
 
 function BookModal({ book, onSave, onClose, isReadOnly, user }) {
-  const { loans, addLoan, addReminder, members } = useApp();
+  const { loans, addLoan, addReminder, members, reminders } = useApp();
   const isEdit = !!book?.id;
 
   const [form, setForm] = useState({
@@ -212,13 +220,18 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
   const [toast, setToast] = useState(null);
 
   const handleBorrowAction = async () => {
+    if (!currentMember) {
+      alert('Data anggota tidak ditemukan.');
+      return;
+    }
+
     const profileIncomplete =
-      !user?.name ||
-      !user?.nim ||
-      !user?.departemen ||
-      !user?.prodi ||
-      !user?.phone ||
-      !user?.address;
+      !currentMember.name ||
+      !currentMember.nim ||
+      !currentMember.departemen ||
+      !currentMember.prodi ||
+      !currentMember.phone ||
+      !currentMember.address;
 
     if (profileIncomplete) {
       alert('Lengkapi profil anda terlebih dahulu sebelum meminjam buku.');
@@ -488,7 +501,12 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
                     {loadingBorrow ? 'Memproses...' : 'Pinjam Buku'}
                   </button>
                 ) : (
-                  <RemindMeButton book={book} user={user} addReminder={addReminder} />
+                  <RemindMeButton
+                    book={book}
+                    user={user}
+                    addReminder={addReminder}
+                    reminders={reminders}
+                  />
                 )
               )}
 
@@ -682,7 +700,7 @@ export default function BukuPage() {
       )}
 
       <div className="page-header">
-        <div className="page-breadcrumb">{isAdminOrPetugas ? 'ADMINISTRASI & ARCHIVES' : 'PORTAL PENGGUNA'}</div>
+        <div className="page-breadcrumb">{isAdminOrPetugas ? 'DATA ADMINISTRASI BUKU' : 'PORTAL PENGGUNA'}</div>
         <h1 className="page-title">{isAdminOrPetugas ? 'Manajemen Buku' : 'Katalog Koleksi Buku'}</h1>
         <p className="page-subtitle">
           Selamat datang, <strong>{user?.name || 'User'}</strong>! Kelola dan pantau ketersediaan koleksi ilmiah FMIPA.

@@ -556,13 +556,19 @@ const addLoan = async ({ memberId, bookId, copyId, copyCode }) => {
 };
 
   useEffect(() => {
-  if (!user?.id) return;
-  const key = `reminders_${user.id}`;
-  const saved =
-    JSON.parse(localStorage.getItem(key) || '[]');
+    const userId =
+      user?.anggotaId ||
+      user?.memberId ||
+      user?.id;
 
-  // update realtime status buku
-  const updated = saved
+    if (!userId) return;
+
+    const key = `reminders_${userId}`;
+    const saved =
+      JSON.parse(localStorage.getItem(key) || '[]');
+
+    // update realtime status buku
+    const updated = saved
 
     .map(reminder => {
 
@@ -610,7 +616,12 @@ const addLoan = async ({ memberId, bookId, copyId, copyCode }) => {
   );
 
   setReminders(updated);
-}, [user?.id, books]);
+  }, [
+    user?.anggotaId,
+    user?.memberId,
+    user?.id,
+    books
+  ]);
 
   const getUserNotifications = () => {
     return reminders.map(r => {

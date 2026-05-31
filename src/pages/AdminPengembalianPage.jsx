@@ -59,7 +59,7 @@ export default function AdminPengembalianPage() {
     <div>
       {/* Page Header */}
       <div className="page-header">
-        <div className="page-breadcrumb">ADMIN · TRANSAKSI</div>
+        <div className="page-breadcrumb">DATA TRANSAKSI PENGEMBALIAN</div>
         <h1 className="page-title">Manajemen Pengembalian</h1>
         <p className="page-subtitle">Riwayat pengembalian buku dan rekap denda keterlambatan seluruh anggota.</p>
       </div>

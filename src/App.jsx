@@ -6,7 +6,6 @@ import { useAuth } from "./components/AuthContext";
 
 // Pages
 import LoginPage from "./pages/login";
-import RegisterPage from "./pages/Register";
 import DashboardPage from "./pages/DashboardPage";
 import UserDashboard from "./pages/UserDashboardPage";
 import BukuPage from "./pages/BukuPage";
@@ -51,8 +50,6 @@ function App() {
           user ? <Navigate to="/dashboard" replace /> : <LoginPage />
         }
       />
-
-      <Route path="/register" element={<RegisterPage />} />
 
       {/* GLOBAL REDIRECT UNTUK /DASHBOARD */}
       <Route
