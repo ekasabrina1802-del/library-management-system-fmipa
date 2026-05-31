@@ -700,7 +700,7 @@ export default function BukuPage() {
       )}
 
       <div className="page-header">
-        <div className="page-breadcrumb">{isAdminOrPetugas ? 'DATA ADMINISTRASI BUKU' : 'PORTAL PENGGUNA'}</div>
+        <div className="page-breadcrumb">{isAdminOrPetugas ? 'DATA ADMINISTRASI BUKU' : 'DATA BUKU'}</div>
         <h1 className="page-title">{isAdminOrPetugas ? 'Manajemen Buku' : 'Katalog Koleksi Buku'}</h1>
         <p className="page-subtitle">
           Selamat datang, <strong>{user?.name || 'User'}</strong>! Kelola dan pantau ketersediaan koleksi ilmiah FMIPA.

@@ -319,7 +319,7 @@ export default function UserDendaPage() {
     <div>
       {/* ── Header ── */}
       <div className="page-header">
-        <div className="page-breadcrumb">Akun Saya</div>
+        <div className="page-breadcrumb">LAPORAN DENDA</div>
         <h1 className="page-title">Riwayat & Denda</h1>
         <p className="page-subtitle">
           Pantau status peminjaman, denda, dan tagihan perpustakaan milikmu.

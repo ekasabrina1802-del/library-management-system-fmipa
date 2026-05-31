@@ -282,7 +282,7 @@ export default function PetugasPeminjamanPage() {
 
       {/* Page Header */}
       <div className="page-header">
-        <div className="page-breadcrumb">PETUGAS · TRANSAKSI</div>
+        <div className="page-breadcrumb">DATA TRANSAKSI PEMINJAMAN</div>
         <h1 className="page-title">Peminjaman Buku</h1>
         <p className="page-subtitle">Catat peminjaman baru dan kelola pinjaman aktif — klik baris untuk pengembalian atau perpanjangan.</p>
       </div>

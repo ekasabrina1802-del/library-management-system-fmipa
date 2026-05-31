@@ -62,7 +62,7 @@ const lateCount = myLoans.filter(
     <div>
       {/* Header */}
       <div className="page-header">
-        <div className="page-breadcrumb">Transaksi</div>
+        <div className="page-breadcrumb">TRANSAKSI PEMINJAMAN</div>
         <h1 className="page-title">Peminjaman Saya</h1>
         <p className="page-subtitle">
           Pantau status pinjaman aktif, riwayat buku, dan ketersediaan koleksi perpustakaan FMIPA.

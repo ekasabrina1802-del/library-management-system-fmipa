@@ -55,7 +55,7 @@ export default function PetugasPengembalianPage() {
     <div>
       {/* Page Header */}
       <div className="page-header">
-        <div className="page-breadcrumb">PETUGAS · RIWAYAT</div>
+        <div className="page-breadcrumb">DATA TRANSAKSI PENGEMBALIAN</div>
         <h1 className="page-title">Riwayat Pengembalian</h1>
         <p className="page-subtitle">
           Rekap seluruh pengembalian buku beserta denda keterlambatan anggota perpustakaan FMIPA.

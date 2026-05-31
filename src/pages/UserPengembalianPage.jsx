@@ -45,8 +45,8 @@ const activeLoans = myLoans.filter(
     <div>
       {/* Header */}
       <div className="page-header">
-        <div className="page-breadcrumb">Transaksi</div>
-        <h1 className="page-title">Riwayat Pengembalian</h1>
+        <div className="page-breadcrumb">TRANSAKSI PENGEMBALIAN</div>
+        <h1 className="page-title">Riwayat Pengembalian Saya</h1>
         <p className="page-subtitle">
           Lihat status pengembalian buku dan catatan denda keterlambatan kamu.
         </p>
