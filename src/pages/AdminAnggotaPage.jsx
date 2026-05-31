@@ -1,6 +1,6 @@
 // AdminAnggotaPage.jsx — selaras dengan PetugasAnggotaPage
 import { useState } from 'react';
-import { X, Check, Search, BookOpen, Users, UserCheck, ChevronRight, ShieldCheck, ShieldOff, History, Clock, TrendingDown, CheckCircle, RefreshCw } from 'lucide-react';
+import { X, Check, Search, BookOpen, Users, UserCheck, ChevronRight, ShieldCheck, ShieldOff, History, Clock, TrendingDown, CheckCircle, RefreshCw, Plus } from 'lucide-react';
 import { useApp } from '../components/AppContext';
 import ApiImage from '../components/ApiImage';
 
@@ -44,7 +44,6 @@ function MemberModal({ member = null, onSave, onClose }) {
     email:    member?.email   || '',
     phone:    member?.phone   || '',
     address:  member?.address || '',
-    password: '',
     photo:    null,
   });
   const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
@@ -52,6 +51,13 @@ function MemberModal({ member = null, onSave, onClose }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // Validasi email UNESA
+    if (!form.email.endsWith('@unesa.ac.id')) {
+      alert('Email petugas harus menggunakan email UNESA.');
+      return;
+    }
+
     const formData = new FormData();
     Object.entries(form).forEach(([key, value]) => {
       if (value !== null && value !== '') formData.append(key, value);
@@ -73,40 +79,34 @@ function MemberModal({ member = null, onSave, onClose }) {
           </div>
           <div className="grid-2">
             <div className="form-group">
-              <label className="form-label">Tipe Anggota</label>
-              <select className="form-control" value={form.type} onChange={f('type')}>
+              <label className="form-label">Tipe Anggota *</label>
+              <select className="form-control" value={form.type} onChange={f('type')} required >
                 <option value="staff">Staff</option>
               </select>
             </div>
             <div className="form-group">
-              <label className="form-label">NIP / Kode Staff</label>
-              <input className="form-control" value={form.nim} onChange={f('nim')} placeholder="Kosongkan jika ingin otomatis" />
+              <label className="form-label">NIP / Kode Staff *</label>
+              <input className="form-control" value={form.nim} onChange={f('nim')} placeholder="Masukkan NIP atau Kode Petugas" required />
             </div>
           </div>
-          {!isEdit && (
-            <div className="form-group">
-              <label className="form-label">Password Login *</label>
-              <input className="form-control" type="password" value={form.password} onChange={f('password')} required />
-            </div>
-          )}
           <div className="form-group">
-            <label className="form-label">Email</label>
+            <label className="form-label">Email UNESA *</label>
             <input className="form-control" type="email" value={form.email} onChange={f('email')} required />
           </div>
           <div className="grid-2">
             <div className="form-group">
-              <label className="form-label">No. Telp</label>
+              <label className="form-label">No. Telp *</label>
               <input className="form-control" value={form.phone} onChange={f('phone')} required />
             </div>
             <div className="form-group">
-              <label className="form-label">Alamat</label>
+              <label className="form-label">Alamat *</label>
               <input className="form-control" value={form.address} onChange={f('address')} required />
             </div>
           </div>
           <div className="form-group">
-            <label className="form-label">Foto Profil</label>
+            <label className="form-label">Foto Profil *</label>
             <input type="file" accept="image/*" className="form-control"
-              onChange={(e) => setForm(p => ({ ...p, photo: e.target.files[0] }))} />
+              onChange={(e) => setForm(p => ({ ...p, photo: e.target.files[0] }))} required={!isEdit} />
           </div>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 }}>
             <button type="button" className="btn btn-ghost" onClick={onClose}>Batal</button>
@@ -457,7 +457,7 @@ export default function AdminAnggotaPage() {
 
       {/* Page Header */}
       <div className="page-header">
-        <div className="page-breadcrumb">DATA PETUGAS</div>
+        <div className="page-breadcrumb">DATA PETUGAS DAN ANGGOTA</div>
         <h1 className="page-title">Manajemen Petugas</h1>
         <p className="page-subtitle">Kelola data petugas (Staff) perpustakaan dan hak akses role</p>
       </div>
@@ -502,7 +502,7 @@ export default function AdminAnggotaPage() {
             </div>
             <button className="btn btn-primary btn-sm" onClick={() => setAddModal(true)}
               style={{ display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
-              <ShieldCheck size={13} /> Tambah Petugas
+              <Plus size={14} /> Tambah Petugas
             </button>
           </div>
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, CheckCircle, AlertCircle, Clock, BookOpen, Info, ChevronRight } from 'lucide-react';
+import { Search, CheckCircle, AlertCircle, Banknote, BookOpen, Info, ChevronRight } from 'lucide-react';
 import { useApp } from '../components/AppContext';
 import { useAuth } from '../components/AuthContext';
 
@@ -45,8 +45,8 @@ const activeLoans = myLoans.filter(
     <div>
       {/* Header */}
       <div className="page-header">
-        <div className="page-breadcrumb">Transaksi</div>
-        <h1 className="page-title">Riwayat Pengembalian</h1>
+        <div className="page-breadcrumb">TRANSAKSI PENGEMBALIAN</div>
+        <h1 className="page-title">Riwayat Pengembalian Saya</h1>
         <p className="page-subtitle">
           Lihat status pengembalian buku dan catatan denda keterlambatan kamu.
         </p>
@@ -173,7 +173,7 @@ const activeLoans = myLoans.filter(
         color: '#38A169'
       }}
     >
-      <Clock size={18} />
+      <Banknote size={18} />
     </div>
   </div>
 </div>

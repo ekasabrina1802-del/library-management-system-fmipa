@@ -27,12 +27,20 @@ function BookCover({ no_klasifikasi, size = 'sm' }) {
   );
 }
 
-function RemindMeButton({ book, user, addReminder }) {
-  const [notified, setNotified] = useState(false);
+function RemindMeButton({ book, user, addReminder, reminders }) {
+  const userId =
+  user?.anggotaId ||
+  user?.memberId ||
+  user?.id;
+
+  const notified = reminders?.some(
+    r =>
+      String(r.bookId) === String(book.id) &&
+      String(r.userId) === String(userId)
+  );
 
   const handleClick = () => {
-    addReminder(book, user.memberId || user.id);
-    setNotified(true);
+    addReminder(book, userId);
   };
 
   if (notified) {
@@ -81,23 +89,20 @@ function RemindMeButton({ book, user, addReminder }) {
   );
 }
 
+// ✅ FIX: Hanya pakai data copies asli dari server — TIDAK ada fallback legacy
+// Ini memastikan ID copy selalu berasal dari data asli, bukan di-generate ulang
 const getAvailableCopies = (book) => {
-  if (book?.copies?.length) {
-    return book.copies.filter(c => c.status === 'available');
-  }
-  return Array.from({ length: Number(book?.stock) || 0 }).map((_, i) => ({
-    id: `legacy-${i}`,
-    status: 'available'
-  }));
+  if (!book?.copies?.length) return [];
+  return book.copies.filter(c => c.status === 'available');
 };
 
 const getBorrowedCopies = (book) => {
-  if (book?.copies?.length) {
-    return book.copies.filter(c => c.status === 'borrowed');
-  }
-  return [];
+  if (!book?.copies?.length) return [];
+  return book.copies.filter(c => c.status === 'borrowed');
 };
 
+// ✅ FIX: generateCopies hanya dipakai saat TAMBAH buku baru
+// Saat EDIT, copies lama dipreserve (lihat bagian onSave)
 function generateCopies(bookCode, total) {
   return Array.from(
     { length: total },
@@ -109,7 +114,7 @@ function generateCopies(bookCode, total) {
   );
 }
 
-function SuccessToast({ title, bookTitle, noInduk, onClose }) {
+function SuccessToast({ bookTitle, noInduk, onClose }) {
   useEffect(() => {
     const timer = setTimeout(onClose, 4000);
     return () => clearTimeout(timer);
@@ -132,7 +137,6 @@ function SuccessToast({ title, bookTitle, noInduk, onClose }) {
         }
       `}</style>
 
-      {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
@@ -153,10 +157,8 @@ function SuccessToast({ title, bookTitle, noInduk, onClose }) {
         }}>✕</button>
       </div>
 
-      {/* Divider */}
       <div style={{ height: 1, background: 'rgba(255,255,255,0.12)' }} />
 
-      {/* Info buku */}
       <div style={{
         background: 'rgba(255,255,255,0.08)', borderRadius: 10,
         padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 4
@@ -173,7 +175,6 @@ function SuccessToast({ title, bookTitle, noInduk, onClose }) {
         📍 Silakan ambil buku ke Perpustakaan FMIPA UNESA
       </div>
 
-      {/* Progress bar */}
       <div style={{ height: 3, background: 'rgba(255,255,255,0.15)', borderRadius: 99, overflow: 'hidden' }}>
         <div style={{
           height: '100%', background: 'rgba(255,255,255,0.5)', borderRadius: 99,
@@ -191,7 +192,7 @@ function SuccessToast({ title, bookTitle, noInduk, onClose }) {
 }
 
 function BookModal({ book, onSave, onClose, isReadOnly, user }) {
-  const { loans, addLoan, addReminder, members } = useApp();
+  const { loans, addLoan, addReminder, members, reminders } = useApp();
   const isEdit = !!book?.id;
 
   const [form, setForm] = useState({
@@ -209,7 +210,7 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
     imagePreview: book?.image_url || null
   });
 
-  const currentMember = members.find(
+  const currentMember = members?.find(
     m =>
       String(m.id) === String(user?.anggotaId || user?.memberId) ||
       m.email === user?.email
@@ -217,76 +218,73 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
 
   const [loadingBorrow, setLoadingBorrow] = useState(false);
   const [toast, setToast] = useState(null);
+
   const handleBorrowAction = async () => {
-  const profileIncomplete =
-    !user?.name ||
-    !user?.nim ||
-    !user?.departemen ||
-    !user?.prodi ||
-    !user?.phone ||
-    !user?.address;
+    if (!currentMember) {
+      alert('Data anggota tidak ditemukan.');
+      return;
+    }
 
-  if (profileIncomplete) {
-    alert('Lengkapi profil anda terlebih dahulu sebelum meminjam buku.');
-    return;
-  }
+    const profileIncomplete =
+      !currentMember.name ||
+      !currentMember.nim ||
+      !currentMember.departemen ||
+      !currentMember.prodi ||
+      !currentMember.phone ||
+      !currentMember.address;
 
-  // ambil copy buku yang tersedia
-  const availableCopy = getAvailableCopies(book)[0];
+    if (profileIncomplete) {
+      alert('Lengkapi profil anda terlebih dahulu sebelum meminjam buku.');
+      return;
+    }
 
-  if (!availableCopy) {
-    alert(`Stok buku "${book.title}" sedang kosong.`);
-    return;
-  }
+    // ✅ FIX: Ambil copy dengan ID asli dari data server
+    const availableCopy = getAvailableCopies(book)[0];
 
-  // kirim data sesuai request backend
- const payload = {
-  memberId: user?.anggotaId || user?.memberId,
-  bookId: book.id,
-  copyId: availableCopy.id,
-  copyCode: availableCopy.copy_code
-};
+    if (!availableCopy) {
+      alert(`Stok buku "${book.title}" sedang kosong.`);
+      return;
+    }
 
-  console.log("Payload pinjam:", payload);
+    // ✅ FIX: Pastikan ID copy terkirim dengan benar ke backend
+    const payload = {
+      memberId: user?.anggotaId || user?.memberId,
+      bookId: book.id,
+      copyId: availableCopy.id,       // ← ID asli dari server
+      copyCode: availableCopy.copy_code
+    };
 
-  setLoadingBorrow(true);
-  const result = await addLoan(payload);
-  setLoadingBorrow(false);
+    console.log("Payload pinjam:", payload);
 
-  if (result.success) {
-    setToast({ bookTitle: book.title, noInduk: book.no_induk });
-  } else {
-    alert(`Gagal meminjam: ${result.message}`);
-  }
-};
+    setLoadingBorrow(true);
+    const result = await addLoan(payload);
+    setLoadingBorrow(false);
+
+    if (result.success) {
+      setToast({ bookTitle: book.title, noInduk: book.no_induk });
+    } else {
+      alert(`Gagal meminjam: ${result.message}`);
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
     if (isReadOnly) return;
-
     if (!isEdit && !form.image) {
       alert("Foto buku wajib diunggah!");
       return;
     }
-
     onSave(form);
   };
 
   const f = (k) => (e) => {
     if (isReadOnly) return;
-
     if (e.target.type === 'file') {
       const file = e.target.files[0];
-
       if (file) {
         setForm(p => ({ ...p, [k]: file }));
-
         const reader = new FileReader();
-
-        reader.onloadend = () =>
-          setForm(p => ({ ...p, imagePreview: reader.result }));
-
+        reader.onloadend = () => setForm(p => ({ ...p, imagePreview: reader.result }));
         reader.readAsDataURL(file);
       }
     } else {
@@ -298,308 +296,227 @@ function BookModal({ book, onSave, onClose, isReadOnly, user }) {
 
   return (
     <>
-    {toast && (
-      <SuccessToast
-        bookTitle={toast.bookTitle}
-        noInduk={toast.noInduk}
-        onClose={() => { setToast(null); onClose(); }}
-      />
-    )}
-    
-    <div
-      className="modal-overlay"
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0,0,0,0.55)',
-        zIndex: 9999,
+      {toast && (
+        <SuccessToast
+          bookTitle={toast.bookTitle}
+          noInduk={toast.noInduk}
+          onClose={() => { setToast(null); onClose(); }}
+        />
+      )}
 
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-
-        padding: 20,
-
-        overflowY: 'auto'
-      }}
-    >
       <div
-        className="modal"
+        className="modal-overlay"
         style={{
-          background: '#fff',
-          width: '100%',
-          maxWidth: 900,
-          borderRadius: 16,
-          padding: '24px',
-          maxHeight: 'calc(100vh - 40px)',
-          overflowY: 'auto',
-          boxShadow: '0 20px 50px rgba(0,0,0,0.25)',
-          scrollbarWidth: 'thin',
-          scrollbarColor: '#7B1C1C #f3f3f3'
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.55)',
+          zIndex: 9999,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: 20,
+          overflowY: 'auto'
         }}
       >
         <div
-          className="modal-header"
+          className="modal"
           style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: 24,
-            position: 'sticky',
-            top: 0,
             background: '#fff',
-            zIndex: 10,
-            paddingBottom: 12
+            width: '100%',
+            maxWidth: 900,
+            borderRadius: 16,
+            padding: '24px',
+            maxHeight: 'calc(100vh - 40px)',
+            overflowY: 'auto',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.25)',
+            scrollbarWidth: 'thin',
+            scrollbarColor: '#7B1C1C #f3f3f3'
           }}
         >
-          <h3 className="modal-title">
-            {isReadOnly
-              ? 'Detail Informasi Buku'
-              : (isEdit ? 'Edit Buku' : 'Tambah Buku Baru')}
-          </h3>
-
-          <button
-            className="modal-close"
-            onClick={onClose}
-            style={{
-              border: 'none',
-              background: 'transparent',
-              cursor: 'pointer'
-            }}
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label className="form-label">Deskripsi *</label>
-
-            <textarea
-              className="form-control"
-              value={form.description}
-              onChange={f('description')}
-              disabled={isReadOnly}
-              rows={4}
-              style={{
-                resize: 'vertical',
-                minHeight: 120
-              }}
-            />
-          </div>
-
           <div
-            className="grid-2"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: 16
-            }}
-          >
-            <div className="form-group">
-              <label className="form-label">No. Induk *</label>
-
-              <input
-                className="form-control"
-                value={form.no_induk}
-                onChange={f('no_induk')}
-                disabled={isReadOnly}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">No. Klasifikasi *</label>
-
-              <input
-                className="form-control"
-                value={form.no_klasifikasi}
-                onChange={f('no_klasifikasi')}
-                disabled={isReadOnly}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Kategori *</label>
-
-            <select
-              className="form-control"
-              value={form.category}
-              onChange={f('category')}
-              disabled={isReadOnly}
-            >
-              {CATEGORIES.slice(1).map(c => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Judul Buku *</label>
-
-            <input
-              className="form-control"
-              value={form.title}
-              onChange={f('title')}
-              disabled={isReadOnly}
-              required
-            />
-          </div>
-
-          <div
-            className="grid-2"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: 16
-            }}
-          >
-            <div className="form-group">
-              <label className="form-label">Penulis *</label>
-
-              <input
-                className="form-control"
-                value={form.author}
-                onChange={f('author')}
-                disabled={isReadOnly}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Penerbit *</label>
-
-              <input
-                className="form-control"
-                value={form.publisher}
-                onChange={f('publisher')}
-                disabled={isReadOnly}
-              />
-            </div>
-          </div>
-
-          <div
-            className="grid-2"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: 16
-            }}
-          >
-            <div className="form-group">
-              <label className="form-label">ISBN *</label>
-
-              <input
-                className="form-control"
-                value={form.isbn}
-                onChange={f('isbn')}
-                disabled={isReadOnly}
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Tahun Terbit *</label>
-
-              <input
-                className="form-control"
-                type="number"
-                value={form.year}
-                onChange={f('year')}
-                disabled={isReadOnly}
-              />
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Jumlah Stok *</label>
-
-            <input
-              className="form-control"
-              type="number"
-              value={form.stock}
-              onChange={f('stock')}
-              disabled={isReadOnly}
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">
-              Foto Buku {!isEdit && '*'}
-            </label>
-
-            {!isReadOnly && (
-              <input
-                type="file"
-                className="form-control"
-                accept="image/*"
-                onChange={f('image')}
-                required={!isEdit}
-              />
-            )}
-
-            {form.imagePreview && (
-              <img
-                src={form.imagePreview}
-                alt="preview"
-                style={{
-                  width: 120,
-                  height: 160,
-                  objectFit: 'cover',
-                  borderRadius: 8,
-                  marginTop: 12,
-                  border: '1px solid #ddd'
-                }}
-              />
-            )}
-          </div>
-
-          <div
+            className="modal-header"
             style={{
               display: 'flex',
-              justifyContent: 'flex-end',
-              gap: 12,
-              marginTop: 24,
-              paddingTop: 20,
-              borderTop: '1px solid #eee'
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: 24,
+              position: 'sticky',
+              top: 0,
+              background: '#fff',
+              zIndex: 10,
+              paddingBottom: 12
             }}
           >
+            <h3 className="modal-title">
+              {isReadOnly
+                ? 'Detail Informasi Buku'
+                : (isEdit ? 'Edit Buku' : 'Tambah Buku Baru')}
+            </h3>
             <button
-              type="button"
-              className="btn btn-ghost"
+              className="modal-close"
               onClick={onClose}
+              style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}
             >
-              Tutup
+              <X size={20} />
             </button>
+          </div>
 
-            {isReadOnly &&
-              (user?.role === 'mahasiswa' ||
-                user?.role === 'dosen') && (
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={handleBorrowAction}
-                  disabled={loadingBorrow}
-                >
-                  {loadingBorrow ? 'Memproses...' : 'Pinjam Buku'}
-                </button>
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label className="form-label">Deskripsi *</label>
+              <textarea
+                className="form-control"
+                value={form.description}
+                onChange={f('description')}
+                disabled={isReadOnly}
+                rows={4}
+                style={{ resize: 'vertical', minHeight: 120 }}
+              />
+            </div>
+
+            <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div className="form-group">
+                <label className="form-label">No. Induk *</label>
+                <input className="form-control" value={form.no_induk} onChange={f('no_induk')} disabled={isReadOnly} required />
+              </div>
+              <div className="form-group">
+                <label className="form-label">No. Klasifikasi *</label>
+                <input className="form-control" value={form.no_klasifikasi} onChange={f('no_klasifikasi')} disabled={isReadOnly} required />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Kategori *</label>
+              <select className="form-control" value={form.category} onChange={f('category')} disabled={isReadOnly}>
+                {CATEGORIES.slice(1).map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Judul Buku *</label>
+              <input className="form-control" value={form.title} onChange={f('title')} disabled={isReadOnly} required />
+            </div>
+
+            <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div className="form-group">
+                <label className="form-label">Penulis *</label>
+                <input className="form-control" value={form.author} onChange={f('author')} disabled={isReadOnly} required />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Penerbit *</label>
+                <input className="form-control" value={form.publisher} onChange={f('publisher')} disabled={isReadOnly} />
+              </div>
+            </div>
+
+            <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div className="form-group">
+                <label className="form-label">ISBN *</label>
+                <input className="form-control" value={form.isbn} onChange={f('isbn')} disabled={isReadOnly} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Tahun Terbit *</label>
+                <input className="form-control" type="number" value={form.year} onChange={f('year')} disabled={isReadOnly} />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Jumlah Stok *</label>
+              <input className="form-control" type="number" value={form.stock} onChange={f('stock')} disabled={isReadOnly} />
+            </div>
+
+            {/* ✅ FIX: Tampilkan daftar copy dengan ID asli agar terlihat & bisa diverifikasi */}
+            {book?.copies?.length > 0 && (
+              <div className="form-group">
+                <label className="form-label">Daftar Copy Buku</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {book.copies.map(copy => (
+                    <div
+                      key={copy.id}
+                      style={{
+                        padding: '8px 12px',
+                        border: `1px solid ${copy.status === 'available' ? '#C6F6D5' : '#FED7D7'}`,
+                        borderRadius: 8,
+                        background: copy.status === 'available' ? '#f0fff4' : '#fff5f5',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: 8
+                      }}
+                    >
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <strong style={{ fontSize: 13 }}>{copy.copy_code}</strong>
+                        {/* ✅ Tampilkan ID copy agar bisa di-debug jika perlu */}
+                        <code style={{ fontSize: 10, color: '#999' }}>{copy.id}</code>
+                      </div>
+                      <span style={{
+                        fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20,
+                        background: copy.status === 'available' ? '#2D6A4F' : '#c0392b',
+                        color: 'white'
+                      }}>
+                        {copy.status === 'available' ? 'Tersedia' : 'Dipinjam'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="form-group">
+              <label className="form-label">Foto Buku {!isEdit && '*'}</label>
+              {!isReadOnly && (
+                <input
+                  type="file"
+                  className="form-control"
+                  accept="image/*"
+                  onChange={f('image')}
+                  required={!isEdit}
+                />
+              )}
+              {form.imagePreview && (
+                <img
+                  src={form.imagePreview}
+                  alt="preview"
+                  style={{
+                    width: 120, height: 160, objectFit: 'cover',
+                    borderRadius: 8, marginTop: 12, border: '1px solid #ddd'
+                  }}
+                />
+              )}
+            </div>
+
+            <div style={{
+              display: 'flex', justifyContent: 'flex-end', gap: 12,
+              marginTop: 24, paddingTop: 20, borderTop: '1px solid #eee'
+            }}>
+              <button type="button" className="btn btn-ghost" onClick={onClose}>Tutup</button>
+
+              {isReadOnly && (user?.role === 'mahasiswa' || user?.role === 'dosen') && (
+                isAvailable ? (
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={handleBorrowAction}
+                    disabled={loadingBorrow}
+                  >
+                    {loadingBorrow ? 'Memproses...' : 'Pinjam Buku'}
+                  </button>
+                ) : (
+                  <RemindMeButton
+                    book={book}
+                    user={user}
+                    addReminder={addReminder}
+                    reminders={reminders}
+                  />
+                )
               )}
 
-            {!isReadOnly && (
-              <button
-                type="submit"
-                className="btn btn-primary"
-              >
-                Simpan
-              </button>
-            )}
-          </div>
-        </form>
+              {!isReadOnly && (
+                <button type="submit" className="btn btn-primary">Simpan</button>
+              )}
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
     </>
   );
 }
@@ -674,7 +591,7 @@ function BookCard({ book, onSelect, onDetail, isPetugas, selected }) {
             {book.no_induk}
           </code>
           <span style={{ fontSize: 9.5, fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0, color: isAvailable ? '#2D6A4F' : '#c0392b' }}>
-            {getAvailableCopies(book).length}/{book.copies?.length || book.stock || 0} unit
+            {getAvailableCopies(book).length}/{book.copies?.length || 0} unit
           </span>
         </div>
 
@@ -734,32 +651,56 @@ export default function BukuPage() {
     setSelected((prev) => prev.includes(id) ? [] : [id]);
   };
 
+  // ✅ FIX: Handler save yang benar untuk mode EDIT
+  // Preserve semua copies yang sudah ada (borrowed maupun available) dengan ID aslinya
+  // Hanya generate copies BARU jika stok bertambah
+  const handleSave = (f, existingBook) => {
+    if (existingBook) {
+      // MODE EDIT: preserve copies lama, tambah/kurangi sesuai stok baru
+      const newStock = Number(f.stock);
+      const oldCopies = existingBook.copies || [];
+      const borrowedCopies = oldCopies.filter(c => c.status === 'borrowed');
+      const availableCopies = oldCopies.filter(c => c.status === 'available');
+
+      let updatedCopies;
+
+      if (newStock >= oldCopies.length) {
+        // Stok bertambah atau sama: pertahankan semua copies lama + tambah yang baru
+        const additionalCount = newStock - oldCopies.length;
+        const newCopies = generateCopies(f.no_induk, additionalCount).map((copy, i) => ({
+          ...copy,
+          copy_code: `${f.no_induk}-${String(oldCopies.length + i + 1).padStart(3, '0')}`
+        }));
+        updatedCopies = [...oldCopies, ...newCopies];
+      } else {
+        // Stok berkurang: prioritaskan pertahankan yang borrowed dulu, sisanya available
+        const keepAvailable = availableCopies.slice(0, newStock - borrowedCopies.length);
+        updatedCopies = [...borrowedCopies, ...keepAvailable];
+      }
+
+      updateBook(existingBook.id, { ...f, copies: updatedCopies });
+    } else {
+      // MODE TAMBAH BARU: generate semua copies fresh
+      const copies = generateCopies(f.no_induk, Number(f.stock));
+      addBook({ ...f, copies });
+    }
+    setModal(null);
+  };
+
   return (
     <div>
       {modal && (
         <BookModal
           book={modal.book}
           user={user}
-          onSave={(f) => {
-            if (modal.mode === 'edit') {
-              const oldBook = modal.book;
-              const borrowed = getBorrowedCopies(oldBook).length;
-              const copies = generateCopies(f.no_induk, Number(f.stock));
-              copies.forEach((copy, index) => { if (index < borrowed) copy.status = 'borrowed'; });
-              updateBook(modal.book.id, { ...f, copies });
-            } else {
-              const copies = generateCopies(f.no_induk, Number(f.stock));
-              addBook({ ...f, copies });
-            }
-            setModal(null);
-          }}
+          onSave={(f) => handleSave(f, modal.mode === 'edit' ? modal.book : null)}
           onClose={() => setModal(null)}
           isReadOnly={modal.mode === 'view'}
         />
       )}
 
       <div className="page-header">
-        <div className="page-breadcrumb">{isAdminOrPetugas ? 'ADMINISTRASI & ARCHIVES' : 'PORTAL PENGGUNA'}</div>
+        <div className="page-breadcrumb">{isAdminOrPetugas ? 'DATA ADMINISTRASI BUKU' : 'DATA BUKU'}</div>
         <h1 className="page-title">{isAdminOrPetugas ? 'Manajemen Buku' : 'Katalog Koleksi Buku'}</h1>
         <p className="page-subtitle">
           Selamat datang, <strong>{user?.name || 'User'}</strong>! Kelola dan pantau ketersediaan koleksi ilmiah FMIPA.
@@ -813,7 +754,7 @@ export default function BukuPage() {
         {/* ── TOOLBAR ── */}
         <div className="mb-16" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
 
-          {/* Baris 1: Tombol aksi / info teks */}
+          {/* Baris 1: Tombol aksi */}
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             {isPetugas ? (
               <>
@@ -859,14 +800,14 @@ export default function BukuPage() {
             </button>
           </div>
 
-          {/* Baris 3: Search + Filter Kategori */}
+          {/* Baris 3: Search + Filter */}
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             <div style={{ position: 'relative', flex: 1, minWidth: 140 }}>
               <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#999' }} />
               <input
                 className="form-control"
                 style={{ width: '100%', paddingLeft: 32 }}
-                placeholder="Cari judul atau penulis..."
+                placeholder="Cari judul atau no. induk..."
                 value={search}
                 onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
               />
@@ -973,7 +914,7 @@ export default function BukuPage() {
                       <div style={{ fontSize: 11, color: '#666' }}>{b.isbn}</div>
                     </td>
                     <td><span className="badge badge-info">{b.category}</span></td>
-                    <td style={{ fontWeight: 600 }}>{b.copies?.length || b.stock || 0}</td>
+                    <td style={{ fontWeight: 600 }}>{b.copies?.length || 0}</td>
                     <td style={{ color: getAvailableCopies(b).length === 0 ? '#e53e3e' : '#38a169', fontWeight: 700 }}>{getAvailableCopies(b).length}</td>
                     <td>
                       <span className={`badge ${getAvailableCopies(b).length > 0 ? 'badge-success' : 'badge-danger'}`}>

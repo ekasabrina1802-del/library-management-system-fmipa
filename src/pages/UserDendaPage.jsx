@@ -1,11 +1,6 @@
 import { useState, useMemo } from 'react';
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
-} from 'recharts';
-import {
-  AlertTriangle, CheckCircle, Clock, BookOpen,
-  ChevronDown, ChevronUp, CreditCard, Bell, Info
-} from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { AlertTriangle, CheckCircle, Banknote, BookOpen, ChevronDown, ChevronUp, CreditCard, Bell, Info } from 'lucide-react';
 import { useApp } from '../components/AppContext';
 import { useAuth } from '../components/AuthContext';
 
@@ -324,7 +319,7 @@ export default function UserDendaPage() {
     <div>
       {/* ── Header ── */}
       <div className="page-header">
-        <div className="page-breadcrumb">Akun Saya</div>
+        <div className="page-breadcrumb">LAPORAN DENDA</div>
         <h1 className="page-title">Riwayat & Denda</h1>
         <p className="page-subtitle">
           Pantau status peminjaman, denda, dan tagihan perpustakaan milikmu.
@@ -459,7 +454,7 @@ export default function UserDendaPage() {
           </div>
 
           <div style={{ width: 42, height: 42, borderRadius: 12, background: '#eef4ff', border: '1px solid #BFDBFE', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563EB' }}>
-            <Clock size={18} />
+            <Banknote size={18} />
           </div>
 
         </div>

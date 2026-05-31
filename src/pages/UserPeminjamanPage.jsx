@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BookOpen, Clock, AlertCircle, CheckCircle, ChevronRight, BookMarked, Info } from 'lucide-react';
+import { BookOpen, Clock, AlertCircle, CheckCircle, ChevronRight, BookMarked, Info, Banknote } from 'lucide-react';
 import { useApp } from '../components/AppContext';
 import { useAuth } from '../components/AuthContext';
 import ApiImage from '../components/ApiImage';
@@ -62,7 +62,7 @@ const lateCount = myLoans.filter(
     <div>
       {/* Header */}
       <div className="page-header">
-        <div className="page-breadcrumb">Transaksi</div>
+        <div className="page-breadcrumb">TRANSAKSI PEMINJAMAN</div>
         <h1 className="page-title">Peminjaman Saya</h1>
         <p className="page-subtitle">
           Pantau status pinjaman aktif, riwayat buku, dan ketersediaan koleksi perpustakaan FMIPA.
@@ -221,7 +221,7 @@ const lateCount = myLoans.filter(
               color: '#2563EB'
             }}
           >
-            <CheckCircle size={18} />
+            <Banknote size={18} />
           </div>
         </div>
       </div>
