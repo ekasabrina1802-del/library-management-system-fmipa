@@ -58,6 +58,15 @@ const lateCount = myLoans.filter(
     { key: 'riwayat', label: 'Riwayat', count: historyLoans.length },
   ];
 
+  // ✅ Tambahkan di sini
+const userRole = String(user?.role || '').toLowerCase();
+const isDosen = userRole === 'dosen';
+
+const batasPeminjamanText = isDosen
+  ? 'Batas peminjaman Anda adalah 30 hari.'
+  : 'Batas peminjaman Anda adalah 7 hari.';
+
+
   return (
     <div>
       {/* Header */}
@@ -81,10 +90,13 @@ const lateCount = myLoans.filter(
         alignItems: 'flex-start',
       }}>
         <Info size={15} style={{ color: 'var(--primary)', flexShrink: 0, marginTop: 2 }} />
-        <div style={{ fontSize: 12.5, color: 'var(--gray-text)', lineHeight: 1.6 }}>
-          <strong style={{ color: 'var(--primary)' }}>Cara meminjam buku:</strong> Datang ke meja petugas perpustakaan dan sebutkan kode buku yang ingin dipinjam.
-          Batas peminjaman <strong>7 hari</strong>. Keterlambatan dikenakan denda <strong>Rp 500/hari</strong>.
-        </div>
+<div style={{ fontSize: 12.5, color: 'var(--gray-text)', lineHeight: 1.6 }}>
+  <strong style={{ color: 'var(--primary)' }}>Cara meminjam buku:</strong> Datang ke meja petugas perpustakaan dan sebutkan kode buku yang ingin dipinjam.
+  {' '}
+  {batasPeminjamanText}
+  {' '}
+  Keterlambatan dikenakan denda <strong>Rp 500/hari</strong>.
+</div>
       </div>
 
       {/* Stats */}
