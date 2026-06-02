@@ -52,31 +52,31 @@ function LoanRow({ l }) {
   const [open, setOpen] = useState(false);
   const denda = Number(l.denda || 0);
   const today = new Date().toISOString().slice(0, 10);
+  const status = (l.status || '').toLowerCase();
+
   const isDendaPaid =
-  l.dendaBayar === true ||
-  l.dendaBayar === 1 ||
-  String(l.dendaBayar) === '1';
+    l.dendaBayar === true ||
+    l.dendaBayar === 1 ||
+    String(l.dendaBayar) === '1';
 
   // Hitung keterlambatan
   let daysLate = 0;
   if (['dipinjam', 'diperpanjang', 'terlambat'].includes(status) && l.dueDate < today) {
-  daysLate = Math.abs(daysFromNow(l.dueDate));
-} else if (status === 'dikembalikan' && denda > 0) {
+    daysLate = Math.abs(daysFromNow(l.dueDate));
+  } else if (status === 'dikembalikan' && denda > 0) {
     daysLate = Math.round(denda / DENDA_PER_HARI);
   }
 
   // Sisa hari untuk pinjaman aktif
-  const remaining = (l.status || '').toLowerCase() === 'dipinjam' ? daysFromNow(l.dueDate) : null;
+  const remaining = status === 'dipinjam' ? daysFromNow(l.dueDate) : null;
 
   // Pinjaman yang sudah melewati batas & belum dikembalikan → anggap terlambat
-  const status = (l.status || '').toLowerCase();
+  const isActuallyLate =
+    ['dipinjam', 'diperpanjang', 'terlambat'].includes(status) &&
+    l.dueDate < today &&
+    Number(l.denda || 0) === 0;
 
-const isActuallyLate =
-  ['dipinjam', 'diperpanjang', 'terlambat'].includes(status) &&
-  l.dueDate < today &&
-  Number(l.denda || 0) === 0;
-
-  const effectiveStatus = isActuallyLate ? 'terlambat' : (l.status || '').toLowerCase();
+  const effectiveStatus = isActuallyLate ? 'terlambat' : status;
 
   const canExpand = denda > 0 || remaining !== null || isActuallyLate;
 
