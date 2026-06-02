@@ -1474,11 +1474,11 @@ app.get('/api/loans', async (req, res) => {
         a.jenis AS "memberType",
         TO_CHAR(p.tgl_pinjam, 'YYYY-MM-DD') AS "loanDate",
         TO_CHAR(p.tgl_jatuh_tempo, 'YYYY-MM-DD') AS "dueDate",
-        TO_CHAR(p.tgl_kembali, 'YYYY-MM-DD') AS "returnDate",
-        p.denda,
-        p.denda_bayar AS "dendaBayar",
-        p.jumlah_perpanjangan AS "jumlahPerpanjangan",
-        p.status
+       TO_CHAR(p.tgl_kembali, 'YYYY-MM-DD') AS "returnDate",
+p.denda,
+p.denda_bayar AS "dendaBayar",
+p.jumlah_perpanjangan AS "jumlahPerpanjangan",
+p.status
       FROM peminjaman p
       JOIN buku b ON p.buku_id = b.id
       JOIN anggota a ON p.anggota_id = a.id
