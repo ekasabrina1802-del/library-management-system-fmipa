@@ -59,9 +59,9 @@ function LoanRow({ l }) {
 
   // Hitung keterlambatan
   let daysLate = 0;
-  if ((l.status || '').toLowerCase() === 'terlambat') {
-    daysLate = daysBetween(l.dueDate, today);
-  } else if ((l.status || '').toLowerCase() === 'dikembalikan' && denda > 0) {
+  if (['dipinjam', 'diperpanjang', 'terlambat'].includes(status) && l.dueDate < today) {
+  daysLate = Math.abs(daysFromNow(l.dueDate));
+} else if (status === 'dikembalikan' && denda > 0) {
     daysLate = Math.round(denda / DENDA_PER_HARI);
   }
 
@@ -69,8 +69,12 @@ function LoanRow({ l }) {
   const remaining = (l.status || '').toLowerCase() === 'dipinjam' ? daysFromNow(l.dueDate) : null;
 
   // Pinjaman yang sudah melewati batas & belum dikembalikan → anggap terlambat
-  const isActuallyLate =
-    (l.status || '').toLowerCase() === 'dipinjam' && l.dueDate < today;
+  const status = (l.status || '').toLowerCase();
+
+const isActuallyLate =
+  ['dipinjam', 'diperpanjang', 'terlambat'].includes(status) &&
+  l.dueDate < today &&
+  Number(l.denda || 0) === 0;
 
   const effectiveStatus = isActuallyLate ? 'terlambat' : (l.status || '').toLowerCase();
 
@@ -257,9 +261,14 @@ export default function UserDendaPage() {
   .reduce((s, l) => s + Number(l.denda || 0), 0);
 
   // Hitung denda berjalan dari pinjaman aktif yang melewati batas
-  const dendaBerjalan = myLoans
-    .filter(l => (l.status || '').toLowerCase() === 'dipinjam' && l.dueDate < today)
-    .reduce((s, l) => s + Math.abs(daysFromNow(l.dueDate)) * DENDA_PER_HARI, 0);
+const dendaBerjalan = myLoans
+  .filter(l => {
+    const status = (l.status || '').toLowerCase();
+    const isActive = ['dipinjam', 'diperpanjang', 'terlambat'].includes(status);
+
+    return isActive && l.dueDate < today && Number(l.denda || 0) === 0;
+  })
+  .reduce((s, l) => s + Math.abs(daysFromNow(l.dueDate)) * DENDA_PER_HARI, 0);
 
   const totalDendaKeseluruhan = totalDendaBelumBayar + dendaBerjalan;
 
