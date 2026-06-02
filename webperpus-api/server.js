@@ -1061,86 +1061,139 @@ if (req.file) {
     }
 
     if (type === 'staff') {
-      if (!password) {
-        return res.status(400).json({
-          success: false,
-          message: 'Password wajib diisi untuk staff/petugas'
-        });
-      }
+  const cleanEmail = normalizeEmail(email);
 
-      if (!email || !email.endsWith('@fmipa.ac.id')) {
-        return res.status(400).json({
-          success: false,
-          message: 'Email staff/petugas harus @fmipa.ac.id'
-        });
-      }
+  if (!cleanEmail || !isDosenOrStaffEmail(cleanEmail)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Email staff/petugas harus menggunakan email UNESA (@unesa.ac.id)'
+    });
+  }
 
-      const checkUser = await pool.query(`
-        SELECT id FROM users WHERE email = $1
-      `, [email]);
+  if (!nim || !phone || !address) {
+    return res.status(400).json({
+      success: false,
+      message: 'Data petugas belum lengkap'
+    });
+  }
 
-      if (checkUser.rows.length > 0) {
-        return res.status(400).json({
-          success: false,
-          message: 'Email sudah digunakan sebagai akun login'
-        });
-      }
+  const checkUser = await pool.query(`
+    SELECT id FROM users WHERE email = $1
+  `, [cleanEmail]);
 
-      const hashedPassword = await bcrypt.hash(password, 10);
+  if (checkUser.rows.length > 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'Email sudah digunakan sebagai akun login'
+    });
+  }
 
-      const resultUser = await pool.query(`
-        INSERT INTO users (username, email, password, role)
-        VALUES ($1, $2, $3, 'petugas')
-        RETURNING id
-      `, [name, email, hashedPassword]);
+  const resultUser = await pool.query(`
+    INSERT INTO users (username, email, password, role)
+    VALUES ($1, $2, NULL, 'petugas')
+    RETURNING id
+  `, [name, cleanEmail]);
 
-      const userId = resultUser.rows[0].id;
-      const staffNim = nim || `STF${String(userId).padStart(3, '0')}`;
+  const userId = resultUser.rows[0].id;
+  const staffNim = nim || `STF${String(userId).padStart(3, '0')}`;
+  const customId = await generateCustomId('dosen', 'petugas');
 
-      const inserted = await pool.query(`
-        INSERT INTO anggota
-          (name, nim, jurusan, departemen, prodi, jenis, email, phone, address, photo_url, profile_completed)
-        VALUES
-          ($1, $2, $3, $4, $5, 'staff', $6, $7, $8, $9, TRUE)
-        RETURNING id
-      `, [
-        name,
-        staffNim,
-        departemen || prodi || 'Perpustakaan FMIPA',
-        departemen || 'Perpustakaan FMIPA',
-        prodi || null,
-        email,
-        phone || null,
-        address || null,
-        photo_url
-      ]);
+  const inserted = await pool.query(`
+    INSERT INTO anggota
+      (custom_id, name, nim, jurusan, departemen, prodi, jenis, email, phone, address, photo_url, profile_completed)
+    VALUES
+      ($1, $2, $3, $4, $5, $6, 'dosen', $7, $8, $9, $10, TRUE)
+    RETURNING id
+  `, [
+    customId,
+    name,
+    staffNim,
+    'Perpustakaan FMIPA',
+    'Perpustakaan FMIPA',
+    null,
+    cleanEmail,
+    phone || null,
+    address || null,
+    photo_url
+  ]);
 
-      return res.json({
-        success: true,
-        message: 'Staff/petugas berhasil ditambahkan',
-        id: inserted.rows[0].id,
-        photo_url
-      });
+  return res.json({
+    success: true,
+    message: 'Petugas berhasil ditambahkan',
+    id: inserted.rows[0].id,
+    photo_url
+  });
     }
 
-    const inserted = await pool.query(`
-      INSERT INTO anggota
-        (name, nim, jurusan, departemen, prodi, jenis, email, phone, address, photo_url, profile_completed)
-      VALUES
-        ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, FALSE)
-      RETURNING id
-    `, [
-      name,
-      nim || null,
-      departemen || prodi || null,
-      departemen || null,
-      prodi || null,
-      type,
-      email || null,
-      phone || null,
-      address || null,
-      photo_url
-    ]);
+    const cleanEmail = normalizeEmail(email);
+
+if (!['mahasiswa', 'dosen'].includes(type)) {
+  return res.status(400).json({
+    success: false,
+    message: 'Tipe anggota tidak valid'
+  });
+}
+
+if (!cleanEmail || !isAllowedUnesaEmail(cleanEmail)) {
+  return res.status(400).json({
+    success: false,
+    message: 'Gunakan email resmi UNESA'
+  });
+}
+
+if (type === 'mahasiswa' && !isMahasiswaEmail(cleanEmail)) {
+  return res.status(400).json({
+    success: false,
+    message: 'Email mahasiswa harus menggunakan @mhs.unesa.ac.id'
+  });
+}
+
+if (type === 'dosen' && !isDosenOrStaffEmail(cleanEmail)) {
+  return res.status(400).json({
+    success: false,
+    message: 'Email dosen harus menggunakan @unesa.ac.id'
+  });
+}
+
+if (!nim || !departemen || !prodi || !phone || !address) {
+  return res.status(400).json({
+    success: false,
+    message: 'Data anggota belum lengkap'
+  });
+}
+
+const profileCompleted = Boolean(
+  name &&
+  nim &&
+  cleanEmail &&
+  phone &&
+  address &&
+  departemen &&
+  prodi
+);
+
+const customId = await generateCustomId(type);
+
+const inserted = await pool.query(`
+  INSERT INTO anggota
+    (custom_id, name, nim, jurusan, departemen, prodi, jenis, email, phone, address, photo_url, profile_completed)
+  VALUES
+    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+  RETURNING id
+`, [
+  customId,
+  name,
+  nim || null,
+  departemen || prodi || null,
+  departemen || null,
+  prodi || null,
+  type,
+  cleanEmail,
+  phone || null,
+  address || null,
+  photo_url,
+  profileCompleted
+]);
 
     res.json({
       success: true,
