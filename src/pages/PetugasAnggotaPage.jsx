@@ -1,6 +1,6 @@
 //PetugasAnggotaPage.jsx — UI improved & aligned with PetugasPeminjamanPage
 import { useState } from 'react';
-import { X, Check, Search, BookOpen, History, RefreshCw, CheckCircle, TrendingDown, Clock, ChevronRight, AlertCircle, Users, GraduationCap, UserCheck } from 'lucide-react';
+import { X, Check, Search, BookOpen, History, RefreshCw, CheckCircle, TrendingDown, Clock, ChevronRight, AlertCircle, Users, GraduationCap, UserCheck, Plus } from 'lucide-react';
 import { useApp } from '../components/AppContext';
 import { useAuth } from '../components/AuthContext';
 import ApiImage from '../components/ApiImage';
@@ -513,22 +513,41 @@ function MemberModal({ member = null, onSave, onClose }) {
     type:      member?.type      || 'mahasiswa',
     email:     member?.email     || '',
     phone:     member?.phone     || '',
-    address:   member?.address   || ''
+    address:   member?.address   || '',
+    photo: null
   });
   const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const allowedEmail = form.email.endsWith('@unesa.ac.id') || form.email.endsWith('@mhs.unesa.ac.id');
-    if (!allowedEmail) { alert('Gunakan email resmi UNESA'); return; }
-    onSave(form);
+
+    const allowedEmail =
+      form.email.endsWith('@unesa.ac.id') ||
+      form.email.endsWith('@mhs.unesa.ac.id');
+
+    if (!allowedEmail) {
+      alert('Gunakan email resmi UNESA');
+      return;
+    }
+
+    const formData = new FormData();
+
+    Object.entries(form).forEach(([key, value]) => {
+      if (value !== null && value !== '') {
+        formData.append(key, value);
+      }
+    });
+
+    onSave(formData);
   };
 
   return (
     <div className="modal-overlay">
       <div className="modal">
         <div className="modal-header">
-          <h3 className="modal-title">Edit Data Anggota</h3>
+          <h3 className="modal-title"> 
+            {member ? 'Edit Data Anggota' : 'Tambah Anggota'}
+          </h3>
           <button className="modal-close" onClick={onClose}><X size={20} /></button>
         </div>
         <form onSubmit={handleSubmit}>
@@ -543,7 +562,7 @@ function MemberModal({ member = null, onSave, onClose }) {
             </div>
           </div>
           <div className="form-group">
-            <label className="form-label">Tipe Anggota</label>
+            <label className="form-label">Tipe Anggota *</label>
             <select className="form-control" value={form.type} onChange={f('type')}>
               <option value="mahasiswa">Mahasiswa</option>
               <option value="dosen">Dosen</option>
@@ -551,22 +570,22 @@ function MemberModal({ member = null, onSave, onClose }) {
           </div>
           <div className="grid-2">
             <div className="form-group">
-              <label className="form-label">Departemen</label>
+              <label className="form-label">Departemen *</label>
               <select
                 className="form-control"
                 value={form.departemen}
                 onChange={(e) => setForm({ ...form, departemen: e.target.value, prodi: '' })}
               >
-                <option value="">Pilih Departemen</option>
+                <option value="">Pilih Departemen *</option>
                 {Object.keys(departmentData).map(dep => (
                   <option key={dep} value={dep}>{dep}</option>
                 ))}
               </select>
             </div>
             <div className="form-group">
-              <label className="form-label">Program Studi</label>
+              <label className="form-label">Program Studi *</label>
               <select className="form-control" value={form.prodi} onChange={f('prodi')}>
-                <option value="">Pilih Prodi</option>
+                <option value="">Pilih Prodi *</option>
                 {(departmentData[form.departemen] || []).map(prodi => (
                   <option key={prodi} value={prodi}>{prodi}</option>
                 ))}
@@ -574,23 +593,51 @@ function MemberModal({ member = null, onSave, onClose }) {
             </div>
           </div>
           <div className="form-group">
-            <label className="form-label">Email</label>
+            <label className="form-label">Email *</label>
             <input className="form-control" type="email" value={form.email} onChange={f('email')} required />
           </div>
           <div className="grid-2">
             <div className="form-group">
-              <label className="form-label">No. Telp</label>
+              <label className="form-label">No. Telp *</label>
               <input className="form-control" value={form.phone} onChange={f('phone')} required />
             </div>
             <div className="form-group">
-              <label className="form-label">Alamat</label>
+              <label className="form-label">Alamat *</label>
               <input className="form-control" value={form.address} onChange={f('address')} required />
+            </div>
+            <div className="form-group">
+              <label className="form-label">
+                Foto Profil *
+              </label>
+
+              <input
+                type="file"
+                accept="image/*"
+                className="form-control"
+                required={!member}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    photo: e.target.files[0]
+                  })
+                }
+              />
             </div>
           </div>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
             <button type="button" className="btn btn-ghost" onClick={onClose}>Batal</button>
             <button type="submit" className="btn btn-primary">
-              <Check size={14} /> Simpan Perubahan
+              {member ? (
+                <>
+                  <Check size={14} />
+                  Simpan Perubahan
+                </>
+              ) : (
+                <>
+                  <Plus size={14} />
+                  Tambah Anggota
+                </>
+              )}
             </button>
           </div>
         </form>
@@ -601,12 +648,13 @@ function MemberModal({ member = null, onSave, onClose }) {
 
 /* ─── Main Page ─────────────────────────────────────────────── */
 export default function AnggotaPage() {
-  const { members, loans, books, updateMember, extendLoan, returnBook } = useApp();
+  const { members, loans, books, updateMember, extendLoan, returnBook, addMember } = useApp();
   const { user } = useAuth();
   const [search,       setSearch]       = useState('');
   const [typeFilter,   setTypeFilter]   = useState('semua');
   const [detailMember, setDetailMember] = useState(null);
   const [editMember,   setEditMember]   = useState(null);
+  const [addModal, setAddModal] = useState(false);
 
   const filtered = members.filter(m =>
     (typeFilter === 'semua' || m.type === typeFilter) &&
@@ -641,35 +689,6 @@ export default function AnggotaPage() {
     { key: 'dosen', label: 'Dosen', activeColor: '#38A169', activeBg: '#f0fff4' },
   ];
 
-    {/* Stats Cards */}
-    <div className="grid-4 mb-24" style={{ gap: '16px' }}>
-
-      {statCards.map((s, i) => (
-
-        <div
-          key={i}
-          style={{ background: s.bg, border: `1.5px solid ${s.border}`, borderRadius: 14, padding: '20px 22px', minHeight: 120, boxShadow: `0 2px 8px ${s.shadow}`, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
-        >
-
-          <div>
-            <div style={{ fontSize: 11, color: s.color, textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600, marginBottom: 6 }}>
-              {s.label}
-            </div>
-
-            <div style={{ fontSize: 28, fontWeight: 800, color: s.color, lineHeight: 1, fontFamily: "'DM Mono', monospace" }}>
-              {s.value}
-            </div>
-          </div>
-
-          <div
-            style={{ width: 42, height: 42, borderRadius: 12, background: s.iconBg, border: `1px solid ${s.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: s.color, flexShrink: 0 }}
-          >
-            {s.icon}
-          </div>
-        </div>
-      ))}
-    </div>
-
   return (
     <div>
       {detailMember && (
@@ -681,6 +700,15 @@ export default function AnggotaPage() {
           onEdit={(m) => { setDetailMember(null); setEditMember(m); }}
           extendLoan={extendLoan}
           returnBook={returnBook}
+        />
+      )}
+      {addModal && (
+        <MemberModal
+          onSave={async (data) => {
+            const success = await addMember(data);
+            if (success) setAddModal(false);
+          }}
+          onClose={() => setAddModal(false)}
         />
       )}
       {editMember && (
@@ -750,6 +778,19 @@ export default function AnggotaPage() {
               border: '1px solid rgba(123,28,28,0.15)',
             }}>{filtered.length} anggota</span>
           </div>
+          <button
+            className="btn btn-primary btn-sm"
+            onClick={() => setAddModal(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6
+            }}
+          >
+            <Plus size={14} />
+            Tambah Anggota
+          </button>
+        </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             {/* Filter buttons */}
@@ -857,6 +898,5 @@ export default function AnggotaPage() {
           {filtered.length} anggota ditampilkan
         </div>
       </div>
-    </div>
   );
 }
